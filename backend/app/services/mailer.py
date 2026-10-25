@@ -136,19 +136,30 @@ def _smtp(acc: Account, m: Mail) -> None:
             s.send_message(msg)
 
 
-def _graph(acc: Account, m: Mail) -> dict[str, Any]:
+def _graph(acc: Account, m: Mail, can_fall_back: bool = False) -> dict[str, Any]:
+    """Microsoft Graph sendMail (their mail.ts, 22/10). `can_fall_back`: Resend is configured, so a failure here is reported as
+    {"ok": False, "fallback": True, "note": …} and the caller tries Resend instead of stopping with the error."""
     tenant, cid, secret = os.environ.get("M365_TENANT_ID"), os.environ.get("M365_CLIENT_ID"), os.environ.get("M365_CLIENT_SECRET")
+
+    def fail(error: str, message: str, note: str) -> dict[str, Any]:
+        return {"ok": False, "fallback": True, "note": note} if can_fall_back else {"ok": False, "error": error, "message": message}
+
     if not (tenant and cid and secret):
-        return {"ok": False, "error": "M365_GRAPH_NOT_CONFIGURED", "message": "Microsoft 365 يحتاج M365_TENANT_ID وM365_CLIENT_ID وM365_CLIENT_SECRET وصلاحية Mail.Send مع موافقة المسؤول."}
+        return fail("M365_GRAPH_NOT_CONFIGURED", "Microsoft 365 يحتاج M365_TENANT_ID وM365_CLIENT_ID وM365_CLIENT_SECRET وصلاحية Microsoft Graph Mail.Send (Application) مع موافقة المسؤول. (الخطوات في docs/M365_GRAPH_SETUP.md)", "M365: الأسرار غير مضبوطة")
     if any(len(a["content"]) > 4_000_000 for a in m.attachments):
         return {"ok": False, "error": "M365_ATTACHMENT_TOO_LARGE", "message": "ملف PDF أكبر من 3 MB؛ قلّل حجمه ثم أعد الإرسال."}
     sender = (acc.from_email or acc.username).strip()
     with httpx.Client(timeout=20) as c:
         tr = c.post(f"https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token",
                     data={"client_id": cid, "client_secret": secret, "scope": "https://graph.microsoft.com/.default", "grant_type": "client_credentials"})
-        token = tr.json().get("access_token") if tr.status_code == 200 else None
+        try:
+            tj = tr.json()
+        except ValueError:
+            tj = {}
+        token = tj.get("access_token") if tr.status_code == 200 else None
         if not token:
-            return {"ok": False, "error": "M365_TOKEN_FAILED", "message": "فشل تسجيل تطبيق Microsoft 365؛ راجع بيانات التطبيق."}
+            why = re.sub(r"\s+", " ", str(tj.get("error_description") or tj.get("error") or tr.status_code))[:200]
+            return fail("M365_TOKEN_FAILED", f"فشل تسجيل تطبيق Microsoft 365 ({why}). راجع Tenant ID وClient ID وClient Secret (انتبه: القيمة Value وليست Secret ID) وأنها لم تنتهِ.", "M365 token: " + why)
         message = {"subject": m.subject, "body": {"contentType": "HTML", "content": m.html},
                    "toRecipients": [{"emailAddress": {"address": a}} for a in m.to],
                    "attachments": [{"@odata.type": "#microsoft.graph.fileAttachment", "name": a["filename"],
@@ -156,7 +167,16 @@ def _graph(acc: Account, m: Mail) -> dict[str, Any]:
         sent = c.post(f"https://graph.microsoft.com/v1.0/users/{sender}/sendMail", headers={"Authorization": f"Bearer {token}"},
                       json={"message": message, "saveToSentItems": True})
         if sent.status_code >= 300:
-            return {"ok": False, "error": "M365_SEND_FAILED", "message": f"Microsoft 365 رفض الإرسال ({sent.status_code}). " + sent.text[:180]}
+            body = re.sub(r"\s+", " ", sent.text)
+            if sent.status_code == 403 or re.search(r"Access|Authorization|denied", body, re.I):
+                hint = " ← غالبًا صلاحية Mail.Send (Application) ناقصة أو لم تُعطَ Admin consent، أو سياسة ApplicationAccessPolicy تمنع هذا الصندوق."
+            elif sent.status_code == 404 or re.search(r"MailboxNotEnabled|ResourceNotFound|NotFound", body, re.I):
+                hint = f" ← الصندوق {sender} غير موجود أو بلا ترخيص Exchange Online (تأكد أن عنوان المرسل هو الصندوق الحقيقي)."
+            elif sent.status_code == 401:
+                hint = " ← الرمز مرفوض؛ راجع بيانات التطبيق."
+            else:
+                hint = ""
+            return fail("M365_SEND_FAILED", f"Microsoft 365 رفض الإرسال ({sent.status_code}){hint} " + body[:220], f"M365 {sent.status_code}{hint}")
     return {"ok": True, "via": "microsoft_graph", "from": sender}
 
 
@@ -179,11 +199,18 @@ def send(acc0: Account | None, m: Mail) -> dict[str, Any]:
         return {"ok": False, "error": "MAIL_DISABLED", "message": "الإرسال معطّل في هذه البيئة (MAIL_DISABLED)"}
     errs: list[str] = []
     acc = fix_account(acc0) if acc0 else None
+    reply_to_acc = acc
+    resend_ready = bool(os.environ.get("RESEND_API_KEY") and os.environ.get("EMAIL_FROM"))
     if acc and is_o365(acc.host):
         try:
-            return _graph(acc, m)
+            g = _graph(acc, m, can_fall_back=resend_ready)
         except httpx.HTTPError as e:
-            return {"ok": False, "error": "M365_SEND_FAILED", "message": "تعذر الاتصال بـ Microsoft Graph: " + str(e)[:180]}
+            g = ({"ok": False, "fallback": True, "note": "M365: " + str(e)[:120]} if resend_ready
+                 else {"ok": False, "error": "M365_SEND_FAILED", "message": "تعذر الاتصال بـ Microsoft Graph: " + str(e)[:180]})
+        if not g.get("fallback"):
+            return g
+        errs.append(g["note"])
+        reply_to_acc, acc = acc, None  # Microsoft 365 never goes through SMTP; Resend below is the fallback (reply-to stays the mailbox)
     if acc:
         try:
             _smtp(acc, m)
@@ -191,7 +218,7 @@ def send(acc0: Account | None, m: Mail) -> dict[str, Any]:
         except (OSError, smtplib.SMTPException) as e:
             errs.append("SMTP: " + str(e)[:200])
     try:
-        r = _resend(acc, m)
+        r = _resend(reply_to_acc, m)
     except httpx.HTTPError as e:
         r = {"ok": False, "error": "SEND_FAILED", "message": "Resend: " + str(e)[:200]}
     if r and r["ok"]:

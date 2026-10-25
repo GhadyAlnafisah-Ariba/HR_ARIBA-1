@@ -103,6 +103,8 @@ const KIND = {
   request: { bg: "rgba(214,158,46,.17)", fg: "#231F20", icon: "clock" },
   ok: { bg: "rgba(41,179,94,.17)", fg: "#1F8D49", icon: "checkCircle" },
   no: { bg: "rgba(181,74,74,.15)", fg: "#B54A4A", icon: "xCircle" },
+  announcement: { bg: "rgba(1,77,61,.14)", fg: "#014D3D", icon: "bell" },
+  greeting: { bg: "rgba(228,228,188,.55)", fg: "#231F20", icon: "star" },
 } as const;
 
 function ago(ts: string) {

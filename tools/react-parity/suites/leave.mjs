@@ -48,16 +48,18 @@ export function leaveData(seed = 300) {
     // their app never loads rt.adjustments (always []), and our canonical loader has none either: no adjustments here
     usedEnd[e.id] = e.terminationDate || iso(cy, 10, 31);
   }
-  return { today, employees, leaves, adjustments, holidays, usedEnd, clean: new Set(employees.slice(0, 35).map((e) => e.id)) };
+  // 22/10 update: Settings can grant leave to some special types (consultant, Tamheer yes; trainee stays without)
+  const rights = { consultant: { leave: true, eos: false }, tamheer: { leave: true, eos: true }, trainee: { leave: false, eos: true } };
+  return { today, employees, leaves, adjustments, holidays, usedEnd, rights, clean: new Set(employees.slice(0, 35).map((e) => e.id)) };
 }
 
-export function leavePrepare(py, data) { py.leave = [{ today: data.today, employees: data.employees, leaves: data.leaves, adjustments: data.adjustments, holidays: data.holidays, usedEnd: data.usedEnd }]; }
+export function leavePrepare(py, data) { py.leave = [{ today: data.today, employees: data.employees, leaves: data.leaves, adjustments: data.adjustments, holidays: data.holidays, usedEnd: data.usedEnd, rights: data.rights }]; }
 
 const ROW = { current: 104, year_end: 102, carry: 101, acc_eos: 110, cum_accrued: 111, cum_used: 111, used_through: 44, app_current: 112, app_year_end: 113, summary_current: 114 };
 
 export function leave(data, out, method) {
   const t = new Tally('leave_' + method, `محرك الإجازات — طريقة ${method === 'calendar' ? 'تقويمية (افتراضيهم)' : method === 'monthly' ? 'شهرية' : 'أيام عمل (= طريقتنا)'}`, [98, 101, 102, 103, 104, 105, 107, 109, 110, 111, 112, 113, 114]);
-  setRuntime({ country: 'SA', leaveAccrual: method, leaveCarry: { enabled: true, days: 10 }, holidays: data.holidays, leaves: data.leaves, adjustments: data.adjustments, employees: data.employees });
+  setRuntime({ country: 'SA', kindRights: data.rights, leaveAccrual: method, leaveCarry: { enabled: true, days: 10 }, holidays: data.holidays, leaves: data.leaves, adjustments: data.adjustments, employees: data.employees });
   const cy = +data.today.slice(0, 4);
   let cleanDiff = 0; const cleanFields = {};
   data.employees.forEach((e) => {

@@ -53,7 +53,7 @@ def _book(x, method):
     emps = [cdata.emp_view(r) for r in rows]
     hol = HolidayCalendar([(D(h["date"]), int(h.get("days") or 1), bool(h.get("recurring"))) for h in x["holidays"]])
     book = LeaveBook(holidays=hol, leaves=x["leaves"], adjustments=x["adjustments"], today=today, method=method,
-                     carry={"enabled": True, "days": 10})
+                     carry={"enabled": True, "days": 10}, kind_rights=x.get("rights"))
     return book, emps, today
 
 

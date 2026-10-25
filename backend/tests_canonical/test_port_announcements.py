@@ -69,3 +69,36 @@ def test_registered_occasion_and_automatic_greetings_once_a_year(api, port_engin
     assert {g["r"] for g in greetings} == {"51", "52"}
     items = api.get(f"{V1}/occasions", headers=h(api, "hr.test")).json()["items"]
     assert any(i["employee_id"] == "52" and i["occasion"] == "graduation" for i in items)
+
+
+# ---------------------------------------------------------------- «Ariba AI» free questions
+def test_ai_chat_staff_only_and_needs_the_key(api, monkeypatch):
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    assert api.post(f"{V1}/ai/chat", headers=h(api, "emp.test"), json={"messages": [{"role": "user", "content": "hi"}]}).json()["error"] == "NOT_AUTHORIZED"
+    assert api.post(f"{V1}/ai/chat", headers=h(api, "hr.test"), json={"messages": [{"role": "user", "content": "hi"}]}).json()["error"] == "AI_NOT_CONFIGURED"
+
+
+def test_ai_chat_continues_on_pause_turn_and_sends_no_extra_tools(api, monkeypatch):
+    from app.routers import port_ai
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
+    seen = []
+
+    def fake(key, model, messages, tools):
+        seen.append((model, len(messages), [t["name"] for t in tools]))
+        if len(seen) == 1:
+            return {"content": [{"type": "text", "text": "searching"}], "stop_reason": "pause_turn"}
+        return {"content": [{"type": "text", "text": "done"}], "stop_reason": "end_turn"}
+
+    monkeypatch.setattr(port_ai, "_anthropic", fake)
+    body = {"messages": [{"role": "user", "content": "ما سعر الذهب؟"}], "tools": [{"name": "open_page"}, {"name": "delete_everything"}]}
+    r = api.post(f"{V1}/ai/chat", headers=h(api, "hr.test"), json=body).json()
+    assert r["ok"] and r["content"][0]["text"] == "done" and r["stop_reason"] == "end_turn"
+    assert seen[0] == ("claude-sonnet-5-5", 1, ["open_page"]) and seen[1][1] == 2   # only open_page is allowed through; the pause was continued
+    assert len(r["extra"]) == 1
+
+
+def test_the_app_bell_shows_announcements_as_such(api):
+    api.post(f"{V1}/announcements/send", headers=h(api, "hr.test"), json={"kind": "greeting", "occasion": "wedding", "title": "مبروك الزواج", "audience": "employees", "ids": ["51"]})
+    bell = api.get(f"{V1}/me/notifications", headers=h(api, "emp.test")).json()
+    n = [x for x in bell if x["title"] == "مبروك الزواج"][0]
+    assert n["kind"] == "greeting" and n["target"] == "index"

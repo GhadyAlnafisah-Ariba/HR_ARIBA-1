@@ -9,6 +9,7 @@ import { useComposer } from "@/components/composer";
 import { ForgotPunchSheet, LocationsCard, sar } from "@/components/shared";
 import { Card, Page, T } from "@/components/ui";
 import { RequestItem } from "@/components/request-item";
+import { AnnouncementsCard } from "@/components/announcements";
 import { useData } from "@/lib/data";
 import { useAuth } from "@/lib/auth";
 import { useTileWidth } from "@/lib/grid";
@@ -250,6 +251,8 @@ export default function Home() {
     <Page onRefresh={refresh}>
       <Hero onForgot={() => setForgot(true)} />
       <Ledger items={[[fmt(leave?.current), "رصيد الإجازة (يوم)"], [fmt(leave?.year_end), "رصيد نهاية العام"], [att ? String(Math.max(0, att.remote_limit - att.remote_used)) : "—", "عن بعد المتبقي"]]} />
+
+      <AnnouncementsCard />
 
       <T size={16} weight={800} style={styles.sec}>ماذا تحتاج اليوم؟</T>
       <View style={styles.svcGrid} onLayout={grid.onLayout}>

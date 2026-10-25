@@ -1745,6 +1745,8 @@ def notifications(actor: dict[str, Any] = Depends(current_actor), db: Session = 
             LEFT JOIN public.workflow_requests r ON r.id=n.request_id WHERE n.recipient_employee_id=:e ORDER BY n.created_at DESC LIMIT 50""", e=eid):
         if n["kind"] == "request":
             kind, target = "request", "team"
+        elif n["kind"] in ("announcement", "greeting"):
+            kind, target = n["kind"], "index"  # 22/10 announcements and greetings: the home screen shows the card
         else:
             kind, target = ("no" if n.get("req_status") == "rejected" else "ok"), "leaves"
         if str(n.get("request_type") or "").startswith("template:"):

@@ -302,11 +302,11 @@ export const letters = {
 
 export type Notification = {
   id: string;
-  kind: "template" | "request" | "ok" | "no";
+  kind: "template" | "request" | "ok" | "no" | "announcement" | "greeting";
   title: string;
   body: string | null;
   at: string;
-  target: "documents" | "leaves" | "team";
+  target: "documents" | "leaves" | "team" | "index";
   is_read: boolean;
 };
 
@@ -314,3 +314,8 @@ export const notifications = {
   mine: () => api<Notification[]>("/me/notifications"),
   markAllRead: () => api<void>("/me/notifications/read", { method: "POST" }),
 };
+
+export type Announcement = { id: string; kind: "announcement" | "greeting"; occasion: string | null; title: string; body: string; pinned: boolean; created_at: string };
+
+/** Running announcements (pinned, or the last 14 days) and greetings of the last 3 days for me (22/10 update). */
+export const announcements = { mine: () => api<{ ok: boolean; items: Announcement[] }>("/me/announcements").then((r) => r.items) };
