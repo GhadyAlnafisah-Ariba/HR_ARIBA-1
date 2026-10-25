@@ -13,6 +13,7 @@ import { useData } from "@/lib/data";
 import { useAuth } from "@/lib/auth";
 import { useTileWidth } from "@/lib/grid";
 import { useLayout } from "@/lib/responsive";
+import { diagOff } from "@/lib/diag";
 import { distanceText } from "@/lib/geo";
 import { riyadhParts, todaySessions, usePunch, workedMinutes } from "@/lib/punch";
 import { useTheme } from "@/theme";
@@ -21,6 +22,7 @@ import { shadow } from "@/lib/shadow";
 function useNow() {
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
+    if (diagOff("clock")) return;
     const id = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(id);
   }, []);

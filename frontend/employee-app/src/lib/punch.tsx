@@ -7,6 +7,7 @@ import { ApiError, attendance } from "./api";
 import { useData } from "./data";
 import { currentFix, evaluate, type Fix, type LocState } from "./geo";
 import { useToast } from "@/components/ui";
+import { diagOff } from "./diag";
 
 type Punch = { loc: LocState; fix: Fix | null; busy: boolean; locate: () => Promise<Fix | null>; punch: (action: "in" | "out") => Promise<void> };
 const Ctx = createContext<Punch | null>(null);
@@ -34,6 +35,7 @@ export function PunchProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    if (diagOff("gps")) return;
     locate();
     const id = setInterval(locate, 15000);
     const sub = AppState.addEventListener("change", (s) => s === "active" && locate());

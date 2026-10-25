@@ -1,9 +1,22 @@
 // Haptics for the moments that earn them (a punch, a sent request, an error, a tab change) — nothing on the web.
+// Off inside Expo Go: with SDK 58 a haptic call there froze the whole app on the first tap (found by switching it off:
+// the freeze disappeared). Standalone builds keep them. Calls are also deferred a tick and throttled so a burst of taps
+// can never queue up on the native side.
 import { Platform } from "react-native";
+import Constants, { ExecutionEnvironment } from "expo-constants";
 import * as Haptics from "expo-haptics";
+import { diagOff } from "./diag";
 
-const on = Platform.OS !== "web";
-const run = (fn: () => Promise<void>) => { if (on) fn().catch(() => {}); };
+const inExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
+const on = Platform.OS !== "web" && !inExpoGo && !diagOff("haptics");
+let last = 0;
+const run = (fn: () => Promise<void>) => {
+  if (!on) return;
+  const now = Date.now();
+  if (now - last < 60) return;
+  last = now;
+  setTimeout(() => { fn().catch(() => {}); }, 0);
+};
 
 export const tap = () => run(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light));
 export const press = () => run(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium));

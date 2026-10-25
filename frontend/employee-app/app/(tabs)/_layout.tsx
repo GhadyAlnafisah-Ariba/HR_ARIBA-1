@@ -157,7 +157,8 @@ function BellPanel({ visible, onClose, top }: { visible: boolean; onClose: () =>
 }
 
 type NavRoute = { key: string; name: string };
-type BottomTabBarProps = { state: { index: number; routes: NavRoute[] }; navigation: { navigate: (name: string) => void } };
+// SDK 58 no longer hands a `navigation` object to a custom tab bar, so the dock navigates through the router.
+type BottomTabBarProps = { state: { index: number; routes: NavRoute[] } };
 
 const DOCK: { name: string; label: string; icon: Parameters<typeof Icon>[0]["name"] }[] = [
   { name: "index", label: "الرئيسية", icon: "home" },
@@ -166,7 +167,7 @@ const DOCK: { name: string; label: string; icon: Parameters<typeof Icon>[0]["nam
   { name: "more", label: "المزيد", icon: "more" },
 ];
 
-function BottomNav({ state, navigation }: BottomTabBarProps) {
+function BottomNav({ state }: BottomTabBarProps) {
   const t = useTheme();
   const insets = useSafeAreaInsets();
   const { open } = useComposer();
@@ -181,7 +182,7 @@ function BottomNav({ state, navigation }: BottomTabBarProps) {
     const n = badge(d.name);
     return (
       <Pressable key={d.name} accessibilityRole="tab" accessibilityLabel={d.label} accessibilityState={{ selected: on }}
-        onPress={() => { select(); navigation.navigate(d.name); }} style={({ pressed }) => [styles.tab, { transform: [{ scale: pressed ? 0.94 : 1 }] }]}>
+        onPress={() => { select(); router.navigate((d.name === "index" ? "/(tabs)" : `/(tabs)/${d.name}`) as never); }} style={({ pressed }) => [styles.tab, { transform: [{ scale: pressed ? 0.94 : 1 }] }]}>
         <View style={{ transform: [{ translateY: on ? -2 : 0 }] }}><Icon name={d.icon} size={23} color={color} stroke={on ? 2.1 : 1.8} /></View>
         <T size={11.5} weight={on ? 800 : 600} color={color} numberOfLines={1}>{d.label}</T>
         <View style={[styles.tabLine, { backgroundColor: "#29B35E", opacity: on ? 1 : 0, transform: [{ skewX: "-30deg" }, { scaleX: on ? 1 : 0.2 }] }]} />
