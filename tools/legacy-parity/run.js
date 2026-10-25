@@ -56,10 +56,23 @@ const range = (n, f) => Array.from({ length: n }, (_, i) => f(i));
   }), (x) => {
     let a, b;
     try { a = LP.compute({ ...x, asOf: new w.Date(2026, 9, x.asOfDay) }); } catch (e) { a = { err: String(e.message) }; }
-    try { b = OP.compute({ ...x, asOf: new Date(2026, 9, x.asOfDay) }); } catch (e) { b = { err: String(e.message) }; }
+    // noLeave:false = the legacy rule on this axis; the 22/10 rule (special types have no leave) has its own suite below
+    try { b = OP.compute({ ...x, noLeave: false, asOf: new Date(2026, 9, x.asOfDay) }); } catch (e) { b = { err: String(e.message) }; }
     const keys = [...new Set([...Object.keys(a), ...Object.keys(b)])].filter((k) => !(REACT_ONLY_KEYS.has(k) && a[k] === undefined && !b[k]));
     const diff = keys.filter((k) => !near(a[k], b[k]));
     return diff.length ? { x, diff: diff.slice(0, 5).map((k) => [k, a[k], b[k]]) } : null;
+  });
+
+  // ---- 22/10 update (the only intended difference from the legacy HTML here): consultant / Tamheer / trainee have no leave
+  // balance and no leave pay unless Settings grants it. Everything else of the row stays the legacy result.
+  suite("استحقاقات الأنواع الخاصة (تحديث 22/10)", range(4000, () => ({
+    basic: pick([3000, 5400.5, 15000]), houRate: pick([0, 0.25]), days: 30, work: 30, join: pick(["2015-03-01", "2022-07-15", "2025-11-20"]), reason: pick(["resign", "retire", "arb77", ""]),
+    lastDay: pick(["", "2026-10-31"]), leaveDays: pick([0, 21]), used: pick([0, 4]), usedAuto: 2, leaveManual: pick(["", 3]), asOfDay: pick([1, 15, 31]), noLeave: pick([true, false]),
+  })), (x) => {
+    const asOf = new Date(2026, 9, x.asOfDay), r = OP.compute({ ...x, trainee: x.noLeave, asOf }), legacy = LP.compute({ ...x, trainee: false, asOf: new w.Date(2026, 9, x.asOfDay) });
+    if (x.noLeave) { const bad = ["N", "O", "P", "AC"].filter((k) => !near(r[k], 0)); return bad.length ? { x, bad: bad.map((k) => [k, r[k]]) } : null; }
+    const diff = ["N", "O", "P", "AC", "AM", "AV"].filter((k) => !near(legacy[k], r[k]));
+    return diff.length ? { x, diff: diff.map((k) => [k, legacy[k], r[k]]) } : null;
   });
 
   // ---- Settlement sRun (المخالصة): the legacy result boxes vs runSettlement
