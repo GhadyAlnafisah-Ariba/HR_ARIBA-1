@@ -21,7 +21,7 @@
 
 ## How it was checked (logic, not only looks)
 - `tools/react-parity` re-pointed at their 22/10 engines: **21 suites, 81,428 cases, 0 differences**; 111/111 comparison rows. The leave suites also run with special-type entitlements granted.
-- pytest 124 passed (new: `test_port_announcements.py`, `test_port_mail_fallback.py`); `tsc`, `eslint`, `next build`, employee-app `tsc` clean.
+- pytest 123 passed, 2 skipped (new: `test_port_announcements.py`, `test_port_mail_fallback.py`); `tsc`, `eslint`, `next build`, employee-app `tsc` clean.
 - On the production-shaped local copy (107 employees): 2 active Tamheer employees lose their leave balance (4.49 → 0, year-end 8.34 → 0); nobody else changes. One employee is paid in dollars (the totals fix applies to him).
 
 ## Database
@@ -44,7 +44,7 @@ Settings `special_rights` and `occasions_auto` live in `ariba_app_settings` (no 
 
 ## التحقق (من المنطق وليس الشكل فقط)
 - أداة المطابقة على معادلاتهم الجديدة: **21 مجموعة و81,428 حالة، صفر فروق**، و111 من 111 صفًا. وفحوص الإجازات تعمل أيضًا مع منح الاستحقاق.
-- pytest: 124 نجح. و`tsc` و`eslint` و`next build` وتطبيق الموظف: نظيفة.
+- pytest: 123 نجح (2 متخطّى). و`tsc` و`eslint` و`next build` وتطبيق الموظف: نظيفة.
 - على النسخة المحلية الشبيهة بالإنتاج (107 موظفين): موظفان نشطان من التمهير يصبح رصيد إجازتهما صفرًا (4.49 ← 0، ونهاية العام 8.34 ← 0). لا يتغير أحد غيرهما. وموظف واحد براتب بالدولار ينطبق عليه إصلاح المجاميع.
 
 ## قاعدة البيانات

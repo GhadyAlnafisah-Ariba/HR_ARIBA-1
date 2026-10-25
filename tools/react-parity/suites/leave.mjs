@@ -92,5 +92,6 @@ export function leave(data, out, method) {
     if (changed && isClean) { cleanDiff++; Object.keys(a).forEach((f) => { if (Math.abs((a[f] ?? 0) - (o[f] ?? 0)) > 0.006) cleanFields[f] = (cleanFields[f] || 0) + 1; }); }
   });
   t.notes.push(`موظفون بدون أرقام مستوردة أو مرضية أو تعديلات (35): ${cleanDiff} فيهم فرق — الحقول: ${JSON.stringify(cleanFields)}`);
+  setRuntime({ kindRights: null }); // the rights are this suite's alone; the other suites run with the default (nobody entitled)
   return t;
 }
