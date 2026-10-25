@@ -1,8 +1,7 @@
 // One date / time picker for the whole app (replaces the OS pickers, which followed the device calendar —
 // e.g. Hijri — and showed grey, unreadable time wheels in dark mode). Gregorian, Arabic labels, brand colours.
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
-import DateTimePicker, { type DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { brand, useTheme } from "@/theme";
 import { Icon } from "./icons";
 import { T } from "./text";
@@ -93,7 +92,7 @@ const ROWS = 5;   // rows visible; the middle one is the selection
 /** One scroll wheel: it snaps to a row and reports the row it settles on. */
 function Wheel({ items, index, onChange, width }: { items: string[]; index: number; onChange: (i: number) => void; width: number }) {
   const t = useTheme();
-  const ref = useRef<ScrollView>(null);
+  const ref = useRef<any>(null); // the ScrollView instance
   const last = useRef(index);
   const at = (y: number) => Math.max(0, Math.min(items.length - 1, Math.round(y / ROW)));
   useEffect(() => { ref.current?.scrollTo({ y: index * ROW, animated: false }); }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -138,12 +137,23 @@ const MINUTES = Array.from({ length: 60 }, (_, i) => pad(i));
 const PERIODS = ["ص", "م"];
 
 /** On a phone / tablet: the system's own spinner (hour, minute, AM/PM wheels), which scrolls and snaps natively. */
-function NativeTime({ title, value, onPick, onDone }: { title?: string; value: string; onPick: (v: string) => void; onDone: () => void }) {
+type PickerEvent = { type?: string };
+// Loaded only when the picker opens (a missing native module must not stop the whole app from starting); null = use the wheels.
+function loadNativePicker(): any {
+  try { return require("@react-native-community/datetimepicker").default; } catch { return null; }
+}
+
+function NativeTime(props: { title?: string; value: string; onPick: (v: string) => void; onDone: () => void }) {
+  const Picker = useMemo(loadNativePicker, []);
+  return Picker ? <NativeTimeView Picker={Picker} {...props} /> : <WheelTime {...props} />;
+}
+
+function NativeTimeView({ Picker: DateTimePicker, title, value, onPick, onDone }: { Picker: any; title?: string; value: string; onPick: (v: string) => void; onDone: () => void }) {
   const t = useTheme();
   const accent = t.dark ? brand.green : brand.dark;
   const [h, m] = (value || hhmm(new Date())).split(":").map(Number);
   const d = new Date(); d.setHours(h, m, 0, 0);
-  const change = (e: DateTimePickerEvent, picked?: Date) => {
+  const change = (e: PickerEvent, picked?: Date) => {
     if (Platform.OS === "android") { if (e.type === "set" && picked) onPick(hhmm(picked)); onDone(); return; } // Android shows its own dialog
     if (picked) onPick(hhmm(picked));
   };
