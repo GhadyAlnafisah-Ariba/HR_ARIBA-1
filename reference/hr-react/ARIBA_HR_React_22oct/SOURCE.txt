@@ -1,0 +1,1 @@
+Source: github.com/Mohamed-Awad-Ariba/Ariba-HR commit 3128689 (22/10/2026). Read-only reference; publishable key redacted.
