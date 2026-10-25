@@ -22,7 +22,7 @@ import httpx
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-PORT = 8765
+PORT = int(os.environ.get("GMAIL_OAUTH_PORT", "8765"))
 REDIRECT = f"http://127.0.0.1:{PORT}/callback"
 SCOPE = "https://www.googleapis.com/auth/gmail.send"
 
