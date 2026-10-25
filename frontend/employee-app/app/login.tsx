@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Switch, TextInput, View } from "react-native";
 import { Icon } from "@/components/icons";
 import { Btn, Sheet, T } from "@/components/ui";
+import { InstallHint } from "@/components/install-hint";
 import { api, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { biometricAvailable, biometricEnabled, forgetDevice, remember, remembered } from "@/lib/biometric";
@@ -96,9 +97,11 @@ export default function Login() {
         <Pressable onPress={submit} disabled={busy} style={({ pressed }) => [styles.btn, { backgroundColor: t.dark ? "#29B35E" : "#014D3D", opacity: pressed || busy ? 0.8 : 1 }]}>
           <T size={15} weight={700} color="#fff">{busy ? "..." : "دخول"}</T>
         </Pressable>
-        <Pressable onPress={doBio} disabled={busy} style={[styles.bio, { borderColor: t.bd, opacity: bio ? 1 : 0.78 }]}>
-          <T size={14} weight={700} color={t.dark ? "#29B35E" : "#014D3D"}>🔐 الدخول بالبصمة / Face ID</T>
-        </Pressable>
+        {Platform.OS === "web" ? null : (
+          <Pressable onPress={doBio} disabled={busy} style={[styles.bio, { borderColor: t.bd, opacity: bio ? 1 : 0.78 }]}>
+            <T size={14} weight={700} color={t.dark ? "#29B35E" : "#014D3D"}>🔐 الدخول بالبصمة / Face ID</T>
+          </Pressable>
+        )}
         <Pressable onPress={() => setForgot(true)} style={{ marginTop: 10, alignItems: "center" }}>
           <T size={12} weight={700} color={t.dark ? "#29B35E" : "#014D3D"}>نسيت كلمة المرور؟</T>
         </Pressable>
@@ -108,6 +111,7 @@ export default function Login() {
           </Pressable>
         ) : null}
         {msg ? <T size={12} center color={msg.good ? t.bl : t.am} style={{ marginTop: 8 }}>{msg.t}</T> : null}
+        <InstallHint />
       </View>
       {forgot ? <ForgotSheet onClose={() => setForgot(false)} /> : null}
     </KeyboardAvoidingView>

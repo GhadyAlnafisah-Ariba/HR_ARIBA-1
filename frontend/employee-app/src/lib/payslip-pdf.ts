@@ -1,4 +1,5 @@
 // The payslip as a PDF (their Pay.jsx slipDoc → «حفظ كـ PDF»): the same A4 page, printed to a file and shared.
+import { Platform } from "react-native";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
 import type { Employee, Payslip } from "./api";
@@ -29,6 +30,17 @@ export function slipDoc(raw: Payslip, me: Employee | null, company: { nameAr?: s
 }
 
 export async function sharePayslip(raw: Payslip, me: Employee | null, company: { nameAr?: string; logo?: string | null }) {
+  if (Platform.OS === "web") {
+    // PWA: expo-print cannot write a file in the browser — the slip opens in its own page and the print dialog saves it as PDF.
+    const w = window.open("", "_blank");
+    if (!w) throw new Error("POPUP_BLOCKED");
+    w.document.open(); w.document.write(slipDoc(raw, me, company)); w.document.close();
+    let printed = false;
+    const once = () => { if (printed) return; printed = true; try { w.print(); } catch { /* closed */ } };
+    w.addEventListener("load", once);
+    setTimeout(once, 600);
+    return;
+  }
   const { uri } = await Print.printToFileAsync({ html: slipDoc(raw, me, company) });
   await Sharing.shareAsync(uri, { mimeType: "application/pdf", dialogTitle: "قسيمة الراتب", UTI: "com.adobe.pdf" });
 }

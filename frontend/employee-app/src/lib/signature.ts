@@ -2,11 +2,18 @@
 // on the device), never sent to HR except inside a document I choose to sign. Stored as an SVG data URL in the app's
 // document directory, one file per account.
 import { File, Paths } from "expo-file-system";
+import { Platform } from "react-native";
+
+// On the web (PWA) there is no document directory: the signature stays in this browser's localStorage, still on this
+// device only and never sent to HR except inside a document the employee signs.
+const web = Platform.OS === "web";
+const webKey = (owner: string) => `ariba.signature.${owner.replace(/[^\w-]/g, "_")}`;
 
 const fileFor = (owner: string) => new File(Paths.document, `ariba-signature-${owner.replace(/[^\w-]/g, "_")}.txt`);
 
 export function getSig(owner: string): string {
   try {
+    if (web) return globalThis.localStorage?.getItem(webKey(owner)) ?? "";
     const f = fileFor(owner);
     return f.exists ? f.textSync() : "";
   } catch {
@@ -16,6 +23,11 @@ export function getSig(owner: string): string {
 
 export function setSig(owner: string, dataUrl: string): boolean {
   try {
+    if (web) {
+      if (!dataUrl) globalThis.localStorage?.removeItem(webKey(owner));
+      else globalThis.localStorage?.setItem(webKey(owner), dataUrl);
+      return true;
+    }
     const f = fileFor(owner);
     if (!dataUrl) {
       if (f.exists) f.delete();

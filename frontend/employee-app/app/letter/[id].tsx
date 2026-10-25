@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
-import { WebView } from "react-native-webview";
+import { HtmlView } from "@/components/html-view";
 import { Icon } from "@/components/icons";
 import { Loading, T } from "@/components/ui";
 import { letters } from "@/lib/api";
@@ -27,7 +27,7 @@ export default function LetterScreen() {
         </Pressable>
         <T size={16} weight={800} style={{ flex: 1 }} numberOfLines={1}>{title ?? "المستند"}</T>
       </View>
-      {html === null ? <Loading /> : <WebView originWhitelist={["*"]} source={{ html }} style={{ flex: 1 }} />}
+      {html === null ? <Loading /> : <HtmlView html={html} />}
     </View>
   );
 }

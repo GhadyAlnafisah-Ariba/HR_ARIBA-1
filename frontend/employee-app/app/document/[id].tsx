@@ -2,7 +2,7 @@
 // Arabic part (<!--ARIBA_EN--> separates the English copy).
 import { useEffect, useState } from "react";
 import { useLocalSearchParams } from "expo-router";
-import { WebView } from "react-native-webview";
+import { HtmlView } from "@/components/html-view";
 import { Screen } from "@/components/screen";
 import { Loading } from "@/components/ui";
 import { docs } from "@/lib/port";
@@ -22,7 +22,7 @@ export default function DocumentScreen() {
   }, [id]);
   return (
     <Screen title={title ?? "المستند"} scroll={false}>
-      {html === null ? <Loading /> : <WebView originWhitelist={["*"]} source={{ html }} style={{ flex: 1 }} />}
+      {html === null ? <Loading /> : <HtmlView html={html} />}
     </Screen>
   );
 }
