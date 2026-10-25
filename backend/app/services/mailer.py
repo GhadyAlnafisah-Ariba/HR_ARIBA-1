@@ -5,6 +5,8 @@ with MAIL_SECRET_KEY (decision 5). Configuration from the environment:
   MAIL_SECRET_KEY          32+ characters; required to save or read a mailbox password
   RESEND_API_KEY, EMAIL_FROM                  Resend fallback (e.g. "Ariba HR <hr@example.com>")
   M365_TENANT_ID, M365_CLIENT_ID, M365_CLIENT_SECRET   Microsoft Graph Mail.Send (application permission)
+  GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, GMAIL_REFRESH_TOKEN   Gmail API over HTTPS (port 443) for a Gmail / Google Workspace
+                           mailbox — for hosts that block SMTP (Railway outside the Pro plan); GMAIL_SENDER = the mailbox when none is saved
   MAIL_DISABLED=1          never connect out (tests, local runs); sends are logged as failed with MAIL_DISABLED
 """
 from __future__ import annotations
@@ -114,7 +116,7 @@ def is_o365(host: str) -> bool:
     return bool(re.search(r"office365|outlook\.com|live\.com|hotmail", host or "", re.I))
 
 
-def _smtp(acc: Account, m: Mail) -> None:
+def _message(acc: Account, m: Mail) -> EmailMessage:
     msg = EmailMessage()
     msg["From"] = formataddr((acc.from_name.replace('"', ""), acc.from_email)) if acc.from_name else acc.from_email
     msg["To"] = ", ".join(m.to)
@@ -124,6 +126,11 @@ def _smtp(acc: Account, m: Mail) -> None:
     for a in m.attachments:
         maintype, _, subtype = (a.get("contentType") or "application/octet-stream").partition("/")
         msg.add_attachment(base64.b64decode(a["content"]), maintype=maintype, subtype=subtype or "octet-stream", filename=a["filename"])
+    return msg
+
+
+def _smtp(acc: Account, m: Mail) -> None:
+    msg = _message(acc, m)
     ctx = ssl.create_default_context()
     if acc.port == 465 or acc.secure and acc.port != 587:
         with smtplib.SMTP_SSL(acc.host, acc.port, context=ctx, timeout=15) as s:
@@ -134,6 +141,50 @@ def _smtp(acc: Account, m: Mail) -> None:
             s.starttls(context=ctx)
             s.login(acc.username, acc.password)
             s.send_message(msg)
+
+
+def is_gmail(host: str) -> bool:
+    return bool(re.search(r"(^|\.)(gmail|googlemail)\.com$", (host or "").strip().lower()))
+
+
+def gmail_configured() -> bool:
+    return bool(os.environ.get("GMAIL_CLIENT_ID") and os.environ.get("GMAIL_CLIENT_SECRET") and os.environ.get("GMAIL_REFRESH_TOKEN"))
+
+
+def _gmail_api(acc: Account | None, m: Mail) -> dict[str, Any]:
+    """Gmail API users.messages.send over HTTPS (OAuth2 refresh token). The message is the same MIME the SMTP path builds, so the
+    attachments and the Arabic text are identical; Google sends it as the authorised mailbox (From must be that mailbox or its alias)."""
+    sender = (acc.from_email if acc else None) or os.environ.get("GMAIL_SENDER") or ""
+    if not sender:
+        return {"ok": False, "error": "GMAIL_SENDER_MISSING", "message": "حدّد بريد الشركة في الإعدادات أو GMAIL_SENDER"}
+    if any(len(a["content"]) > 18_000_000 for a in m.attachments):
+        return {"ok": False, "error": "GMAIL_ATTACHMENT_TOO_LARGE", "message": "المرفق أكبر من حد Gmail (نحو 25 MB)."}
+    shell = acc or Account("company", "smtp.gmail.com", 465, True, sender, "", None, sender)
+    raw = base64.urlsafe_b64encode(_message(shell, m).as_bytes()).decode()
+    with httpx.Client(timeout=30) as c:
+        tr = c.post("https://oauth2.googleapis.com/token", data={
+            "client_id": os.environ["GMAIL_CLIENT_ID"], "client_secret": os.environ["GMAIL_CLIENT_SECRET"],
+            "refresh_token": os.environ["GMAIL_REFRESH_TOKEN"], "grant_type": "refresh_token"})
+        try:
+            tj = tr.json()
+        except ValueError:
+            tj = {}
+        token = tj.get("access_token") if tr.status_code == 200 else None
+        if not token:
+            why = re.sub(r"\s+", " ", str(tj.get("error_description") or tj.get("error") or tr.status_code))[:200]
+            hint = " ← غالبًا انتهت صلاحية الـ refresh token (تطبيق Google في وضع Testing ينتهي بعد 7 أيام) أو القيم خاطئة." if "invalid_grant" in why or "invalid_grant" in str(tj.get("error")) else ""
+            return {"ok": False, "error": "GMAIL_TOKEN_FAILED", "message": f"فشل دخول Gmail API ({why}).{hint}"}
+        sent = c.post("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", headers={"Authorization": f"Bearer {token}"}, json={"raw": raw})
+        if sent.status_code >= 300:
+            body = re.sub(r"\s+", " ", sent.text)
+            if sent.status_code in (401, 403):
+                hint = " ← فعّل Gmail API في المشروع ووافق على صلاحية gmail.send."
+            elif sent.status_code == 400 and "Invalid" in body:
+                hint = " ← تحقق من عنوان المستلم."
+            else:
+                hint = ""
+            return {"ok": False, "error": "GMAIL_SEND_FAILED", "message": f"Gmail رفض الإرسال ({sent.status_code}){hint} " + body[:200]}
+    return {"ok": True, "via": "gmail_api", "from": sender}
 
 
 def _graph(acc: Account, m: Mail, can_fall_back: bool = False) -> dict[str, Any]:
@@ -193,7 +244,7 @@ def _resend(acc: Account | None, m: Mail) -> dict[str, Any] | None:
 
 
 def send(acc0: Account | None, m: Mail) -> dict[str, Any]:
-    """mail.ts sendMail: Graph for Microsoft 365, else SMTP; Resend when SMTP fails or nothing is saved.
+    """mail.ts sendMail: Graph for Microsoft 365; Gmail API for Gmail when GMAIL_* is set; else SMTP; Resend when those fail or nothing is saved.
     Our server is not on Supabase, so ports 25/587 are not blocked here."""
     if os.environ.get("MAIL_DISABLED") == "1":
         return {"ok": False, "error": "MAIL_DISABLED", "message": "الإرسال معطّل في هذه البيئة (MAIL_DISABLED)"}
@@ -211,6 +262,14 @@ def send(acc0: Account | None, m: Mail) -> dict[str, Any]:
             return g
         errs.append(g["note"])
         reply_to_acc, acc = acc, None  # Microsoft 365 never goes through SMTP; Resend below is the fallback (reply-to stays the mailbox)
+    if gmail_configured() and ((acc and is_gmail(acc.host)) or (not acc and os.environ.get("GMAIL_SENDER"))):
+        try:
+            g = _gmail_api(acc, m)
+        except httpx.HTTPError as e:
+            g = {"ok": False, "error": "GMAIL_SEND_FAILED", "message": "تعذر الاتصال بـ Gmail API: " + str(e)[:180]}
+        if g["ok"]:
+            return g
+        errs.append(g["message"])  # SMTP below is the next try (it works where port 465 is open), then Resend
     if acc:
         try:
             _smtp(acc, m)
@@ -225,7 +284,7 @@ def send(acc0: Account | None, m: Mail) -> dict[str, Any]:
         return r
     if r:
         errs.append(r["message"])
-    if not acc and not r:
+    if not acc and not r and not errs:
         return {"ok": False, "error": "EMAIL_NOT_CONFIGURED", "message": "مفيش بريد إرسال مضبوط (الإعدادات ← البريد والإشعارات)"}
     return {"ok": False, "error": "SEND_FAILED", "message": " | ".join(errs)}
 

@@ -50,3 +50,7 @@ Settings `special_rights` and `occasions_auto` live in `ariba_app_settings` (no 
 ## قاعدة البيانات
 هجرة واحدة إضافية فقط: `docs/db-migrations/002_announcements.sql` (مع `verify_002.sql`). تُشغَّل بـ `run_on_railway.sh` على demo ثم production **قبل** نشر الكود.
 الإعدادان `special_rights` و`occasions_auto` في `ariba_app_settings` بلا تغيير سكيما. الافتراضي: لا أحد مستحق.
+
+## Addendum (25 Oct): e-mail on Railway Hobby — Gmail API / إضافة: الإيميل على Railway Hobby
+Railway blocks outbound SMTP (465/587) outside the Pro plan, so Gmail SMTP fails with `Network is unreachable`. `services/mailer.py` now sends through the Gmail API over HTTPS (443) when `GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET` and `GMAIL_REFRESH_TOKEN` are set and the mailbox is Gmail; otherwise SMTP, then Resend, as before. The refresh token is obtained once with `backend/tools/gmail_oauth_token.py` (scope `gmail.send` only). Tests: `tests_canonical/test_port_mail_gmail.py` (Google simulated).
+الإرسال عبر Gmail API على HTTPS (443) عند ضبط `GMAIL_*`، وإلا SMTP ثم Resend كما كان.
