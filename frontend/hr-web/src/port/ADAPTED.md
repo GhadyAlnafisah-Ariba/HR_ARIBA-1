@@ -49,3 +49,15 @@ byte-for-byte their code; ESLint skips it (they lint it with oxlint) except the 
 | `next/latn.js` (loaded by `next/Shell.jsx`, `next/page.jsx`) | Every number and date in English digits whatever locale a screen passes (`ar-SA`, `ar-EG` …). |
 | `styles/ariba-ours.css` | The sidebar sits below the windows that open over the page (it was at the top z-index, hiding part of modals); radios / checkboxes keep their size (their `input{width:100%}` squeezed the text beside them). |
 | `pages/leaves/Pending.jsx`, `pages/leaves/AllRequests.jsx`, `pages/forms/index.jsx` | A form the employee accepted shows as «📄 title» in HR's pending requests (with the signed copy) and in all requests; the forms archive says whether it waits for the manager's signature or HR's approval. |
+
+## 22 October 2026 update (their Ariba-HR commit 3128689; reference/hr-react/ARIBA_HR_React_22oct)
+Same rules as above: their files copied verbatim wherever our copy was verbatim, their diff patched onto the adapted ones.
+| File | Change |
+|---|---|
+| `engines/leave.js`, `engines/payrollRows.js` | Replaced by the 22/10 versions (special-type entitlements, multi-currency sums). `engines/{runtime,country,empkind,payx}.js` re-export `src/lib/calc/*`, which received the same upstream changes (`lib/calc/leave-annual.ts` adds `leaveExempt`). |
+| `lib/api.js` | Transport only: `ariba_ann_*`, `ariba_occ_*`, `ariba_my_announcements` → `/announcements`, `/occasions`, `/me/announcements`; `functionCall('ariba-ai')` → `POST /ai/chat`. |
+| `lib/data.js` | `special_rights` setting key (their change) — read from our `ariba_app_settings`. |
+| `lib/audit.js`, `pages/leaves/AllRequests.jsx` | Their `shortName` (first + father + family name) — their diff patched onto our adapted copies. |
+| `router.jsx` + `app/(hr)/(portal)/announcements/page.tsx` | The new page `ann` → `/announcements` (Next route). |
+| Everything else changed upstream (`components/{AiAssistant,Layout,OccAuto}`, `lib/{aiActions,aiAgent,aiParse,empFields,exporter,finance,names,occasions,print,xlsx}`, `nav.js`, `pages/{announcements,attendance,employees,finance,forms,leaves,payroll,reports,settings}`) | Their 22/10 files as they are (new ones added, or patched where we had adapted them: Layout, AiAssistant, Dashboard, EmpForm, forms/index, Pending). |
+| Not ported | Their `supabase/functions/*` and `sql/21–24`: replaced by our server (`routers/port_announcements.py`, `routers/port_ai.py`, `services/mailer.py`) and `docs/db-migrations/002_announcements.sql`. Their `pg_cron` job is the scheduler job `occasions`. |

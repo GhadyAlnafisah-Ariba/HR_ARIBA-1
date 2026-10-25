@@ -11,6 +11,7 @@
 | File | What it does |
 |---|---|
 | `001_react_port.sql` | The new tables and columns on the normalized schema (without any change to the data): candidates, their files and application links, goals and evaluations, delegation and manager permissions, document signing, leave attachments, mail accounts (password encrypted) and the send log, tasks and meetings, WebAuthn and Push, request-workflow columns (on behalf, escalation, return), notification email, the payroll path (prepare/approve/reopen), the new request and document types, and the default settings (`workflow_config`, `doc_sign_cfg`, `apply_invite_*`). A single transaction, and every item is `IF NOT EXISTS`, so running it a second time changes nothing. |
+| `002_announcements.sql` + `verify_002.sql` | (22/10 update) Two new tables only — `ariba_announcements` and `ariba_emp_occasions` — for announcements and greetings. No existing table or row is touched; IF NOT EXISTS; one transaction. `run_on_railway.sh` picks it up automatically after 001. |
 | `verify_001.sql` | Verifies every new table, column and key; any FAIL line stops the script. |
 | `run_on_railway.sh` | A full backup with verification of it → confirm the database is normalized → run every `0NN_*.sql` in order → verify → compare row counts before/after. |
 
