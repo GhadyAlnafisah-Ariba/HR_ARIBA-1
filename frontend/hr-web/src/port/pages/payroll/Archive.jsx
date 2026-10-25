@@ -27,7 +27,7 @@ export default function PayArchive() {
         {list === null ? <div style={{ padding: 18, textAlign: 'center', color: 'var(--mu)' }}>{T('جاري تحميل سجل المسيرات المعتمدة...', 'Loading approved payroll history...')}</div>
           : err ? <div style={{ padding: 18, textAlign: 'center', color: 'var(--rd)' }}>{T('تعذر تحميل سجل المسيرات المعتمدة', 'Unable to load payroll history')}</div>
             : !list.length ? <div style={{ padding: 22, textAlign: 'center', color: 'var(--mu)' }}>{T('لا توجد مسيرات رواتب معتمدة محفوظة حتى الآن.', 'No approved payroll history yet.')}</div>
-              : list.map((x) => { let total = 0, net = 0; (x.rows || []).forEach((r) => { total += Number(r.totalDue || r.total || 0) || 0; net += Number(r.netSAR || r.net || 0) || 0; });
+              : list.map((x) => { let total = 0, net = 0; (x.rows || []).forEach((r) => { const fx = Number(r.exchRate) > 0 ? Number(r.exchRate) : ((Number(r.net) && Number(r.netSAR)) ? Number(r.netSAR) / Number(r.net) : 1); total += (Number(r.totalDue || r.total || 0) || 0) * fx; net += Number(r.netSAR || r.net || 0) || 0; });
                 return <div key={x.year + '-' + x.month} style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', padding: '11px 12px', borderBottom: '1px solid var(--bd)' }}>
                   <div style={{ minWidth: 150, flex: 1 }}><strong>{mn(x.month)} {x.year}</strong><div style={{ fontSize: 10, color: 'var(--mu)', marginTop: 3 }}>{T('معتمد', 'Approved')} — {x.approved_at || ''} | {Number(x.employees || 0)} {T('موظف', 'employees')}</div></div>
                   <div className="b bgr" style={{ padding: '5px 9px' }}>{f2(total)} {T('إجمالي', 'Total')}</div>

@@ -4,6 +4,9 @@ import { useApp } from '../store/AppStore.jsx';
 import { rpc } from '../lib/api.js';
 import { toast } from './Toast.jsx';
 import { aiBridge } from '../lib/aiBridge.js';
+import { askAgent } from '../lib/aiAgent.js';
+import { answerEmployee } from '../lib/empFields.js';
+import { parseAdmin, headOf, planField, applyField, planBalance, applyBalance, sendAnnouncement, occLabel } from '../lib/aiActions.js';
 import { understand, PAGE_WORDS, findEmployees, parseDates, parseDuration, parseTime, showDate, iso, addDays, today, isTerm, SETTLE_REASONS, N } from '../lib/aiParse.js';
 import { LVL, recordLeave, newLeaveId } from '../lib/leaves.js';
 import { leaveCurrentBalance } from '../engines/leave.js';
@@ -11,7 +14,15 @@ import { countAnnualLeaveDays } from '../engines/holidays.js';
 
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const ST_AR = { absent: 'غياب', present: 'حضور', late: 'تأخير', remote: 'عمل عن بعد' };
-const FORMS = { onboarding: { ar: 'نموذج مباشرة عمل' }, experience: { ar: 'شهادة خبرة' }, extension: { ar: 'نموذج تمديد عقد', date: 'end' }, termination: { ar: 'نموذج إنهاء خدمة', date: 'last' }, clearance: { ar: 'نموذج إخلاء طرف', date: 'last' }, custody: { ar: 'نموذج استلام عهدة' }, evaluation: { ar: 'نموذج تقييم فترة التجربة' } };
+const FORMS = { onboarding: { ar: 'نموذج مباشرة عمل' }, experience: { ar: 'شهادة خبرة' }, extension: { ar: 'نموذج تمديد عقد', date: 'end' }, termination: { ar: 'نموذج إنهاء خدمة', date: 'last' }, clearance: { ar: 'نموذج إخلاء طرف', date: 'last' }, custody: { ar: 'نموذج استلام عهدة' }, evaluation: { ar: 'نموذج تقييم فترة التجربة' }, contract_end: { ar: 'إشعار انتهاء عقد' }, salary_cert: { ar: 'شهادة تعريف بالراتب' } };
+/** عرض ردّ الذكاء الاصطناعي: نص آمن + **غامق** + قوائم + جداول Markdown بسيطة */
+const mdLite = (t) => {
+  const inl = (x) => esc(x).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>').replace(/`([^`]+)`/g, '<code>$1</code>');
+  const lines = String(t || '').split('\n'), out = []; let tbl = [];
+  const flush = () => { if (!tbl.length) return; const rows = tbl.filter((r) => !/^\s*\|?[\s:|-]+\|?\s*$/.test(r)).map((r) => r.replace(/^\s*\||\|\s*$/g, '').split('|').map((c) => c.trim())); out.push('<table class="ai-tbl" style="border-collapse:collapse;font-size:12px;margin:6px 0">' + rows.map((r, i) => '<tr>' + r.map((c) => (i ? '<td' : '<th') + ' style="border:1px solid #cbd5e1;padding:3px 6px">' + inl(c) + (i ? '</td>' : '</th>')).join('') + '</tr>').join('') + '</table>'); tbl = []; };
+  lines.forEach((ln) => { if (/^\s*\|.*\|\s*$/.test(ln)) { tbl.push(ln); return; } flush(); if (/^\s*#{1,4}\s+/.test(ln)) out.push('<b>' + inl(ln.replace(/^\s*#{1,4}\s+/, '')) + '</b><br>'); else if (/^\s*[-*•]\s+/.test(ln)) out.push('• ' + inl(ln.replace(/^\s*[-*•]\s+/, '')) + '<br>'); else out.push(inl(ln) + '<br>'); });
+  flush(); return out.join('');
+};
 const num = (v) => Number(v || 0).toLocaleString('en-US', { maximumFractionDigits: 2 });
 const empLabel = (e) => '<b>' + esc(e.nameAr) + '</b>' + (e.empNo ? ' <span class="ai-mini">(رقم ' + esc(e.empNo) + ')</span>' : '') + (isTerm(e) ? ' <span class="ai-mini">— منتهي الخدمة</span>' : '');
 
@@ -20,7 +31,7 @@ export default function AiAssistant() {
   const { employees, leaves, reload } = useApp(); const waiting = useRef(null); const nav = useNavigate();
   const [open, setOpen] = useState(false), [msgs, setMsgs] = useState([]), [text, setText] = useState('');
   const emps = employees.filter((e) => e && e.nameAr);
-  const logRef = useRef(null); const id = useRef(0);
+  const logRef = useRef(null); const id = useRef(0); const aiHist = useRef([]);
   useEffect(() => { if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight; }, [msgs]);
   const add = (m) => { const k = ++id.current; setMsgs((a) => [...a, { ...m, k }]); return k; };
   const upd = (k, patch) => setMsgs((a) => a.map((m) => (m.k === k ? { ...m, ...patch } : m)));
@@ -91,16 +102,60 @@ export default function AiAssistant() {
     await rpc('ariba_hr_send_message', { p_employee_id: String(e.id), p_title: title, p_body: body });
     return '✓ اتبعت الرسالة لـ ' + empLabel(e) + ' كإشعار داخل تطبيقه' + (e.email ? ' (وبالإيميل تلقائياً لو خدمة الإيميل مفعّلة)' : '') + '.';
   }
+  // أي سؤال/طلب مش من أوامر البرنامج: يروح للذكاء الاصطناعي (أسئلة عامة وبحث ويب — بدون إرسال بيانات موظفين)
+  function askAI(t) {
+    const k = add({ type: 'html', html: '<span class="ai-mini">🧠 بفكّر…</span>' });
+    askAgent(t, aiHist.current, { nav: (pg) => nav('/' + pg) })
+      .then((r) => { aiHist.current = r.history; upd(k, { html: mdLite(r.text) }); })
+      .catch((err) => upd(k, { html: '⚠️ ' + esc((err && err.message) || err) + '<div class="ai-mini" style="line-height:1.9;margin-top:6px">أوامر البرنامج المباشرة شغالة زي ما هي: رصيد إجازة أحمد • ابعت رسالة لسارة: … • كم عدد الموظفين • افتح المسير</div>' }));
+  }
+  const looksGeneral = (t) => /[?؟]/.test(t) || /^\s*(ما|ماذا|كيف|لماذا|ليه|ازاي|إزاي|هل|متى|امتى|اشرح|اكتب|ترجم|لخص|قارن|صيغ|what|how|why|who|when|can|explain|write|translate)\b/i.test(t) || t.trim().split(/\s+/).length > 12;
+  const annResult = (r) => (r.sent ? '✓ وصل ' + r.sent + (r.expected ? ' من ' + r.expected : '') + ' موظف في تطبيقهم' + (r.failed && r.failed.length ? '<div class="ai-mini">⚠ ما وصلش: ' + r.failed.map(esc).join('، ') + '</div>' : '') : '⚠ ما وصلش لأي موظف' + (r.failed && r.failed.length ? ' (' + r.failed.map(esc).join('، ') + ')' : ''));
+  // أوامر الإدارة: تعديل راتب/بدلات/تأمينات/بيانات، رصيد إجازة، إعلان وتهنئة — كلها بتأكيد قبل التنفيذ
+  function runAdmin(a, t, forced) {
+    if (a.type === 'ann' || a.type === 'greet') {
+      let rec, who;
+      if (a.all) { rec = { audience: 'all', ids: [] }; who = 'كل الموظفين'; }
+      else {
+        const l = forced ? [forced] : findEmployees(headOf(t), emps);
+        if (!l.length) { add({ type: 'html', html: a.type === 'ann' ? '📢 الإعلان هيتبعت لمين؟ اكتب «لكل الموظفين» أو اسم الموظف.' : '🎉 هنهنّي مين؟ اكتب اسم الموظف أو «للجميع».' }); return; }
+        if (l.length > 1) { add({ type: 'pick', list: l.slice(0, 8), t }); return; }
+        rec = { audience: 'employees', ids: [String(l[0].id)] }; who = empLabel(l[0]);
+      }
+      if (a.type === 'ann' && !a.body) { add({ type: 'html', html: '📢 اكتب نص الإعلان بعد النقطتين، مثال: ابعت إعلان لكل الموظفين: الدوام غداً من 9 صباحاً.' }); return; }
+      card((a.type === 'ann' ? '📢 إعلان' : '🎉 تهنئة (' + occLabel(a.occasion) + ')') + ' إلى ' + who + (a.body ? ':<div style="margin:6px 0;padding:6px 8px;background:rgba(0,0,0,.05);border-radius:6px">' + esc(a.body) + '</div>' : '<div class="ai-mini">بنص القالب الجاهز للمناسبة.</div>'), async () => annResult(await sendAnnouncement(a, rec, employees)));
+      return;
+    }
+    const l = forced ? [forced] : findEmployees(t, emps);
+    if (!l.length) { add({ type: 'html', html: '❓ مش لاقي موظف بالاسم ده.' }); return; }
+    if (l.length > 1) { const act = l.filter((x) => !isTerm(x)); if (act.length === 1) l.splice(0, l.length, act[0]); else { add({ type: 'pick', list: l.slice(0, 8), t }); return; } }
+    const e = l[0];
+    if (a.type === 'bal') {
+      const p = planBalance(e, a); if (p.err) { add({ type: 'html', html: '⚠ ' + esc(p.err) }); return; }
+      card('🏖️ تعديل رصيد إجازة ' + empLabel(e) + '<br>الرصيد الحالي <b>' + num(p.cur) + '</b> ← <b>' + num(p.nv) + ' يوم</b><div class="ai-mini">بنفس آلية «تعديل الأرصدة» وبيتسجل في سجل التراجع.</div>', async () => { await applyBalance(e, p.nv); try { await reload({ silent: true }); } catch { /* */ } return '✓ اتعدّل رصيد ' + empLabel(e) + ' إلى <b>' + num(p.nv) + ' يوم</b>'; });
+      return;
+    }
+    const p = planField(e, a, employees); if (p.err) { add({ type: 'html', html: '⚠ ' + esc(p.err) }); return; }
+    card('✏️ تعديل <b>' + esc(a.label) + '</b> لـ ' + empLabel(e) + '<br>' + esc(p.before) + ' ← <b>' + esc(p.after) + '</b>' + (p.salaryRelated ? '<div class="ai-mini" style="line-height:1.9">الإجمالي: ' + num(p.gross0) + ' ← ' + num(p.gross1) + '<br>الصافي بعد التأمينات: ' + num(p.net0) + ' ← ' + num(p.net1) + '</div>' : ''), async () => { await applyField(p); try { await reload({ silent: true }); } catch { /* */ } return '✓ اتعدّل ' + esc(a.label) + ' لـ ' + empLabel(e) + ' ← <b>' + esc(p.after) + '</b>'; });
+  }
   function handle(t, forced) {
     if (waiting.current && !forced) { const w = waiting.current; waiting.current = null; const k = card('✉️ رسالة لـ ' + empLabel(w) + ':<div style="margin:6px 0;padding:6px 8px;background:rgba(0,0,0,.05);border-radius:6px">' + esc(t) + '</div>', () => doMessage(w, t.length > 60 ? t.slice(0, 57) + '…' : t, t)); void k; return; }
+    const adm = parseAdmin(t); if (adm) { runAdmin(adm, t, forced); return; }
     const intent = understand(t);
     if (intent.kind === 'nav') { const pg = PAGE_WORDS.find((x) => x[1] === intent.page); nav('/' + intent.page); add({ type: 'html', html: '📂 فتحتلك الصفحة.' }); void pg; return; }
     if (intent.kind === 'stat') { add({ type: 'html', html: doStat(intent.q) }); return; }
-    if (intent.kind === 'unknown') { add({ type: 'html', html: 'مافهمتش الطلب ده 🤔 جرّب مثلاً:<div class="ai-mini" style="line-height:1.9">• ابعت رسالة لأحمد: الاجتماع الساعة 10<br>• رصيد إجازة فلان / راتب فلان<br>• سجل غياب فلان امبارح / إجازة مرضية لفلان 3 أيام<br>• كشف راتب فلان / مخالصة فلان / شهادة خبرة فلان<br>• كم عدد الموظفين؟ / مين في إجازة النهارده؟<br>• الإقامات اللي بتنتهي / إجمالي الرواتب / توزيع الأقسام<br>• افتح الإجازات / افتح التقارير</div>' }); return; }
+    if (intent.kind === 'unknown') {
+      // سؤال عن بيانات موظف (أي حقل في ملفه): يتجاوب محلياً. غير كده: ذكاء اصطناعي للأسئلة العامة
+      if (forced) { add({ type: 'html', html: answerEmployee(t, forced, emps) }); return; }
+      const found = findEmployees(t, emps);
+      if (found.length === 1) { add({ type: 'html', html: answerEmployee(t, found[0], emps) }); return; }
+      if (found.length > 1) { add({ type: 'pick', list: found.slice(0, 8), t }); return; }
+      askAI(t); return;
+    }
     if (intent.kind === 'pwlist') { const k = add({ type: 'html', html: '⏳ …' }); doPwList().then((h) => upd(k, { html: h })); return; }
     let list = forced ? [forced] : findEmployees(t, emps);
     if (!forced && list.length > 1 && /att|leave|payslip/.test(intent.kind)) { const act = list.filter((x) => !isTerm(x)); if (act.length) list = act; }
-    if (!list.length) { add({ type: 'html', html: '❓ مش لاقي موظف بالاسم ده.' }); return; }
+    if (!list.length) { if (!forced && looksGeneral(t)) { askAI(t); return; } add({ type: 'html', html: '❓ مش لاقي موظف بالاسم ده.' }); return; }
     if (list.length > 1) { add({ type: 'pick', list: list.slice(0, 8), t }); return; }
     if (intent.kind === 'msg') {
       const e0 = list[0], body = msgBody(t, e0);
@@ -116,8 +171,8 @@ export default function AiAssistant() {
       card('🏖️ طلب إجازة ' + esc((LVL[intent.type] || {}).ar || '') + ' لـ ' + empLabel(e) + '<br>📅 من ' + showDate(from) + ' إلى ' + showDate(to), () => doLeave(e, intent.type, from, to)); return;
     }
     if (intent.kind === 'form') {
-      const f = FORMS[intent.form]; aiBridge.pending = { kind: 'form', form: intent.form, empId: e.id, date: dates[0] || '', print: intent.form !== 'custody' }; nav('/forms');
-      add({ type: 'html', html: intent.form === 'custody' ? '📝 فتحتلك ' + f.ar + ' لـ ' + empLabel(e) + ' — ضيف بنود العهدة واضغط طباعة.' : '🖨️ اتفتح ' + f.ar + ' لـ ' + empLabel(e) + ' للطباعة.' }); return;
+      const f = FORMS[intent.form]; aiBridge.pending = { kind: 'form', form: intent.form, empId: e.id, date: dates[0] || '', print: intent.form !== 'custody' && intent.form !== 'salary_cert' }; nav('/forms');
+      add({ type: 'html', html: intent.form === 'custody' ? '📝 فتحتلك ' + f.ar + ' لـ ' + empLabel(e) + ' — ضيف بنود العهدة واضغط طباعة.' : (intent.form === 'salary_cert' ? '📄 فتحتلك صفحة النماذج واخترت ' + empLabel(e) + ' — كمّل بيانات ' + f.ar + ' واضغط طباعة أو إرسال.' : '🖨️ اتفتح ' + f.ar + ' لـ ' + empLabel(e) + ' للطباعة.') }); return;
     }
     if (intent.kind === 'settlement') {
       let reason = ''; const nt = N(t); SETTLE_REASONS.forEach((r) => { if (r[0].test(nt)) reason = r[1]; });

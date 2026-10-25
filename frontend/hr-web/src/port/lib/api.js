@@ -23,6 +23,16 @@ const enc = encodeURIComponent;
 const sheet = (a) => 'pay_' + a.p_year + '_' + String(a.p_month).padStart(2, '0');
 
 const MAP = {
+  // announcements and greetings (22/10 update, sql/21–24)
+  ariba_ann_send: (a) => post('/announcements/send', { kind: a.p_kind, occasion: a.p_occasion, title: a.p_title, body: a.p_body, audience: a.p_audience, employer: a.p_employer, ids: a.p_ids, pinned: a.p_pinned, expires: a.p_expires }),
+  ariba_ann_hr_list: () => get('/announcements'),
+  ariba_ann_delete: (a) => del('/announcements/' + enc(a.p_id)),
+  ariba_ann_missing: (a) => post('/announcements/missing', { ids: a.p_ids }),
+  ariba_my_announcements: () => get('/me/announcements'),
+  ariba_occ_list: () => get('/occasions'),
+  ariba_occ_save: (a) => post('/occasions', { employee_id: a.p_employee_id, occasion: a.p_occasion, date: a.p_date, yearly: a.p_yearly, note: a.p_note }),
+  ariba_occ_delete: (a) => del('/occasions/' + enc(a.p_id)),
+  ariba_occ_run_auto: () => post('/occasions/run-auto'),
   // assets
   ariba_assets_list: () => get('/assets'),
   ariba_assets_upsert: (a) => post('/assets', { asset: a.p_asset }),

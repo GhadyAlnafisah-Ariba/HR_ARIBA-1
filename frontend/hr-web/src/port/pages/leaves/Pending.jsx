@@ -1,3 +1,4 @@
+import { shortName } from '../../lib/names.js';
 import { useCallback, useEffect, useState } from 'react';
 import { useApp, usePerm } from '../../store/AppStore.jsx';
 import { useLang } from '../../lib/i18n.js';
@@ -27,7 +28,7 @@ export default function Pending({ onCount }) {
   const hrPending = leaves.filter((l) => l.hr && l.status === 'pending' && (!l.to || l.to >= today));
   useEffect(() => { if (onCount && queue) onCount(queue.length + hrPending.length); }, [queue, hrPending.length]); // eslint-disable-line
 
-  const name = (id) => { const e = employees.find((x) => String(x.id) === String(id)); return e ? String(e.nameAr || '').split(' ').slice(0, 3).join(' ') : '—'; };
+  const name = (id) => { const e = employees.find((x) => String(x.id) === String(id)); return e ? shortName(String(e.nameAr || '')) : '—'; };
   async function act(fn, ok, key) {
     setBusy(key);
     try { await fn(); toast(ok); await Promise.all([load(), reload({ silent: true })]); } catch (e) { toast(e.message || 'تعذر تنفيذ الإجراء', 'ter'); } finally { setBusy(''); }

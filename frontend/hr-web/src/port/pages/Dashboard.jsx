@@ -1,8 +1,9 @@
+import { shortName } from '../lib/names.js';
 import { useEffect, useMemo, useState } from 'react';
 import { useApp } from '../store/AppStore.jsx';
 import ChartCanvas from '../components/ChartCanvas.jsx';
 import { collectAlerts, dmy, isSaudiEmp } from '../lib/util.js';
-import { noEos } from '../engines/empkind.js';
+import { isSpecial } from '../engines/empkind.js';
 import { rpc } from '../lib/api.js';
 import { useLang } from '../lib/i18n.js';
 import { FemaleIcon, MaleIcon } from '@/components/hr/gender-icons';
@@ -47,7 +48,7 @@ export default function Dashboard() {
 
   const localPending = leaves.filter((l) => l.status === 'pending').length;
   const pending = localPending + queue.length;
-  const alerts = useMemo(() => collectAlerts(a, h, noEos), [a, h]);
+  const alerts = useMemo(() => collectAlerts(a, h, isSpecial), [a, h]);
   const fmt = (n) => Math.round(n).toLocaleString('en-US') + ' ر.س';
   const stageTxt = (s) => (s === 'manager' ? 'بانتظار المدير المباشر' : s === 'hr' ? 'بانتظار الموارد البشرية' : s === 'ceo' ? 'بانتظار الرئيس التنفيذي' : 'قيد المعالجة');
 
@@ -104,7 +105,7 @@ export default function Dashboard() {
         <div className="card"><div className="ch"><div className="ct"><i className="ti ti-alert-triangle" style={{ color: 'var(--rd)' }} /> <span>تنبيهات عاجلة</span></div><span className="b br" id="AC">{alerts.length}</span></div>
           <div id="AL" style={{ maxHeight: 200, overflowY: 'auto' }}>
             {alerts.length ? alerts.slice(0, 40).map((al, i) => { const c = al.n < 0 ? 'var(--rd)' : al.n <= 14 ? 'var(--rd)' : al.n <= 30 ? 'var(--am)' : '#f59e0b';
-              return <div key={i} style={{ padding: '8px 10px', borderInlineStart: '3px solid ' + c, marginBottom: 4, background: c + '14', borderRadius: 4, fontSize: 12, color: c }}>⚠ <b>{String((h ? (al.e.nameEn || al.e.nameAr) : (al.e.nameAr || al.e.nameEn)) || al.e.id || '').split(' ').slice(0, 3).join(' ')}</b> — {al.label}: {dmy(al.d)} <span style={{ opacity: .9 }}>({al.n < 0 ? (h ? 'expired ' + (-al.n) + ' days ago' : 'منتهي من ' + (-al.n) + ' يوم') : al.n === 0 ? (h ? 'today' : 'النهارده') : (h ? al.n + ' days left' : 'باقي ' + al.n + ' يوم')})</span></div>; })
+              return <div key={i} style={{ padding: '8px 10px', borderInlineStart: '3px solid ' + c, marginBottom: 4, background: c + '14', borderRadius: 4, fontSize: 12, color: c }}>⚠ <b>{shortName(String((h ? (al.e.nameEn || al.e.nameAr) : (al.e.nameAr || al.e.nameEn)) || al.e.id || ''))}</b> — {al.label}: {dmy(al.d)} <span style={{ opacity: .9 }}>({al.n < 0 ? (h ? 'expired ' + (-al.n) + ' days ago' : 'منتهي من ' + (-al.n) + ' يوم') : al.n === 0 ? (h ? 'today' : 'النهارده') : (h ? al.n + ' days left' : 'باقي ' + al.n + ' يوم')})</span></div>; })
               : <div style={{ padding: 20, textAlign: 'center', color: 'var(--mu)', fontSize: 13 }}>{h ? 'No urgent alerts' : 'لا توجد تنبيهات عاجلة'}</div>}
           </div></div>
         <div className="card"><div className="ch"><div className="ct"><i className="ti ti-chart-pie-2" /> <span>الأقسام</span></div></div><div style={{ height: 180 }}><ChartCanvas id="cDept" type="doughnut" labels={Object.keys(m.deptMap)} data={Object.values(m.deptMap)} colors={Object.keys(m.deptMap).map((x, i) => DEPT_COLORS[i % DEPT_COLORS.length])} /></div></div>

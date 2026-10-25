@@ -6,13 +6,14 @@ import { toast } from '../../components/Toast.jsx';
 import PromptModal from '../../components/PromptModal.jsx';
 import { rt } from '../../engines/runtime.js';
 import { PAYX as X } from '../../engines/payx.js';
-import { ctx as mctx, buildRows, recalc, updateField, baseRow, enrich, autoWork, sums, rowSig, PKEYS, num, iso, defaultInsDays } from '../../engines/payrollRows.js';
+import { ctx as mctx, buildRows, recalc, updateField, baseRow, enrich, autoWork, sums, sameCur, rowSig, PKEYS, num, iso, defaultInsDays } from '../../engines/payrollRows.js';
 import { payrollDraft, payrollStatus, payrollSync, payrollPrepare, payrollReopen } from '../../lib/payroll.js';
 import { buildCols, SUMCOL, money } from './cols.jsx';
 import { payrollXlsx, payrollPrintHtml, MONTHS_AR } from './output.js';
 import { printHtml } from '../../lib/print.js';
 import { download } from '../../lib/util.js';
 import PayArchive from './Archive.jsx';
+import PrintColsDlg from './PrintColsDlg.jsx';
 import { logoOf, signerOf } from '../../lib/branding.js';
 
 const TDS = { padding: '5px 7px', borderBottom: '1px solid rgba(36,48,68,.25)', textAlign: 'right', whiteSpace: 'nowrap', fontSize: 11, borderLeft: '1px solid rgba(36,48,68,.15)' };
@@ -159,7 +160,11 @@ export default function Payroll() {
   function exportXlsx() { if (!list.length) return toast('لا توجد بيانات', 'ter'); const { blob, name } = payrollXlsx(list, cols, SUMCOL, y, mo); download(name, blob); }
   function print() {
     if (!list.length) return toast('لا توجد بيانات للطباعة', 'ter');
-    const body = payrollPrintHtml(list, { y, m: mo, logo: logoOf(settings), signer: signerOf(settings, employees), companyTitle: ((settings.names && settings.names.coAr) ? 'كشف رواتب ومكافآت موظفي ' + settings.names.coAr : undefined) });
+    setDlg({ kind: 'printcols' });
+  }
+  function doPrint(colKeys) {
+    setDlg(null);
+    const body = payrollPrintHtml(list, { y, m: mo, logo: logoOf(settings), signer: signerOf(settings, employees), cols: colKeys, companyTitle: ((settings.names && settings.names.coAr) ? 'كشف رواتب ومكافآت موظفي ' + settings.names.coAr : undefined) });
     printHtml('مسير الرواتب ' + MONTHS_AR[mo] + ' ' + y, body);
   }
 
@@ -173,7 +178,7 @@ export default function Payroll() {
 
   const totalRow = (label, rs, bg, key) => {
     const s = sums(rs); let first = true;
-    return <tr key={key}>{cols.map((c, i) => { if (first) { first = false; return <td key={i} colSpan={3} style={{ ...TDS, background: bg, fontWeight: 800, position: 'sticky', right: 0 }}>{label} ({rs.length})</td>; } if (i < 3) return null; const k = SUMCOL[c.t]; return <td key={i} style={{ ...TDS, background: bg, fontWeight: 800 }}>{k ? money(s[k]) : ''}</td>; })}</tr>;
+    return <tr key={key}>{cols.map((c, i) => { if (first) { first = false; return <td key={i} colSpan={3} style={{ ...TDS, background: bg, fontWeight: 800, position: 'sticky', right: 0 }}>{label} ({rs.length})</td>; } if (i < 3) return null; const k = SUMCOL[c.t]; return <td key={i} style={{ ...TDS, background: bg, fontWeight: 800 }}>{k ? ((k === 'net' && !sameCur(rs)) ? '—' : money(s[k])) : ''}</td>; })}</tr>;
   };
   const groups = []; let curG = null; cols.forEach((c) => { if (c.g) { curG = { t: c.g, n: 0 }; groups.push(curG); } curG.n += 1; });
   const thS = { background: 'var(--c2)', padding: '6px 7px', textAlign: 'right', fontSize: 10, fontWeight: 700, borderBottom: '2px solid var(--bl)', whiteSpace: 'nowrap', position: 'sticky', top: 0, zIndex: 2, borderLeft: '1px solid rgba(36,48,68,.3)' };
@@ -251,6 +256,7 @@ export default function Payroll() {
       </div>
 
       <PayArchive />
+      <PrintColsDlg open={!!(dlg && dlg.kind === 'printcols')} rows={list} onClose={() => setDlg(null)} onPrint={doPrint} />
       <PromptModal open={dlg && dlg.kind === 'approve'} noInput title="اعتماد مسير الرواتب" message="اعتماد مسير الرواتب؟ لن يمكن التعديل بعد الاعتماد (فتحه من المالية فقط وبسبب مسجّل)." confirmText="اعتماد" onClose={() => setDlg(null)} onConfirm={approve} />
       <PromptModal open={dlg && dlg.kind === 'rebuild'} noInput danger title="إعادة بناء المسير" message="إعادة بناء المسير من بيانات الموظفين؟ ستُفقد التعديلات اليدوية غير المعتمدة." confirmText="إعادة بناء" onClose={() => setDlg(null)} onConfirm={rebuild} />
       <PromptModal open={dlg && dlg.kind === 'prepare'} title="تجهيز المسير للمالية" label="ملاحظة للمالية (اختياري)" confirmText="إرسال للمالية" onClose={() => setDlg(null)} onConfirm={prepare} />

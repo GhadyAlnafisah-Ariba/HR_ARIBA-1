@@ -77,6 +77,8 @@ PORT_TABLE_NAMES = frozenset(
         "ariba_mail_accounts",
         "ariba_mail_log",
         "ariba_tasks",
+        "ariba_announcements",
+        "ariba_emp_occasions",
         "ariba_webauthn_credentials",
         "ariba_push_tokens",
     }

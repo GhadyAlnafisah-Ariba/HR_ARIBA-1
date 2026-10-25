@@ -1,3 +1,4 @@
+import { shortName } from './names.js';
 // أدوات مشتركة لصفحات المالية (حاسبات، WPS، المخصصات…)
 import { esc, printHtml, wrapLetterhead } from './print.js';
 import { download } from './util.js';
@@ -14,7 +15,7 @@ export const iso = (d) => d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p
 export const monthCtx = (y, mo) => { const days = new Date(y, mo, 0).getDate(); return { y, m: mo, days, start: new Date(y, mo - 1, 1), end: new Date(y, mo - 1, days) }; };
 export const isTerm = (e) => !!(e && (e.isTerminated || e.term));
 export const lastDayOf = (e) => pd(e.terminationDate || e.lastWorkingDay || e.lastDay);
-export const shortNm = (e, en) => String((en ? (e.nameEn || e.nameAr) : (e.nameAr || e.nameEn)) || '').split(' ').slice(0, 3).join(' ');
+export const shortNm = (e, en) => shortName(String((en ? (e.nameEn || e.nameAr) : (e.nameAr || e.nameEn)) || ''));
 export const empNoSort = (a, b) => { const x = Number(String(a.empNo || a.id).replace(/\D/g, '')), y = Number(String(b.empNo || b.id).replace(/\D/g, '')); return (Number.isFinite(x) ? x : 1e9) - (Number.isFinite(y) ? y : 1e9); };
 /** الموظفون الحاليون النشطون غير بالساعة */
 export const liveEmps = (emps) => (emps || []).filter((e) => e && !e.isHourly && !isTerm(e) && e.active !== false);
@@ -28,6 +29,10 @@ export function saveCsv(name, head, rows) {
 export function printOfficial(settings, title, html, opts) {
   printHtml(title, wrapLetterhead(settings && settings.letterhead, html), opts);
 }
+/** نفس الورق الرسمي كنص HTML (للمرفقات بالإيميل) */
+export const officialHtml = (settings, html) => wrapLetterhead(settings && settings.letterhead, html);
+/** المستند المرسل لتطبيق الموظف: نفس الورق الرسمي للعربي والإنجليزي (كل جزء على حدة قبل/بعد <!--ARIBA_EN-->) */
+export const officialDocs = (settings, html) => String(html).split('<!--ARIBA_EN-->').map((p) => officialHtml(settings, p)).join('<!--ARIBA_EN-->');
 export { esc };
 
 /** نفس fD/fN في البرنامج الأصلي */

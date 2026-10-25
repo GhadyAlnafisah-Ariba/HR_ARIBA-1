@@ -27,16 +27,20 @@ export function printHtml(title, bodyHtml, { dir = 'rtl', lang = 'ar' } = {}) {
 const okImg = (s) => /^data:image\/(png|jpe?g|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(String(s || ''));
 const mmv = (v, d) => { const n = Number(v); return isFinite(n) && n >= 0 && n <= 120 ? n : d; };
 import { ARIBA_LH } from './arLetterhead.js';
+// النماذج الرسمية (class="doc"): نوزّع المحتوى رأسياً بين الترويسة والتذييل بدل ما يلزق في الثلث الأعلى من الصفحة
+const isDoc = (h) => /class="doc[\s"]/.test(String(h || ''));
+const CEN = '.lh-t.lh-c{height:296mm}.lh-t.lh-c>tbody>tr>td{vertical-align:middle}';
 export function wrapLetterhead(cfg, html) {
   if (!cfg || (cfg.mode !== 'page' && cfg.mode !== 'hf')) return html;
+  const cc = isDoc(html), tc = cc ? ' lh-c' : '', cs = cc ? CEN : '';
   if (cfg.mode === 'page') {
     const page = okImg(cfg.page) ? cfg.page : '', T = mmv(cfg.top, 42), B = mmv(cfg.bottom, 30);
-    return '<style>@page{size:A4;margin:0}html,body{margin:0!important}.lh-t{width:100%;border-collapse:collapse;border:0}.lh-t td{padding:0;border:0}.lh-t thead{display:table-header-group}.lh-t tfoot{display:table-footer-group}'
+    return '<style>' + cs + '@page{size:A4;margin:0}html,body{margin:0!important}.lh-t{width:100%;border-collapse:collapse;border:0}.lh-t td{padding:0;border:0}.lh-t thead{display:table-header-group}.lh-t tfoot{display:table-footer-group}'
       + (page ? '.lh-bg{position:fixed;left:0;top:0;width:210mm;height:297mm;z-index:-1;background:url("' + page + '") no-repeat 0 0/100% 100%}' : '') + '</style>'
-      + (page ? '<div class="lh-bg"></div>' : '') + '<table class="lh-t"><thead><tr><td><div style="height:' + T + 'mm"></div></td></tr></thead><tbody><tr><td>' + html + '</td></tr></tbody><tfoot><tr><td><div style="height:' + B + 'mm"></div></td></tr></tfoot></table>';
+      + (page ? '<div class="lh-bg"></div>' : '') + '<table class="lh-t' + tc + '"><thead><tr><td><div style="height:' + T + 'mm"></div></td></tr></thead><tbody><tr><td>' + html + '</td></tr></tbody><tfoot><tr><td><div style="height:' + B + 'mm"></div></td></tr></tfoot></table>';
   }
   const hd = cfg.head || (cfg.preset === 'ariba' ? ARIBA_LH.head : ''), ft = cfg.foot || (cfg.preset === 'ariba' ? ARIBA_LH.foot : '');
   const h = okImg(hd) ? '<img src="' + hd + '" style="width:100%;display:block">' : '', f = okImg(ft) ? '<img src="' + ft + '" style="width:100%;display:block">' : '';
-  return '<style>@page{size:A4;margin:0}html,body{margin:0!important}.lh-t{width:100%;border-collapse:collapse;border:0}.lh-t td{padding:0;border:0}.lh-t thead{display:table-header-group}.lh-t tfoot{display:table-footer-group}</style>'
-    + '<table class="lh-t"><thead><tr><td>' + h + '</td></tr></thead><tbody><tr><td style="padding:0 12mm">' + html + '</td></tr></tbody><tfoot><tr><td>' + f + '</td></tr></tfoot></table>';
+  return '<style>' + cs + '@page{size:A4;margin:0}html,body{margin:0!important}.lh-t{width:100%;border-collapse:collapse;border:0}.lh-t td{padding:0;border:0}.lh-t thead{display:table-header-group}.lh-t tfoot{display:table-footer-group}</style>'
+    + '<table class="lh-t' + tc + '"><thead><tr><td>' + h + '</td></tr></thead><tbody><tr><td style="padding:0 12mm' + (cc ? ' 10mm' : '') + '">' + html + '</td></tr></tbody><tfoot><tr><td>' + f + '</td></tr></tfoot></table>';
 }

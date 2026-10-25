@@ -1,6 +1,8 @@
+import { shortName } from '../../lib/names.js';
 import { useMemo, useState } from 'react';
 import { useApp } from '../../store/AppStore.jsx';
 import { useLang } from '../../lib/i18n.js';
+import { noEos } from '../../engines/empkind.js';
 import { fD, fN, num, r2, money, pd, iso, saveXlsx, esc, printOfficial } from '../../lib/finance.js';
 
 export const LAWS = { m84: ['م.84 — إنهاء من الشركة', 'Art.84 — Employer termination'], m74: ['م.74 — اتفاق الطرفين', 'Art.74 — Mutual'], m85: ['م.85 — استقالة', 'Art.85 — Resignation'], m75: ['م.75 — استقالة قسرية', 'Art.75 — Forced resignation'], m77: ['م.77 — فصل تعسفي', 'Art.77 — Arbitrary dismissal'], m80: ['م.80 — فصل تأديبي', 'Art.80 — Disciplinary'], m74r: ['م.74(4) — تقاعد', 'Art.74(4) — Retirement'], m74d: ['م.74(3) — وفاة/عجز', 'Art.74(3) — Death/disability'] };
@@ -27,17 +29,19 @@ const INP = { background: 'var(--c2)', border: '1px solid var(--bd)', borderRadi
 
 export default function Eos() {
   const en = useLang() === 'en'; const T = (a, b) => (en ? b : a); const { employees, settings } = useApp();
-  const [date, setDate] = useState(''), [law, setLaw] = useState('m84'), [er, setEr] = useState('');
+  const [date, setDate] = useState(''), [law, setLaw] = useState('m84'), [er, setEr] = useState(''), [sel, setSel] = useState('');
   const endD = pd(date) || new Date(new Date().toDateString());
-  const base = useMemo(() => employees.filter((e) => e && !e.isHourly && !e.isTerminated && !e.term && e.excludeFromEOS !== true), [employees]);
+  const base = useMemo(() => employees.filter((e) => e && !e.isHourly && !e.isTerminated && !e.term && e.excludeFromEOS !== true && !noEos(e)), [employees]);
+  const nExempt = useMemo(() => employees.filter((e) => e && !e.isHourly && !e.isTerminated && !e.term && noEos(e)).length, [employees]); /* استشاري/تمهير/تدريب: لا مكافأة */
+  const pickList = useMemo(() => base.filter((e) => !er || e.employer === er).sort((a, b) => String(a.nameAr || a.nameEn || '').localeCompare(String(b.nameAr || b.nameEn || ''), 'ar')), [base, er]);
   const ers = useMemo(() => [...new Set(base.map((e) => e.employer).filter(Boolean))].sort(), [base]);
-  const rows = useMemo(() => base.filter((e) => !er || e.employer === er).map((e) => {
+  const rows = useMemo(() => base.filter((e) => (!er || e.employer === er) && (!sel || String(e.id) === sel)).map((e) => {
     const j = pd(e.contractJoin), yrs = j ? Math.max(0, r2((endD - j) / (365.25 * 86400000))) : num(e.yearsOfService);
     const sal = num(e.salary || e.sal), hou = num(e.housingAllowance || e.hou), d = j ? duration(j, endD) : null;
     return { e, join: e.contractJoin || '', dur: d ? d.fy + T(' سنة ', 'y ') + d.fm + T(' شهر ', 'm ') + d.fd + T(' يوم', 'd') : yrs.toFixed(2), sal, hou, base: sal + hou, eos: eosByLaw(sal, hou, yrs, law) };
-  }), [base, er, law, date]); // eslint-disable-line
+  }), [base, er, sel, law, date]); // eslint-disable-line
   const totB = rows.reduce((a, r) => a + r.base, 0), totE = rows.reduce((a, r) => a + r.eos, 0), lawName = LAWS[law][en ? 1 : 0], LAWN = { m84: 'م.84 إنهاء الشركة', m74: 'م.74 اتفاق', m85: 'م.85 استقالة', m75: 'م.75 قسرية', m77: 'م.77 تعسفي', m80: 'م.80 تأديبي', m74r: 'م.74(4) تقاعد', m74d: 'م.74(3) وفاة' }, lawShort = en ? lawName : (LAWN[law] || lawName);
-  const nm = (e) => String((en ? (e.nameEn || e.nameAr) : (e.nameAr || e.nameEn)) || '').split(' ').slice(0, 3).join(' ');
+  const nm = (e) => shortName(String((en ? (e.nameEn || e.nameAr) : (e.nameAr || e.nameEn)) || ''));
   const head = [T('م', '#'), T('الموظف', 'Employee'), T('جهة العمل', 'Employer'), T('المباشرة', 'Joined'), T('الخدمة', 'Service'), T('الأساسي', 'Basic'), T('السكن', 'Housing'), T('الوعاء', 'Base'), lawShort];
   function xlsx() { saveXlsx('EOS_' + law + '_' + iso(endD) + '.xlsx', [{ name: 'EOS', rows: [[T('مكافأة نهاية الخدمة — ', 'End of service — ') + lawName + ' — ' + iso(endD)], [], head, ...rows.map((r, i) => [i + 1, nm(r.e), r.e.employer || '', r.join, r.dur, r2(r.sal), r2(r.hou), r2(r.base), r2(r.eos)]), [T('الإجمالي', 'Total'), '', '', '', '', '', '', r2(totB), r2(totE)]], widths: [6, 28, 16, 12, 18, 12, 12, 12, 16] }]); }
   function print() {
@@ -56,9 +60,11 @@ export default function Eos() {
           <button onClick={() => setDate('')} style={{ background: 'none', border: 'none', color: 'var(--mu)', cursor: 'pointer', fontSize: 11 }}>{T('اليوم', 'Today')}</button>
         </div>
         <select id="eosLawSel" style={INP} value={law} onChange={(x) => setLaw(x.target.value)}>{Object.entries(LAWS).map(([k, v]) => <option key={k} value={k}>{v[en ? 1 : 0]}</option>)}</select>
-        <select id="eosEmpFilter" style={INP} value={er} onChange={(x) => setEr(x.target.value)}><option value="">{T('كل جهات العمل', 'All employers')}</option>{ers.map((x) => <option key={x}>{x}</option>)}</select>
+        <select id="eosEmpFilter" style={INP} value={er} onChange={(x) => { setEr(x.target.value); setSel(''); }}><option value="">{T('كل جهات العمل', 'All employers')}</option>{ers.map((x) => <option key={x}>{x}</option>)}</select>
+        <select id="eosEmpSel" style={{ ...INP, minWidth: 200 }} value={sel} onChange={(x) => setSel(x.target.value)}><option value="">{T('كل الموظفين', 'All employees')}</option>{pickList.map((e) => <option key={e.id} value={String(e.id)}>{(e.empNo ? e.empNo + ' — ' : '') + (en ? (e.nameEn || e.nameAr) : (e.nameAr || e.nameEn))}</option>)}</select>
         <button className="btn bsm" style={{ background: 'var(--pu)', color: '#fff' }} onClick={xlsx}><i className="ti ti-file-spreadsheet" /> Excel</button>
       </div>
+      {nExempt > 0 && <div style={{ fontSize: 11, color: 'var(--mu)', marginBottom: 8 }}><i className="ti ti-info-circle" /> {T('لا تُحسب مكافأة نهاية خدمة للاستشاريين والتمهير والتدريب (' + nExempt + ' موظف مستبعد).', 'EOS is not calculated for consultants, Tamheer and trainees (' + nExempt + ' excluded).')}</div>}
       <div id="eosKPIs" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: 8, marginBottom: 10 }}>
         <K l={T('القانون', 'Law')} v={lawShort} c="#3b82f6" /><K l={T('إجمالي المكافآت', 'Total EOS')} v={fN(Math.round(totE)) + ' ' + T('ر.س', 'SAR')} c="#10b981" /><K l={T('إجمالي الوعاء', 'Total base')} v={fN(Math.round(totB)) + ' ' + T('ر.س', 'SAR')} c="#06b6d4" /><K l={T('عدد الموظفين', 'Employees')} v={rows.length} c="#8b5cf6" />
       </div>

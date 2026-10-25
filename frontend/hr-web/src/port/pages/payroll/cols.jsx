@@ -1,3 +1,4 @@
+import { shortName } from '../../lib/names.js';
 // أعمدة جدول المسير (نفس ترتيب الإكسيل) — كل عمود: عنوان + دالة عرض (r, locked, api)
 import { PAYX as X } from '../../engines/payx.js';
 import { num } from '../../engines/payrollRows.js';
@@ -30,7 +31,7 @@ export function buildCols(eg) {
   const cols = [
     { g: 'بيانات الموظف', t: 'م', v: (r) => r.idx, sticky: true },
     { t: 'الرقم', v: (r) => r.empNo },
-    { t: 'الاسم', v: (r) => <><b>{String(r.name || '').split(' ').slice(0, 3).join(' ')}</b>{r.reason ? <span style={{ color: '#d97706', fontSize: 9 }}> ●</span> : null}</>, st: { minWidth: 130 }, sticky: true },
+    { t: 'الاسم', v: (r) => <><b>{shortName(String(r.name || ''))}</b>{r.reason ? <span style={{ color: '#d97706', fontSize: 9 }}> ●</span> : null}</>, st: { minWidth: 130 }, sticky: true },
     { t: 'الجنسية', v: (r) => r.nat },
     { t: 'نطاق العمل', v: (r) => <span className="b bb" style={{ fontSize: 10 }}>{r.employer}</span> },
     { t: 'الوظيفة', v: (r) => <span style={{ color: 'var(--mu)' }}>{r.job}</span>, st: { maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis' } },

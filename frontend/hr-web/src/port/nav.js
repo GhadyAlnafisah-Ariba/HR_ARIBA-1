@@ -5,6 +5,7 @@ export const PG_NAV = [
   { sec: 'الموظفون / Employees' },
   { id: 'emps', icon: 'ti-users', ar: 'الموظفون', en: 'Employees', badge: 'emp', bc: 'bb' },
   { id: 'cand', icon: 'ti-user-search', ar: 'المرشحون', en: 'Candidates' },
+  { id: 'ann', icon: 'ti-speakerphone', ar: 'الإعلانات والتهاني', en: 'Announcements', },
   { id: 'goals', icon: 'ti-target', ar: 'المستهدفات', en: 'Targets' },
   { id: 'eval', icon: 'ti-star', ar: 'التقييم', en: 'Evaluation' },
   { sec: 'الحضور / Attendance' },
@@ -46,9 +47,10 @@ export const PG_INFO = {
   taxcalc: { ar: 'حاسبة الضريبة', en: 'Tax calculator', ic: 'ti-receipt-tax' }, wps: { ar: 'ملف تحويل الرواتب', en: 'Salary transfer file', ic: 'ti-building-bank' },
   prov: { ar: 'تقرير المخصصات', en: 'Provisions report', ic: 'ti-pig-money' }, assets: { ar: 'الأصول والعهد', en: 'Assets & custody', ic: 'ti-building-warehouse' },
   team: { ar: 'توفر الفريق والمهام', en: 'Team & tasks', ic: 'ti-users-group' }, audit: { ar: 'سجل التعديلات', en: 'Audit log', ic: 'ti-history' },
+  ann: { ar: 'الإعلانات والتهاني', en: 'Announcements & greetings', ic: 'ti-speakerphone' },
   cand: { ar: 'المرشحون وطلبات التوظيف', en: 'Candidates', ic: 'ti-user-search' },
   goals: { ar: 'المستهدفات', en: 'Targets', ic: 'ti-target' }, eval: { ar: 'التقييم', en: 'Evaluation', ic: 'ti-star' },
   forms: { ar: 'النماذج', en: 'Templates', ic: 'ti-files' },
 };
 // الصفحة -> وحدة الصلاحيات
-export const MODS = { dash: 'staff', cand: 'employees', goals: 'employees', eval: 'employees', emps: 'employees', form: 'employees', att: 'attendance', loc: 'locations', lv: 'leaves', team: 'staff', pay: 'payroll', slip: 'payroll', insc: 'payroll', salcalc: 'payroll', taxcalc: 'payroll', wps: 'payroll', prov: 'payroll', eos: 'settlement', eoscalc: 'settlement', docs: 'documents', forms: 'forms', rpt: 'reports', set: 'settings', audit: 'audit', assets: 'assets' };
+export const MODS = { dash: 'staff', ann: 'employees', cand: 'employees', goals: 'employees', eval: 'employees', emps: 'employees', form: 'employees', att: 'attendance', loc: 'locations', lv: 'leaves', team: 'staff', pay: 'payroll', slip: 'payroll', insc: 'payroll', salcalc: 'payroll', taxcalc: 'payroll', wps: 'payroll', prov: 'payroll', eos: 'settlement', eoscalc: 'settlement', docs: 'documents', forms: 'forms', rpt: 'reports', set: 'settings', audit: 'audit', assets: 'assets' };

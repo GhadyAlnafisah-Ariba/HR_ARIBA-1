@@ -30,13 +30,14 @@ router = APIRouter()
 
 # Their lib/data.js SETTING_KEYS (the ones the formulas read).
 RUNTIME_KEYS = {"insurance": "insurance_rules", "carry": "leave_carry", "accrual": "leave_accrual_method",
-                "country": "country_system", "schedule": "attendance_schedule"}
+                "country": "country_system", "schedule": "attendance_schedule", "rights": "special_rights"}
 # Every key their pages read or write through ariba_hr_get_setting / ariba_hr_set_setting, with the module needed to change it.
 KV_KEYS = {"brand_colors": "settings", "company_logo": "settings", "company_names": "settings", "hr_signer": "settings",
            "insurance_rules": "settings", "leave_carry": "settings", "leave_accrual_method": "settings", "letterhead": "settings",
            "punch_watermark": "settings", "country_system": "settings", "attendance_schedule": "settings", "master_lists": "settings",
            "report_templates": "documents|forms", "salary_cert_seq": "documents|forms", "id_issue_place": "documents|forms",
-           "candidate_auto": "employees", "apply_public_url": "employees"}
+           "candidate_auto": "employees", "apply_public_url": "employees",
+           "special_rights": "settings", "occasions_auto": "employees|settings"}
 
 
 @router.get("/settings/runtime")

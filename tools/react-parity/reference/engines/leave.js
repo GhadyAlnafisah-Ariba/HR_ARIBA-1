@@ -1,6 +1,9 @@
 // محرك أرصدة الإجازات — منقول من الدوال leave* في النظام القديم (نفس المعادلات) لكن بدون DOM أو globals.
 import { rt, perfGet } from './runtime.js';
 import * as C from './country.js';
+import { noLeave } from './empkind.js';
+/** استشاري/تمهير/تدريب: لا استحقاق إجازات نهائيًا (رصيد صفر) */
+export const leaveExempt = (e) => !!e && noLeave(e);
 import { countLeaveWorkdays, countAnnualLeaveDays, isLeaveWorkday, isOfficialHoliday, ymd } from './holidays.js';
 
 export const leaveDateValue = (l, key) => l[key] || l[(key === 'from' ? 'from_date' : key === 'to' ? 'to_date' : key)] || l.date || '';
@@ -10,10 +13,11 @@ const getLvs = () => rt.leaves || [];
 
 export const leaveYearDates = (year) => { const y = Number(year) || new Date().getFullYear(); return { start: new Date(y, 0, 1), end: new Date(y, 11, 31) }; };
 export function leaveEmpStart(e) { const raw = e.contractJoin || e.joinDate || e.startDate; if (!raw) return null; const d = new Date(raw); return isNaN(d) ? null : d; }
-export function leaveAnnual(e) { if (C.isEG()) return C.annualDays(e, new Date()); return Math.max(0, Number(e.leaveDaysContract || e.ldc || 21) || 21); }
+export function leaveAnnual(e) { if (leaveExempt(e)) return 0; if (C.isEG()) return C.annualDays(e, new Date()); return Math.max(0, Number(e.leaveDaysContract || e.ldc || 21) || 21); }
 export function leaveWorkingDaysInYear(year) { const y = Number(year) || new Date().getFullYear(); return perfGet('workdays|' + y, () => countLeaveWorkdays(new Date(y, 0, 1), new Date(y, 11, 31))); }
 
 export function leaveAccruedForPeriod(e, year, toDate) {
+  if (leaveExempt(e)) return 0;
   const y = Number(year), end0 = toDate instanceof Date ? new Date(toDate) : new Date(toDate || leaveYearDates(y).end);
   const key = 'accrued|' + String(e?.id ?? '') + '|' + y + '|' + (isNaN(end0) ? 'bad' : end0.toISOString().slice(0, 10));
   return perfGet(key, () => {
@@ -127,6 +131,7 @@ export function leaveDefaultUsed(e, year, toDate) {
 export function leaveCarryCap() { const c = rt.leaveCarry && typeof rt.leaveCarry === 'object' ? rt.leaveCarry : { enabled: true, days: 10 }; return c.enabled ? Math.max(0, Number(c.days) || 0) : Infinity; }
 export function leaveEosOf(close) { const cap = leaveCarryCap(); return cap === Infinity ? 0 : Math.max(0, (Number(close) || 0) - cap); }
 export function leaveCarryForward(e, year) {
+  if (leaveExempt(e)) return 0;
   const y = Number(year) || new Date().getFullYear(), o = leaveYearOverride(e, y);
   if (o && o.carry !== undefined) return Math.max(0, Number(o.carry) || 0);
   if (y === leaveStartYear(e)) return 0;
@@ -137,6 +142,7 @@ export function leaveCarryForward(e, year) {
 export function leaveUsedFor(e, y, end) { const o = leaveYearOverride(e, y), cy = new Date().getFullYear(); if (o && o.used !== undefined && y < cy && !o.asOf) return Math.max(0, Number(o.used) || 0); return leaveDefaultUsed(e, y, end); }
 export function leaveUsedDelta(e, y, end) { const o = leaveYearOverride(e, y); if (!o || o.used === undefined) return 0; return Math.max(0, leaveUsedFor(e, y, end) - (Number(o.used) || 0)); }
 export function leaveYearLedger(e, year) {
+  if (leaveExempt(e)) return { year: Number(year), opening: 0, entitlement: 0, used: 0, adjustment: 0, close: 0, carry: 0, eos: 0, override: null };
   const y = Number(year), key = 'ledger|' + String(e?.id ?? '') + '|' + y;
   return perfGet(key, () => {
     const dates = leaveYearDates(y), o = leaveYearOverride(e, y), opening = leaveCarryForward(e, y);
@@ -150,6 +156,7 @@ export function leaveYearLedger(e, year) {
   });
 }
 export function leaveCurrentLedger(e) {
+  if (leaveExempt(e)) return 0;
   const y = new Date().getFullYear(), o = leaveYearOverride(e, y), now = new Date();
   if (o && o.current !== undefined) {
     let base = Math.max(0, (Number(o.current) || 0) - leaveUsedDelta(e, y, now));
@@ -160,17 +167,18 @@ export function leaveCurrentLedger(e) {
   return Math.max(0, leaveCarryForward(e, y) + leaveAccruedForPeriod(e, y, now) + leaveManualNet(e, y, now) - leaveDefaultUsed(e, y, now));
 }
 export function leaveYearClosing(e, year) {
+  if (leaveExempt(e)) return 0;
   const y = Number(year), o = leaveYearOverride(e, y), now = new Date();
   if (y < leaveStartYear(e)) return 0;
   if (o && o.yearEnd !== undefined && o.carry !== undefined) return Math.max(0, (Number(o.yearEnd) || 0) - leaveUsedDelta(e, y, leaveYearDates(y).end));
   if (y === now.getFullYear()) return Math.max(0, leaveCarryForward(e, y) + leaveAccruedForPeriod(e, y, leaveYearDates(y).end) + leaveManualNet(e, y) - leaveDefaultUsed(e, y, leaveYearDates(y).end));
   return leaveYearLedger(e, y).close;
 }
-export function leaveYearExcess(e, year) { const o = leaveYearOverride(e, year); if (o && o.eos !== undefined) return Math.max(0, Number(o.eos) || 0); return leaveEosOf(leaveYearClosing(e, year)); }
-export function leaveAccumulatedEos(e, endYear) { const start = leaveStartYear(e), end = Number(endYear) || new Date().getFullYear(); let total = 0; /* مجموع فائض كل سنة (فوق حد الترحيل) من أول سنة خدمة — بدون إضافة الحقل القديم leaveEosExcess لأنه كان يُحسب مرتين */ for (let y = start; y < end; y++) total += leaveYearExcess(e, y); return Math.max(0, total); }
-export function leaveCumulativeAccruedToToday(e) { const start = leaveStartYear(e), now = new Date(), cy = now.getFullYear(); let t = 0; for (let y = start; y <= cy; y++) { const o = leaveYearOverride(e, y); t += o && o.entitlement !== undefined && y < cy ? Math.max(0, Number(o.entitlement) || 0) : leaveAccruedForPeriod(e, y, y === cy ? now : leaveYearDates(y).end); } return t; }
-export function leaveCumulativeUsedToToday(e) { const start = leaveStartYear(e), now = new Date(), cy = now.getFullYear(); let t = 0; for (let y = start; y <= cy; y++) t += leaveUsedFor(e, y, y === cy ? now : leaveYearDates(y).end); return t; }
-export function leaveCumulativeManualToToday(e) { const start = leaveStartYear(e), now = new Date(), cy = now.getFullYear(); let t = 0; for (let y = start; y <= cy; y++) { const o = leaveYearOverride(e, y); t += o && o.adjustment !== undefined ? Number(o.adjustment) || 0 : leaveManualNet(e, y, y === cy ? now : leaveYearDates(y).end); } return t; }
+export function leaveYearExcess(e, year) { if (leaveExempt(e)) return 0; const o = leaveYearOverride(e, year); if (o && o.eos !== undefined) return Math.max(0, Number(o.eos) || 0); return leaveEosOf(leaveYearClosing(e, year)); }
+export function leaveAccumulatedEos(e, endYear) { if (leaveExempt(e)) return 0; const start = leaveStartYear(e), end = Number(endYear) || new Date().getFullYear(); let total = 0; /* مجموع فائض كل سنة (فوق حد الترحيل) من أول سنة خدمة — بدون إضافة الحقل القديم leaveEosExcess لأنه كان يُحسب مرتين */ for (let y = start; y < end; y++) total += leaveYearExcess(e, y); return Math.max(0, total); }
+export function leaveCumulativeAccruedToToday(e) { if (leaveExempt(e)) return 0; const start = leaveStartYear(e), now = new Date(), cy = now.getFullYear(); let t = 0; for (let y = start; y <= cy; y++) { const o = leaveYearOverride(e, y); t += o && o.entitlement !== undefined && y < cy ? Math.max(0, Number(o.entitlement) || 0) : leaveAccruedForPeriod(e, y, y === cy ? now : leaveYearDates(y).end); } return t; }
+export function leaveCumulativeUsedToToday(e) { if (leaveExempt(e)) return 0; const start = leaveStartYear(e), now = new Date(), cy = now.getFullYear(); let t = 0; for (let y = start; y <= cy; y++) t += leaveUsedFor(e, y, y === cy ? now : leaveYearDates(y).end); return t; }
+export function leaveCumulativeManualToToday(e) { if (leaveExempt(e)) return 0; const start = leaveStartYear(e), now = new Date(), cy = now.getFullYear(); let t = 0; for (let y = start; y <= cy; y++) { const o = leaveYearOverride(e, y); t += o && o.adjustment !== undefined ? Number(o.adjustment) || 0 : leaveManualNet(e, y, y === cy ? now : leaveYearDates(y).end); } return t; }
 export const leaveCumulativeBalanceToToday = (e) => Math.max(0, leaveCumulativeAccruedToToday(e) - leaveCumulativeUsedToToday(e) + leaveCumulativeManualToToday(e));
 export const leaveProjectedYearEnd = (e, year) => leaveYearClosing(e, Number(year) || new Date().getFullYear());
 export const leaveCurrentBalance = (e) => Math.max(0, leaveCurrentLedger(e));

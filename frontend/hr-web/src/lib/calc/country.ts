@@ -123,7 +123,7 @@ export function egCompute(x, o, c) {
   if (Rr) { f = (Rr.f === 'tier') ? resignFactor(c.K) : Rr.f; }
   if (!R.eosEnabled) f = 0;
   o.AK = c.hasReason ? o.AJ * f : 0; o.ARB = 0;
-  if (c.hasReason && Rr && Rr.k === 'arb77' && R.arbComp && !(c.trainee || x.noEos || isNaN(c.AD)) && c.K > 0) { o.ARB = num(R.arbMonths) * T * c.K; o.AK += o.ARB; }
+  if (c.hasReason && Rr && Rr.k === 'arb77' && R.arbComp && !((x.noEos !== undefined && x.noEos !== null ? x.noEos : c.trainee) || isNaN(c.AD)) && c.K > 0) { o.ARB = num(R.arbMonths) * T * c.K; o.AK += o.ARB; }
   o.AM = o.V + o.X + o.Y + o.Z + o.AA + o.AB + o.AC + o.AK;
   const isIns = !(c.trainee || x.noIns) && !(st === 'لا يطبق' || st === 'غير خاضع'), lim = limitsFor(c.asOf.getFullYear());
   if (isIns && T > 0) { const w = Math.min(lim[1], Math.max(lim[0], T)), base = w * (Ins / days); o.AQ = base; o.AO = base * R.insEmp / 100; o.AR = base * R.insEr / 100; }

@@ -1,3 +1,4 @@
+import { shortName } from '../../lib/names.js';
 import { useMemo, useState } from 'react';
 import { useApp, usePerm } from '../../store/AppStore.jsx';
 import { useLang } from '../../lib/i18n.js';
@@ -24,7 +25,7 @@ export default function Locations() {
     const phys = locations.filter((l) => l && l.active !== false && l.type !== 'remote').sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'ar'));
     return { by, none, phys };
   }, [employees, locations]);
-  const nm = (e) => String((en ? (e.nameEn || e.nameAr) : (e.nameAr || e.nameEn)) || '').split(' ').slice(0, 3).join(' ');
+  const nm = (e) => shortName(String((en ? (e.nameEn || e.nameAr) : (e.nameAr || e.nameEn)) || ''));
   const set = (k) => (e) => setF((s) => ({ ...s, [k]: e.target.value }));
   async function reload() { try { const l = await fetchLocations(); setLocations(l); } catch { /* ignore */ } }
   async function save() {

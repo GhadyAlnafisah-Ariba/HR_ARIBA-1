@@ -1,3 +1,4 @@
+import { shortName } from '../../lib/names.js';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useApp, usePerm } from '../../store/AppStore.jsx';
 import { useLang } from '../../lib/i18n.js';
@@ -141,7 +142,7 @@ export default function Assets() {
     catch (e) { setSt((s) => ({ ...s, loaded: true, err: String(e.message || e) })); }
   }, []);
   useEffect(() => { load(); }, [load]);
-  const empName = (id) => { const e = employees.find((x) => String(x.id) === String(id) || String(x.empNo) === String(id) || String(x.username || x.u || '').toUpperCase() === String(id).toUpperCase()); return e ? String(e.nameAr || e.nameEn || id).split(' ').slice(0, 3).join(' ') : String(id); };
+  const empName = (id) => { const e = employees.find((x) => String(x.id) === String(id) || String(x.empNo) === String(id) || String(x.username || x.u || '').toUpperCase() === String(id).toUpperCase()); return e ? shortName(String(e.nameAr || e.nameEn || id)) : String(id); };
   const cn = (c) => (CAT[c] || CAT.other)[en ? 1 : 0];
   const asOf = pd(asOfS) || new Date();
   const custIds = useMemo(() => { const m = {}; st.assets.forEach((a) => { if (a.custodian_employee_id) m[a.custodian_employee_id] = a.custodian_name || empName(a.custodian_employee_id); }); return m; }, [st.assets, employees]); // eslint-disable-line

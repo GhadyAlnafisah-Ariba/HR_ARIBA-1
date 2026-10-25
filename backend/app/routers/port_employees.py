@@ -72,6 +72,7 @@ def sync_employee(employee_id: str, body: dict[str, Any], request: Request, acto
 
 
 _EMP_TABLES = [  # (table, column) holding rows of one employee, child tables first
+    ("ariba_emp_occasions", "employee_id"),
     ("ariba_leave_files", "employee_id"), ("ariba_targets", "employee_id"), ("ariba_evaluations", "employee_id"), ("ariba_delegations", "employee_id"),
     ("ariba_doc_signing", "employee_id"), ("attendance", "employee_id"), ("permissions", "employee_id"), ("leave_requests", "employee_id"),
     ("employee_payrolls", "employee_id"), ("ariba_documents", "employee_id"), ("workflow_notifications", "recipient_employee_id"),

@@ -1,5 +1,6 @@
 // ADAPTED: see below. سجل التعديلات — تسجيل من جهة العميل (طابور محلي ثم ariba_audit_add_many) مثل V132 لكن بدون تعديل window.fetch/XHR
 import { rpc } from './api.js';
+import { shortName } from './names.js';
 import { rt } from '../engines/runtime.js';
 
 export const MOD = { employees: ['الموظفون', 'Employees'], attendance: ['الحضور والانصراف', 'Attendance'], payroll: ['مسير الرواتب', 'Payroll'], leaves: ['الإجازات', 'Leaves'], requests: ['الطلبات', 'Requests'], documents: ['المستندات والنماذج', 'Documents & forms'], settings: ['الإعدادات', 'Settings'], locations: ['مواقع البصمة', 'Punch locations'], security: ['الصلاحيات والأمان', 'Permissions & security'], settlement: ['المخالصة', 'Settlement'], insurance: ['التأمينات', 'Insurance'] };
@@ -14,7 +15,7 @@ export async function flush() { /* nothing queued */ }
 export function log() { /* written by the server */ }
 export function startAudit() { /* nothing to start */ }
 
-const empName = (id) => { const e = (rt.employees || []).find((x) => String(x.id) === String(id)); return e ? String(e.nameAr || e.nameEn || id).split(' ').slice(0, 3).join(' ') : String(id == null ? '' : id); };
+const empName = (id) => { const e = (rt.employees || []).find((x) => String(x.id) === String(id)); return e ? shortName(String(e.nameAr || e.nameEn || id)) : String(id == null ? '' : id); };
 const SET_LBL = { insurance_rules: 'تعديل نسب التأمينات الاجتماعية', hr_signer: 'تعديل مدير الموارد البشرية / التوقيع / الختم', company_logo: 'تغيير شعار الشركة', company_names: 'تغيير اسم الشركة', letterhead: 'تعديل الورق الرسمي', country_system: 'تغيير النظام (سعودي/مصري)', leave_carry: 'تعديل ترحيل الإجازات', brand_colors: 'تعديل ألوان الهوية' };
 const RPCW = {
   ariba_hr_record_leave: (a) => ['leaves', 'تسجيل إجازة', { type: 'employee', id: a.p_employee_id, name: empName(a.p_employee_id), summary: 'تسجيل إجازة ' + (a.p_type || a.p_leave_type || '') + ' لـ ' + empName(a.p_employee_id) + ' من ' + (a.p_from || a.p_start_date || '') + ' إلى ' + (a.p_to || a.p_end_date || '') }],
@@ -56,7 +57,7 @@ export function logEmployeeSave(nw) {
 }
 export const PAYF = { workDays: 'أيام العمل', insDays: 'أيام التأمينات', otHours: 'ساعات الإضافي', otAmount: 'الإضافي', leaveManual: 'بدل أجازة (يدوي)', otherAllow: 'بدلات أخرى', loanDeduct: 'سلف / غياب', otherDeduct: 'خصومات أخرى', payMethod: 'طريقة الدفع', notes: 'ملاحظات', reason: 'سبب الإنهاء', lastDay: 'نهاية العقد / آخر يوم' };
 export function logPayEdit(row, field, oldV, newV, month, auto) {
-  if (String(oldV) === String(newV) && !auto) return; const n = String(row.nameAr || row.name || row.id).split(' ').slice(0, 3).join(' ');
+  if (String(oldV) === String(newV) && !auto) return; const n = shortName(String(row.nameAr || row.name || row.id));
   log('payroll', auto ? 'رجوع للقيمة التلقائية في المسير' : 'تعديل يدوي في المسير', { type: 'employee', id: row.id, name: n, summary: n + ': ' + (PAYF[field] || field) + ' من ' + fv(oldV) + ' إلى ' + fv(newV) + ' (مسير ' + month + ')', details: { field, label: PAYF[field] || field, old: oldV === undefined ? null : oldV, new: newV === undefined ? null : newV, month, auto: !!auto } });
 }
 export const auditList = (filters) => rpc('ariba_audit_list', { p_filters: filters });

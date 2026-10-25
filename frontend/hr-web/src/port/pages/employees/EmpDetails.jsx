@@ -4,7 +4,7 @@ import { useApp } from '../../store/AppStore.jsx';
 import { useLang } from '../../lib/i18n.js';
 import { fN, fD } from '../../lib/util.js';
 import { calcIns, calcEOS } from '../../engines/insurance.js';
-import { insExempt } from '../../engines/empkind.js';
+import { insExempt, noEos } from '../../engines/empkind.js';
 import { salaryUnit } from '../../lib/employees.js';
 import { leaveCurrentBalance } from '../../engines/leave.js';
 import { Av, grossDisplay, netSAR } from './EmpList.jsx';
@@ -42,7 +42,7 @@ export default function EmpDetails({ id, onClose }) {
       <Di l={h ? 'Emp Insurance' : 'تأمين موظف'} v={!exempt && c.empAmt > 0 ? '-' + fN(c.empAmt) + ' ر.س' : (h ? 'None' : 'لا يوجد')} />
       <Di l={h ? 'Co Insurance' : 'تأمين شركة'} v={fN(c.erAmt) + ' ر.س'} />
       <Di l={h ? 'Net Salary / SAR' : 'الصافي / ريال'} v={<strong style={{ color: 'var(--cy)' }}>{netSAR(e)}</strong>} />
-      <Di l={h ? 'EOS (calculated)' : 'مكافأة الخدمة'} v={Math.round(calcEOS(e.salary || 0, e.yearsOfService || 0, e.housingAllowance || 0)).toLocaleString('en-US') + ' ر.س'} />
+      <Di l={h ? 'EOS (calculated)' : 'مكافأة الخدمة'} v={noEos(e) ? (h ? 'None (no EOS)' : 'لا يستحق') : Math.round(calcEOS(e.salary || 0, e.yearsOfService || 0, e.housingAllowance || 0)).toLocaleString('en-US') + ' ر.س'} />
     </>,
     <>
       <Di l={h ? 'Leave Balance' : 'رصيد الإجازة'} v={(() => { try { return leaveCurrentBalance(e); } catch { return e.leaveBalance || 0; } })().toFixed(1) + (h ? ' days' : ' يوم')} /><Di l={h ? 'Annual Entitlement' : 'المستحق سنوياً'} v={(e.leaveDaysContract || 21) + (h ? ' days' : ' يوم')} />

@@ -81,7 +81,7 @@ export async function fetchHolidays() {
 }
 export async function fetchLocations() { const r = await rpc('ariba_hr_locations'); return Array.isArray(r) ? r : (r && r.locations) || []; }
 
-export const SETTING_KEYS = { brand: 'brand_colors', logo: 'company_logo', names: 'company_names', signer: 'hr_signer', insurance: 'insurance_rules', carry: 'leave_carry', accrual: 'leave_accrual_method', letterhead: 'letterhead', punch: 'punch_watermark', country: 'country_system', schedule: 'attendance_schedule', lists: 'master_lists' };
+export const SETTING_KEYS = { brand: 'brand_colors', logo: 'company_logo', names: 'company_names', signer: 'hr_signer', insurance: 'insurance_rules', carry: 'leave_carry', accrual: 'leave_accrual_method', rights: 'special_rights', letterhead: 'letterhead', punch: 'punch_watermark', country: 'country_system', schedule: 'attendance_schedule', lists: 'master_lists' };
 export async function fetchSettings() {
   const out = {};
   await Promise.all(Object.entries(SETTING_KEYS).map(async ([k, key]) => { try { out[k] = await getSetting(key); } catch { out[k] = null; } }));
@@ -95,6 +95,7 @@ export function runtimePatchFromSettings(s) {
   const patch = {};
   if (s.carry && typeof s.carry === 'object') patch.leaveCarry = { enabled: s.carry.enabled !== false, days: Number(s.carry.days) || 0 };
   if (s.accrual && typeof s.accrual === 'object' && ['calendar', 'workdays', 'monthly'].includes(s.accrual.method)) patch.leaveAccrual = s.accrual.method;
+  patch.kindRights = s.rights && typeof s.rights === 'object' ? s.rights : null;
   if (s.insurance && Array.isArray(s.insurance.effectiveRules)) patch.insRules = s.insurance;
   patch.schedule = normSchedule(s.schedule);
   if (s.country && typeof s.country === 'object') { patch.country = s.country.mode === 'EG' ? 'EG' : 'SA'; patch.egRules = s.country.rules || null; }

@@ -1,7 +1,8 @@
 """Background jobs that replace their browser timers and Supabase cron (docs/17_PORT_PLAN.md section 2):
 - every hour: move requests whose manager/CEO wait ran out to HR (ariba_hr_run_escalation);
 - every 5 minutes: e-mail the new notifications (ariba-notify-dispatch) and push them to the app;
-- every minute: register new candidates automatically when HR turned it on (their CandAuto).
+- every minute: register new candidates automatically when HR turned it on (their CandAuto);
+- every hour (from 06:00 Riyadh): send today's automatic greetings when HR turned them on (their pg_cron ariba__occ_run).
 Each job takes a Postgres advisory lock, so with several API instances only one runs it. SCHEDULER_ENABLED=0 turns it off
 (the tests and one-off scripts do)."""
 from __future__ import annotations
@@ -39,7 +40,19 @@ def _candidates(db: Session) -> Any:
     return n
 
 
-JOBS: list[tuple[str, int, Callable[[Session], Any]]] = [("escalation", 3600, _escalation), ("notify", 300, _notify), ("candidates", 60, _candidates)]
+def _occasions(db: Session) -> Any:
+    """Automatic greetings (their pg_cron job at 06:00 Riyadh): idempotent through auto_key, so an hourly check is enough."""
+    from app.core.scheduling import now_riyadh
+    from app.routers.port_announcements import run_auto
+    if now_riyadh().hour < 6:
+        return 0
+    n = run_auto(db)
+    db.commit()
+    return n
+
+
+JOBS: list[tuple[str, int, Callable[[Session], Any]]] = [("escalation", 3600, _escalation), ("notify", 300, _notify), ("candidates", 60, _candidates),
+                                                          ("occasions", 3600, _occasions)]
 
 
 def run_job(session_factory: Callable[[], Session], lock_id: int, name: str, fn: Callable[[Session], Any]) -> Any:

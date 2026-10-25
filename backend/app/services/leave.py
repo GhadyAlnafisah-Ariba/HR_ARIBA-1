@@ -27,6 +27,7 @@ from datetime import date, timedelta
 from typing import Any, Callable
 
 from app.services import country as C
+from app.services.gosi import no_leave
 
 INTERRUPT_TYPES = ("sick", "emergency", "death", "marriage", "paternity", "maternity", "hajj", "umrah", "unpaid")
 ACCRUAL_METHODS = ("calendar", "monthly", "workdays")
@@ -109,7 +110,7 @@ class LeaveBook:
 
     def __init__(self, *, holidays: HolidayCalendar, leaves: list[dict] | None = None, adjustments: list[dict] | None = None,
                  today: date, method: str = "calendar", carry: dict | None = None, country: str = "SA", eg_rules: dict | None = None,
-                 data: dict | None = None, approved_annual: dict | None = None):
+                 data: dict | None = None, approved_annual: dict | None = None, kind_rights: dict | None = None):
         self.holidays = holidays
         self.leaves = list(leaves or [])
         if approved_annual:  # older callers: approved annual periods only
@@ -123,6 +124,7 @@ class LeaveBook:
         self.carry_setting = {"enabled": c.get("enabled", True) is not False, "days": _num(c.get("days"))} if carry is not None else dict(DEFAULT_CARRY)
         self.country = country
         self.eg_rules = eg_rules
+        self.kind_rights = kind_rights if isinstance(kind_rights, dict) else None  # Settings › special-type entitlements
         self._memo: dict = {}
         self._by_emp: dict[str, list[dict]] = {}
         for lv in self.leaves:
@@ -164,8 +166,15 @@ class LeaveBook:
         d = self.emp_start(self._e(emp))
         return d.year if d else self.today.year
 
+    def exempt(self, emp) -> bool:
+        """leaveExempt (22/10 engines/leave.js): consultant / Tamheer / trainee have no leave unless Settings grants it."""
+        e = self._e(emp)
+        return bool(e) and no_leave(e, self.kind_rights)
+
     def annual(self, emp, at: date | None = None) -> float:
         e = self._e(emp)
+        if self.exempt(e):
+            return 0.0
         if self.country == "EG":
             return C.annual_days(e, at or self.today, self.eg_rules)
         return max(0.0, _num(e.get("leaveDaysContract") or e.get("ldc") or 21) or 21.0)
@@ -183,6 +192,8 @@ class LeaveBook:
 
     def accrued(self, emp, y: int, to: date | None = None, flag: int | None = None) -> float:
         e = self._e(emp)
+        if self.exempt(e):
+            return 0.0
         end0 = to or date(y, 12, 31)
         f = flag if flag is not None else (self.NOW if to is not None and to == self.today else self.MIDNIGHT)
         key = ("accrued", e.get("id"), y, end0, f)
@@ -355,6 +366,8 @@ class LeaveBook:
         return 0.0 if cap == math.inf else max(0.0, _num(close) - cap)
 
     def carry_forward(self, emp, y: int) -> float:
+        if self.exempt(emp):
+            return 0.0
         o = self.override(emp, y)
         if _has(o, "carry"):
             return max(0.0, _num(o["carry"]))
@@ -370,6 +383,8 @@ class LeaveBook:
         return self._memo_get(("ledger", e.get("id"), y), lambda: self._ledger(e, y))
 
     def _ledger(self, e: dict, y: int) -> dict:
+        if self.exempt(e):
+            return {"year": y, "opening": 0, "entitlement": 0, "used": 0, "adjustment": 0, "close": 0, "carry": 0, "eos": 0, "override": None}
         y_end = date(y, 12, 31)
         o = self.override(e, y)
         opening = self.carry_forward(e, y)
@@ -386,6 +401,8 @@ class LeaveBook:
                 "close": close, "carry": carry, "eos": eos, "override": o}
 
     def year_closing(self, emp, y: int) -> float:
+        if self.exempt(emp):
+            return 0.0
         o = self.override(emp, y)
         if y < self.start_year(emp):
             return 0.0
@@ -397,6 +414,8 @@ class LeaveBook:
         return self.ledger(emp, y)["close"]
 
     def current(self, emp) -> float:
+        if self.exempt(emp):
+            return 0.0
         y, now = self.today.year, self.today
         o = self.override(emp, y)
         if _has(o, "current"):
@@ -418,16 +437,22 @@ class LeaveBook:
         return self.projected_year_end(emp)
 
     def year_excess(self, emp, y: int) -> float:
+        if self.exempt(emp):
+            return 0.0
         o = self.override(emp, y)
         if _has(o, "eos"):
             return max(0.0, _num(o["eos"]))
         return self.eos_of(self.year_closing(emp, y))
 
     def accumulated_eos(self, emp, end_year: int | None = None) -> float:
+        if self.exempt(emp):
+            return 0.0
         start, end = self.start_year(emp), end_year or self.today.year
         return max(0.0, sum(self.year_excess(emp, y) for y in range(start, end)))
 
     def cumulative_accrued(self, emp) -> float:
+        if self.exempt(emp):
+            return 0.0
         cy, t = self.today.year, 0.0
         for y in range(self.start_year(emp), cy + 1):
             o = self.override(emp, y)
@@ -435,10 +460,14 @@ class LeaveBook:
         return t
 
     def cumulative_used(self, emp) -> float:
+        if self.exempt(emp):
+            return 0.0
         cy = self.today.year
         return sum(self.used_for(emp, y, self.today if y == cy else date(y, 12, 31)) for y in range(self.start_year(emp), cy + 1))
 
     def cumulative_manual(self, emp) -> float:
+        if self.exempt(emp):
+            return 0.0
         cy, t = self.today.year, 0.0
         for y in range(self.start_year(emp), cy + 1):
             o = self.override(emp, y)

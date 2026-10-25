@@ -13,6 +13,7 @@ import { useTheme } from '../lib/theme.js';
 import { applyBrand } from '../lib/brand.js';
 import SectionAudit from '../pages/audit/SectionAudit.jsx';
 import CandAuto from './CandAuto.jsx';
+import OccAuto from './OccAuto.jsx';
 import HrBell from './HrBell.jsx';
 import AiAssistant from './AiAssistant.jsx';
 import ChangePw from '../employee/ChangePw.jsx';
@@ -91,7 +92,7 @@ export default function Layout() {
             <div className="tbr">
               <button id="aribaThemeBtn" className="ariba-theme-btn" type="button" onClick={toggleTheme} title={theme === 'dark' ? 'التبديل إلى الوضع النهاري' : 'التبديل إلى الوضع الليلي'}><i className={'ti ' + (theme === 'dark' ? 'ti-sun' : 'ti-moon')} /></button>
               <span style={{ fontSize: 11, color: 'var(--mu)' }} id="DTS">{dateTxt}</span>
-              <HrBell /><CandAuto />
+              <HrBell /><CandAuto /><OccAuto />
               <button className="ib" id="langBtn" onClick={() => setLang(getLang() === 'en' ? 'ar' : 'en')} title="تغيير اللغة" style={{ fontSize: 11, fontWeight: 700, padding: '4px 8px' }}><span id="langBtnTxt">{en ? 'AR' : 'EN'}</span></button>
               <PageExport title={en ? info.en : info.ar} />
               <button className="ib" onClick={() => window.print()} title="طباعة"><i className="ti ti-printer" /></button>

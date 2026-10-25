@@ -4,7 +4,7 @@
 // except usedThrough, which reads the server's figure (see USED_CACHE). Do not edit by hand.
 import { PAYX as X } from './payx';
 import { gosiRuleFor, insStatusText } from './insurance';
-import { insExempt, noEos } from './empkind';
+import { insExempt, noEos, noLeave } from './empkind';
 import { leaveAnnual } from './leave-annual';
 
 export const num = (v) => { const n = Number(v); return Number.isFinite(n) ? n : 0; };
@@ -78,7 +78,7 @@ export function recalc(r, e, m) {
     saudi: !!(r.isSaudi || X.isSaudiNat(r.nat)), trainee: isTraineeRow(r), nat: r.nat, employer: r.employer, dob: r.dob || e.dob, join: r.join, lastDay: r.lastDay || null,
     contractMonths: r.contractMonths, reason: r.reason, leaveDays: r.leaveDays || 21, used: emp0(r.usedManual) ? null : r.usedManual, usedAuto,
     noIns: (() => { const ex = insExempt(e); const man = !!(r.manualEdits && r.manualEdits.insStatus); return ex && !(man && !/لا يطبق|غير خاضع/.test(String(r.insStatus || ''))); })(),
-    leaveManual: r.leaveManual, noInsDeduct: r.noInsDeduct, noEos: !!noEos(e), asOf: m.end, rates: rates(m.end),
+    leaveManual: r.leaveManual, noInsDeduct: r.noInsDeduct, noEos: !!noEos(e), noLeave: !!noLeave(e), asOf: m.end, rates: rates(m.end),
   });
   r.salByDays = o.V; r.houPay = o.Y; r.traPay = o.Z; r.prjPay = o.AA; r.othPay = o.AB; r.allIn = o.T; r.overtime = o.X;
   r.contractEnd = o.I; r.K = o.K; r.N = o.N; r.O = o.O; r.P = o.P; r.leaveComp = o.AC; r.svcY = o.AD; r.svcM = o.AE; r.svcD = o.AF;
@@ -151,7 +151,17 @@ export function updateField(row, field, val, e, m) {
   return recalc(row, e, m);
 }
 export const SUMK = ['tax', 'mf', 'sal', 'salByDays', 'overtime', 'houPay', 'traPay', 'prjPay', 'othPay', 'leaveComp', 'eosAmt', 'totalDue', 'loanDeduct', 'insEmp', 'otherDeduct', 'insBase', 'insEr', 'totalDeduct', 'net', 'netSAR'];
-export function sums(rows) { const s = {}; SUMK.forEach((k) => { s[k] = 0; }); rows.forEach((r) => SUMK.forEach((k) => { s[k] += num(r[k]); })); return s; }
+/** سعر صرف الصف (ريال لكل وحدة عملة الصف). الفارغ = 1 */
+export const fxOf = (r) => { const f = (r.exchRate === '' || r.exchRate == null) ? 1 : num(r.exchRate); return f > 0 ? f : 1; };
+/** مجاميع المسير. كل المبالغ تُحوَّل إلى العملة الأساسية (ريال) بسعر صرف كل صف قبل الجمع، حتى لا تُجمع عملات مختلفة معًا.
+ *  استثناء: net = «المستحق بالعملة» يبقى بعملة الصف (يُعرض مفصّلًا بالعملات)، و netSAR بالريال أصلًا. */
+export function sums(rows) {
+  const s = {}; SUMK.forEach((k) => { s[k] = 0; });
+  rows.forEach((r) => { const f = fxOf(r); SUMK.forEach((k) => { s[k] += (k === 'netSAR' || k === 'net') ? num(r[k]) : num(r[k]) * f; }); });
+  return s;
+}
+/** هل كل صفوف القائمة بعملة واحدة؟ (لإظهار إجمالي «المستحق بالعملة» أو إخفائه) */
+export const sameCur = (rows) => { const c = new Set(rows.map((r) => r.currency || 'ريال سعودي')); return c.size <= 1; };
 /** المفاتيح التي تُرسل للسحابة كمسودة (PKEYS في النظام القديم) */
 export const PKEYS = ['workDays', 'insDays', 'otHours', 'otAmount', 'leaveManual', 'otherAllow', 'loanDeduct', 'otherDeduct', 'payMethod', 'notes', 'reason', 'lastDay', 'usedManual', 'allInManual', 'noInsDeduct', 'insStatus', 'prj', 'oth', 'exchRate', 'leaveDays', 'manualEdits'];
 export function rowSig(r) { const o = {}; PKEYS.forEach((k) => { const v = r[k]; if (v !== undefined && v !== null && v !== '') o[k] = v; }); return JSON.stringify(o); }

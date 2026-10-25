@@ -1026,7 +1026,7 @@ def _dashboard_alerts(active: list[dict[str, Any]], today: date) -> list[dict[st
         push("iqama", _pdate(data.get("iqamaExpiry") or data.get("iqe")))
         push("passport", _pdate(data.get("passportExpiry") or data.get("ppe")))
         push("contract", contract)
-        if not gosi_calc.react_no_eos(data):
+        if not gosi_calc.is_special(data):
             pe = _pdate(data.get("probationEnd")) or (join + timedelta(days=90) if join else None)
             if pe and join and -7 <= (pe - today).days <= _ALERT_LIMITS["probation"] and (today - join).days <= 400:
                 push("probation", pe)

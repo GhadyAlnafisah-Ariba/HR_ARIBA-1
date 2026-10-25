@@ -5,6 +5,7 @@ import { useLang } from '../../lib/i18n.js';
 import { isEG, resignFactor, leaveCum, rules } from '../../engines/country.js';
 import { num, r2, money, pd, iso, esc, printOfficial } from '../../lib/finance.js';
 import { duration } from './Eos.jsx';
+import { noEos, noLeave } from '../../engines/empkind.js';
 import { buildSettlementHtml } from '../../lib/settlementDoc.js';
 import { toast } from '../../components/Toast.jsx';
 import { mailDoc } from '../../lib/mailDoc.js';
@@ -23,10 +24,11 @@ export function settle(p) {
   else if (r === 'm85' || r === 'm75') { if (ty < 2) { ef = 0; note = 'أقل من سنتين — لا تستحق.|Under 2 years — nothing due.'; } else if (ty < 5) { ef = r2(e84 / 3); note = 'ثلث م.84.|One third of Art.84.'; } else if (ty < 10) { ef = r2(e84 * 2 / 3); note = 'ثلثان م.84.|Two thirds of Art.84.'; } else { ef = e84; note = 'م.84 كاملة.|Full Art.84.'; } }
   else if (r === 'm77') { const c77 = eg ? Math.round(sal * rules().arbMonths * ty) : Math.max(Math.round(sal * 2), Math.round((sal / 30) * 15 * ty)); ef = r2(e84 + c77); note = 'تعويض + م.84.|Compensation + Art.84.'; }
   else if (r === 'm80' || r === 'm53') { ef = 0; note = 'لا مكافأة.|No award.'; }
+  if (p.noEos) { ef = 0; note = (p.noLeave ? 'استشاري/تمهير/تدريب — لا مكافأة نهاية خدمة ولا إجازات.|Consultant/Tamheer/Trainee — no EOS and no leave.' : 'استشاري/تمهير/تدريب — لا مكافأة نهاية خدمة.|Consultant/Tamheer/Trainee — no EOS.'); }
   const ld = num(p.leaveD) || 21, lt = num(p.taken);
-  const ldue = eg ? r2(leaveCum(d1, d2, null)) : r2(ty * ld), lrem = Math.max(0, r2(ldue - lt)), lcomp = r2((sal / 30) * lrem);
+  const ldue = p.noLeave ? 0 : eg ? r2(leaveCum(d1, d2, null)) : r2(ty * ld), lrem = Math.max(0, r2(ldue - lt)), lcomp = r2((sal / 30) * lrem);
   const wd = num(p.wd), ad = num(p.ad), lmsf = wd > 0 && ad > 0 ? r2((sal / wd) * ad) : sal;
-  const lexc = Math.max(0, r2(lt - ldue)), lded = r2((sal / 30) * lexc);
+  const lexc = p.noLeave ? 0 : Math.max(0, r2(lt - ldue)), lded = r2((sal / 30) * lexc);
   const extT = p.extras.reduce((a, x) => a + num(x.v), 0);
   const dedT = p.deds.reduce((a, x) => { const v = num(x.v); if (!v) return a; return a + (x.t === 'days' ? r2((sal / (wd || 30)) * v) : v); }, 0);
   const total = Math.max(0, r2(ef + lcomp + lmsf + extT - dedT - lded));
@@ -45,7 +47,7 @@ export default function EosCalc() {
   function pick(v) {
     setId(v); const x = list.find((y) => String(y.id) === v); if (!x) return setP(empty);
     const tot = num(x.salaryTotal) || (num(x.salary || x.sal) + num(x.housingAllowance || x.hou) + num(x.transportAllowance || x.tra) + num(x.projectAllowance) + num(x.otherAllowance));
-    setP({ ...empty, start: String(x.contractJoin || '').slice(0, 10), sal: tot || '', leaveD: num(x.leaveDaysContract) || 21, end: iso(new Date()) });
+    setP({ ...empty, start: String(x.contractJoin || '').slice(0, 10), sal: tot || '', leaveD: num(x.leaveDaysContract) || 21, noEos: noEos(x), noLeave: noLeave(x), end: iso(new Date()) });
   }
   const [aiAuto, setAiAuto] = useState(false);
   useEffect(() => { const q = aiBridge.pending; if (q && q.kind === 'settlement') { aiBridge.pending = null; pick(String(q.empId)); if (q.date) set('end', q.date); if (q.reason) set('reason', q.reason); setAiAuto(true); } }, []); // eslint-disable-line

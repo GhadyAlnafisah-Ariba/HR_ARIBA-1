@@ -10,7 +10,8 @@ export const iso = (d) => d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p
 export const monthCtx = (y, mo) => { const days = new Date(y, mo, 0).getDate(); return { y, m: mo, days, start: new Date(y, mo - 1, 1), end: new Date(y, mo - 1, days) }; };
 export const isTerm = (e) => !!(e && (e.isTerminated || e.term));
 export const lastDayOf = (e) => pd(e.terminationDate || e.lastWorkingDay || e.lastDay);
-export const shortNm = (e, en) => String((en ? (e.nameEn || e.nameAr) : (e.nameAr || e.nameEn)) || '').split(' ').slice(0, 3).join(' ');
+import { shortName } from './names.js';
+export const shortNm = (e, en) => shortName(String((en ? (e.nameEn || e.nameAr) : (e.nameAr || e.nameEn)) || ''));
 export const empNoSort = (a, b) => { const x = Number(String(a.empNo || a.id).replace(/\D/g, '')), y = Number(String(b.empNo || b.id).replace(/\D/g, '')); return (Number.isFinite(x) ? x : 1e9) - (Number.isFinite(y) ? y : 1e9); };
 /** الموظفون الحاليون النشطون غير بالساعة */
 export const liveEmps = (emps) => (emps || []).filter((e) => e && !e.isHourly && !isTerm(e) && e.active !== false);

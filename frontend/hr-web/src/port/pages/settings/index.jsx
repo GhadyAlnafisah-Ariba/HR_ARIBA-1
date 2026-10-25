@@ -13,6 +13,7 @@ import PunchCard from './PunchCard.jsx';
 import PermsCard from './PermsCard.jsx';
 import FlexCard from './FlexCard.jsx';
 import ExcludeCard from './ExcludeCard.jsx';
+import RightsCard from './RightsCard.jsx';
 import MasterListsCard from './MasterListsCard.jsx';
 import PwCard from './PwCard.jsx';
 import RolesCard from './RolesCard.jsx';
@@ -63,9 +64,9 @@ export default function Settings() {
     company: [<CountryCard key="cn" />, <CompanyCard key="co" />, <LogoCard key="lg" />, <BrandCard key="br" />],
     print: [<LetterheadCard key="lh" />, <SignerCard key="hs" />],
     att: [<ScheduleCard key="sc" />, <FlexCard key="fx" />],
-    leave: [<CarryCard key="lc" />, <AccrualCard key="acc" />],
+    leave: [<CarryCard key="lc" />, <AccrualCard key="acc" />, <RightsCard key="rt" />],
     app: [<PunchCard key="pw" />, <WorkflowCard key="wf" />, <DocSignCard key="ds" />],
-    fin: [<InsuranceCard key="ins" />, <ExcludeCard key="ex" />],
+    fin: [<InsuranceCard key="ins" />, <ExcludeCard key="ex" />, <RightsCard key="rt2" pre="RT2" />],
     mail: [<MyMailCard key="mm" />, <CompanyMailCard key="mc" />, <MailModeCard key="mo" />],
     lists: [<MasterListsCard key="ml" />],
     access: [<PwCard key="pwd" />, <ApplyCard key="apl" />, ...(canPerm ? [<PermsCard key="pm" />, <RolesCard key="rl" />, <ManagerPermsCard key="mp" />] : [])],

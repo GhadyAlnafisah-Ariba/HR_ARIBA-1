@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useLang } from '../../lib/i18n.js';
 import { toast } from '../../components/Toast.jsx';
 import { rpc } from '../../lib/api.js';
-import { printOfficial, esc } from '../../lib/finance.js';
+import { printOfficial, officialHtml, officialDocs, esc } from '../../lib/finance.js';
 import { loadTr } from '../../lib/tr.js';
 import { buildEn } from './formsEn.js';
 import { FORMS } from './docs.js';
@@ -49,7 +49,7 @@ export function BulkCard({ ctx, mkFor, st, withEn, refresh }) {
           const r = mkFor(form, e2, stk); if (r.err) throw new Error(r.err);
           title = r.title; html = await withEn(form, e2, stk, r.html);
         }
-        await rpc('ariba_hr_send_template', { p_employee_id: String(e2.id), p_emp_no: String(e2.empNo || e2.id), p_template_type: type, p_title: title, p_file_name: type + '_' + e2.id + '.html', p_mime_type: 'text/html', p_base64: b64(html) });
+        await rpc('ariba_hr_send_template', { p_employee_id: String(e2.id), p_emp_no: String(e2.empNo || e2.id), p_template_type: type, p_title: title, p_file_name: type + '_' + e2.id + '.html', p_mime_type: 'text/html', p_base64: b64(officialDocs(settings, html)) });
         if (form === 'salary_cert') consumeRef();
         ok++;
       } catch (err) { fail.push(nm(e2) + ': ' + (err.message || err)); if (form !== 'salary_cert' && /inputs|incomplete|ناقصة|اكتب|حدد|اختر|أضف|enter|set/i.test(String(err.message || ''))) break; }
@@ -126,7 +126,7 @@ export function SalaryCertCard({ ctx, eid }) {
     try {
       let html = r.html; const m2 = missing('en', d);
       if (!m2.length) html += '<!--ARIBA_EN-->' + scHtml('en', d, { settings, employees, tr }).html; else toast(T('النسخة الإنجليزية ما اتبعتتش لأن بيانات إنجليزية ناقصة (افتح "النسخة الإنجليزية" واملأها)', 'English copy not attached: English data is incomplete'), 'ter');
-      await rpc('ariba_hr_send_template', { p_employee_id: String(e.id), p_emp_no: String(e.empNo || e.id), p_template_type: 'salary_cert', p_title: r.title, p_file_name: 'salary_cert_' + e.id + '.html', p_mime_type: 'text/html', p_base64: b64(html) });
+      await rpc('ariba_hr_send_template', { p_employee_id: String(e.id), p_emp_no: String(e.empNo || e.id), p_template_type: 'salary_cert', p_title: r.title, p_file_name: 'salary_cert_' + e.id + '.html', p_mime_type: 'text/html', p_base64: b64(officialDocs(settings, html)) });
       consumeRef(); setF((o) => ({ ...o, ref: nextRef() })); toast('✅ ' + T('اتبعت للموظف', 'Sent to the employee'), 'tin');
     } catch (err) { toast('⚠️ ' + (err.message || err), 'ter'); } finally { setBusy(false); }
   }
@@ -135,7 +135,7 @@ export function SalaryCertCard({ ctx, eid }) {
     const { d, m, tr } = await mk(lang); setFlag(true);
     if (m.length) { toast((lang === 'en' ? 'Missing / incomplete: ' : 'بيانات ناقصة: ') + m.map((x) => x.label).join('، '), 'ter'); setTick(tick + 1); return; }
     const r = scHtml(lang, d, { settings, employees, tr });
-    const sent = await mailDoc('salary_cert', e, { title: r.title + ' — ' + (e.nameAr || e.nameEn || ''), html: r.html });
+    const sent = await mailDoc('salary_cert', e, { title: r.title + ' — ' + (e.nameAr || e.nameEn || ''), html: officialHtml(settings, r.html) });
     if (sent) { consumeRef(); setF((o) => ({ ...o, ref: nextRef() })); }
   }
   const t = todayInfo();

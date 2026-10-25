@@ -84,6 +84,8 @@ export function understand(text) {
     return { kind: 'reset' };
   }
   if (has(/مخالص|تصفي[هة]|نهاي[هة] (ال)?خدم[هة]|مكافا[هة] نهاي[هة]/) && !has(/انهاء (ال)?خدم|انهاء (ال)?عقد/)) return { kind: 'settlement' };
+  if (has(/(شهاد[هة]|خطاب|تعريف).*(راتب|مرتب)|(راتب|مرتب).*(شهاد[هة]|خطاب|تعريف)/) && !has(/كشف|قسيم/)) return { kind: 'form', form: 'salary_cert' };
+  if (has(/(اشعار|نموذج) (انتهاء|نهايه) (ال)?عقد/)) return { kind: 'form', form: 'contract_end' };
   if (has(/اخلاء( ال)? ?طرف|اخلاء/)) return { kind: 'form', form: 'clearance' };
   if (has(/انهاء (ال)?خدم|انهاء (ال)?عقد|انذار/)) return { kind: 'form', form: 'termination' };
   if (has(/مباشر/)) return { kind: 'form', form: 'onboarding' };

@@ -3,7 +3,7 @@ import { useApp, usePerm } from '../../store/AppStore.jsx';
 import { useLang } from '../../lib/i18n.js';
 import { toast } from '../../components/Toast.jsx';
 import { rpc } from '../../lib/api.js';
-import { printOfficial, esc } from '../../lib/finance.js';
+import { printOfficial, officialHtml, officialDocs, esc } from '../../lib/finance.js';
 import { offerDraft } from '../../lib/offerDraft.js';
 import { aiBridge } from '../../lib/aiBridge.js';
 import { FORMS, wrap, CRIT, LAWS, offerHtml, SENDABLE } from './docs.js';
@@ -55,10 +55,10 @@ export default function Forms() {
     const r = make(k); if (!r) return;
     if (!window.confirm('هيتبعت "' + r.title + '" لـ ' + (e.nameAr || '') + ' في تطبيقه عشان يوافق أو يعترض. متأكد؟')) return;
     setBusy(k);
-    try { const html = await withEn(k, e, st[k], r.html); await rpc('ariba_hr_send_template', { p_employee_id: String(e.id), p_emp_no: String(e.empNo || e.id), p_template_type: k, p_title: r.title, p_file_name: k + '_' + e.id + '.html', p_mime_type: 'text/html', p_base64: b64(html) }); toast('✅ ' + T('اتبعت للموظف وبيقدر يوافق أو يعترض من تطبيقه', 'Sent to the employee for approval'), 'tin'); refresh(); }
+    try { const html = await withEn(k, e, st[k], r.html); await rpc('ariba_hr_send_template', { p_employee_id: String(e.id), p_emp_no: String(e.empNo || e.id), p_template_type: k, p_title: r.title, p_file_name: k + '_' + e.id + '.html', p_mime_type: 'text/html', p_base64: b64(officialDocs(settings, html)) }); toast('✅ ' + T('اتبعت للموظف وبيقدر يوافق أو يعترض من تطبيقه', 'Sent to the employee for approval'), 'tin'); refresh(); }
     catch (err) { toast('⚠️ ' + (err.message || 'تعذر الإرسال'), 'ter'); } finally { setBusy(''); }
   }
-  async function email(k) { const r = make(k); if (!r) return; setBusy('m' + k); try { await mailDoc(k, e, { title: r.title + ' — ' + (e.nameAr || ''), html: r.html }); } finally { setBusy(''); } }
+  async function email(k) { const r = make(k); if (!r) return; setBusy('m' + k); try { await mailDoc(k, e, { title: r.title + ' — ' + (e.nameAr || ''), html: officialHtml(settings, r.html) }); } finally { setBusy(''); } }
   async function refresh() { try { const l = await rpc('ariba_hr_template_status', {}); setStatus(Array.isArray(l) ? l : (l && l.rows) || []); } catch (err) { setStatus({ err: String(err.message || err) }); } }
   const empName = (id) => { const f = employees.find((x) => String(x.id) === String(id)); return f ? (f.nameAr || f.nameEn || id) : id; };
   const Card = CardX;

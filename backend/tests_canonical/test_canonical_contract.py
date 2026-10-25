@@ -30,7 +30,7 @@ EXPECTED_TABLES = {
     # docs/db-migrations/001_react_port.sql
     "ariba_candidates", "ariba_candidate_files", "ariba_candidate_invites", "ariba_targets", "ariba_evaluations",
     "ariba_delegations", "ariba_manager_perms", "ariba_doc_signing", "ariba_leave_files", "ariba_mail_accounts",
-    "ariba_mail_log", "ariba_tasks", "ariba_webauthn_credentials", "ariba_push_tokens",
+    "ariba_mail_log", "ariba_tasks", "ariba_announcements", "ariba_emp_occasions", "ariba_webauthn_credentials", "ariba_push_tokens",
 }
 
 RETIRED_TABLES = {

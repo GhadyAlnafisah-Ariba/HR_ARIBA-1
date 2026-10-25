@@ -90,7 +90,9 @@ import { isEG, egCompute } from './country.js';
     var O=!isBlank(x.used)?num(x.used):(hasReason?Oauto:0); o.O=O;          /* O ما تم استحقاقه */
     o.P=(N===null)?null:r2(N-O);                                            /* P الرصيد المستحق */
     o.AC=(!hasReason||o.P===null)?num(x.leaveManual):o.P*(o.T/30);          /* AC بدل أجازة */
-    if(trainee||x.noEos||isNaN(AD)){ o.AG=o.AH=o.AI=0; }                    /* تمهير/تدريب/استشاري: مفيش مكافأة نهاية خدمة */
+    var zeroLv=(x.noLeave!==undefined&&x.noLeave!==null)?!!x.noLeave:(trainee||!!x.noEos), zeroEos=(x.noEos!==undefined&&x.noEos!==null)?!!x.noEos:trainee;
+    if(zeroLv){ o.N=0; o.O=0; o.P=0; o.AC=0; }                    /* وكذلك: لا رصيد إجازة ولا بدل إجازة */
+    if(zeroEos||isNaN(AD)){ o.AG=o.AH=o.AI=0; }                    /* تمهير/تدريب/استشاري: مفيش مكافأة نهاية خدمة */
     else {
       o.AG=(AD<=5)?(AD*o.T*0.5):((5*o.T*0.5)+(AD-5)*o.T*1);                 /* AG */
       o.AH=(AD>=5)?((AE/12)*o.T):((AE/12)*o.T*0.5);                         /* AH */

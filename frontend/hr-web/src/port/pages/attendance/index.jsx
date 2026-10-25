@@ -1,3 +1,4 @@
+import { shortName } from '../../lib/names.js';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useApp, usePerm } from '../../store/AppStore.jsx';
 import { useLang } from '../../lib/i18n.js';
@@ -65,7 +66,7 @@ function Daily({ T, en, emps, locs, can }) {
         <div id="ATL" style={{ maxHeight: 380, overflowY: 'auto' }}>
           {emps.map((e) => { const g = grp[String(e.id) + '|' + date], s = stRec(e); const st = g ? (ST[g.status] || ST.present) : null; return (
             <div key={e.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0', borderBottom: '1px solid rgba(36,48,68,.4)' }}>
-              <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontSize: 12, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{String(nameOf(e, en)).split(' ').slice(0, 3).join(' ')}</div><div style={{ fontSize: 10, color: 'var(--dm)' }}>{(g && g.loc) || e.employer}</div></div>
+              <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontSize: 12, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{shortName(String(nameOf(e, en)))}</div><div style={{ fontSize: 10, color: 'var(--dm)' }}>{(g && g.loc) || e.employer}</div></div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 11, color: 'var(--mu)' }}>{g ? hm(g.in) + ' → ' + (g.out ? hm(g.out) : '…') + (g.sessions > 1 ? '  (×' + g.sessions + ')' : '') : '—'}</div>
                 {g && g.status === 'late' && g.late > 0 && <div style={{ fontSize: 10, color: 'var(--am)' }}>⏰ {T('تأخير ', 'Late ')}{fmtHM(g.late, en)}</div>}
@@ -94,11 +95,11 @@ function Monthly({ T, en, emps }) {
   const H = en ? ['Employee', 'Present', 'Late', 'Absent', 'Leave', 'Remote', 'Late', 'Hours'] : ['الموظف', 'حاضر', 'متأخر', 'غائب', 'إجازة', 'عن بعد', 'إجمالي التأخير', 'الساعات'];
   return (
     <div className="card"><div className="ch"><div className="ct"><i className="ti ti-calendar-stats" /> <span>{T('تقرير شهري', 'Monthly report')}</span></div>
-      <div style={{ display: 'flex', gap: 5 }}><select id="AME" value={eid} onChange={(e) => setEid(e.target.value)} style={{ maxWidth: 140 }}><option value="">{T('الكل', 'All')}</option>{emps.map((e) => <option key={e.id} value={e.id}>{String(e.nameAr || '').split(' ').slice(0, 3).join(' ')}</option>)}</select>
+      <div style={{ display: 'flex', gap: 5 }}><select id="AME" value={eid} onChange={(e) => setEid(e.target.value)} style={{ maxWidth: 140 }}><option value="">{T('الكل', 'All')}</option>{emps.map((e) => <option key={e.id} value={e.id}>{shortName(String(e.nameAr || ''))}</option>)}</select>
         <select id="AMM" value={mon} onChange={(e) => setMon(e.target.value)} style={{ maxWidth: 130 }}>{months.map((m) => <option key={m.v} value={m.v}>{m.l}</option>)}</select><button className="btn bpl bsm" id="AMS_GO" onClick={run}><i className="ti ti-search" /></button></div></div>
       <div className="tw"><table id="AMT">
         {busy ? <tbody><tr><td style={{ padding: 14, color: 'var(--mu)' }}>{T('جارٍ التحميل…', 'Loading…')}</td></tr></tbody> : err ? <tbody><tr><td style={{ padding: 14, color: 'var(--rd)' }}>{err}</td></tr></tbody> : res && (
-          <tbody><tr>{H.map((x, i) => <th key={i}>{x}</th>)}</tr>{res.map((s) => <tr key={s.e.id}><td>{String(nameOf(s.e, en)).split(' ').slice(0, 3).join(' ')}</td><td style={{ color: 'var(--gr)' }}>{s.present}</td><td style={{ color: 'var(--am)' }}>{s.late}</td><td style={{ color: 'var(--rd)' }}>{s.absent}</td><td style={{ color: 'var(--pu)' }}>{s.leave}</td><td style={{ color: 'var(--cy)' }}>{s.remote}</td><td>{fmtHM(s.lateMin, en)}</td><td>{s.hours}</td></tr>)}</tbody>)}
+          <tbody><tr>{H.map((x, i) => <th key={i}>{x}</th>)}</tr>{res.map((s) => <tr key={s.e.id}><td>{shortName(String(nameOf(s.e, en)))}</td><td style={{ color: 'var(--gr)' }}>{s.present}</td><td style={{ color: 'var(--am)' }}>{s.late}</td><td style={{ color: 'var(--rd)' }}>{s.absent}</td><td style={{ color: 'var(--pu)' }}>{s.leave}</td><td style={{ color: 'var(--cy)' }}>{s.remote}</td><td>{fmtHM(s.lateMin, en)}</td><td>{s.hours}</td></tr>)}</tbody>)}
       </table></div>
     </div>
   );

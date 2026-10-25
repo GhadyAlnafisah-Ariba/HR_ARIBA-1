@@ -10,7 +10,15 @@ export function kindOf(e) {
   if (/متدرب|تدريب|trainee|intern/i.test(job) || /^\s*تدريب\s*$/.test(dep) || /تدريب/.test(emp) || /متدرب/.test(typ)) return 'trainee';
   return '';
 }
-/** لا مكافأة نهاية خدمة (استشاري/تمهير/تدريب) */
-export const noEos = (e) => !!kindOf(e);
+import { rt } from './runtime.js';
+/** النوع الخاص (استشاري/تمهير/تدريب/غير خاضع) */
+export const isSpecial = (e) => !!kindOf(e);
+const KINDS = ['tamheer', 'trainee', 'consultant'];
+/** استحقاقات الأنواع الخاصة من الإعدادات (الافتراضي: لا إجازات ولا مكافأة). rights[kind] = { leave, eos } */
+export function kindRight(kind, what) { const r = rt.kindRights; return !!(r && r[kind] && r[kind][what] === true); }
+/** لا مكافأة نهاية خدمة: الأنواع الخاصة إلا لو الإعدادات فعّلت استحقاق المكافأة لنوعها */
+export const noEos = (e) => { const k = kindOf(e); if (!k) return false; return KINDS.includes(k) ? !kindRight(k, 'eos') : true; };
+/** لا إجازات: الأنواع الخاصة إلا لو الإعدادات فعّلت استحقاق الإجازة لنوعها */
+export const noLeave = (e) => { const k = kindOf(e); if (!k) return false; return KINDS.includes(k) ? !kindRight(k, 'leave') : true; };
 /** إعفاء من التأمينات: النوع المشتق أو insSystem === 'exempt' */
-export const insExempt = (e) => !!(e && e.insSystem === 'exempt') || noEos(e);
+export const insExempt = (e) => !!(e && e.insSystem === 'exempt') || isSpecial(e);

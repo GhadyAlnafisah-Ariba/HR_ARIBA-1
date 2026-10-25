@@ -1,5 +1,5 @@
 // تصدير أي جدول إلى Excel / PDF / Word + إرساله بالإيميل تلقائياً (بدون فتح برنامج بريد)
-import { buildXlsx } from './xlsx.js';
+import { buildXlsx, withFormulaTotals } from './xlsx.js';
 import { esc } from './print.js';
 import { functionCall } from './api.js';
 
@@ -36,7 +36,7 @@ async function pdfBlob(spec) {
 /** spec = {title, headers, rows, sub?, name?} → {blob, name, mime} */
 export async function makeFile(fmt, spec) {
   const base = safeName(spec.name || spec.title);
-  if (fmt === 'xlsx') return { blob: buildXlsx([{ name: String(spec.title || 'Report').replace(/[\\/?*[\]:]/g, ' ').slice(0, 30), rows: [spec.headers, ...spec.rows], widths: spec.headers.map(() => 18) }]), name: base + '.xlsx', mime: FORMATS.xlsx[2] };
+  if (fmt === 'xlsx') return { blob: buildXlsx([{ name: String(spec.title || 'Report').replace(/[\\/?*[\]:]/g, ' ').slice(0, 30), rows: withFormulaTotals([spec.headers, ...spec.rows], { totals: spec.totals !== false }), widths: spec.headers.map(() => 18) }]), name: base + '.xlsx', mime: FORMATS.xlsx[2] };
   if (fmt === 'doc') {
     const html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" dir="rtl"><head><meta charset="utf-8"><title>' + esc(spec.title) + '</title><style>@page{size:A4 landscape}body{font-family:Tahoma,Arial}</style></head><body>' + tableHtml(spec) + '</body></html>';
     return { blob: new Blob(['﻿', html], { type: 'application/msword' }), name: base + '.doc', mime: FORMATS.doc[2] };

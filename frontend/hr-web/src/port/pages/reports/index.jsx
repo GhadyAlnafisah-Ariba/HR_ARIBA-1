@@ -7,6 +7,7 @@ import { daysLeft, fD } from '../../lib/util.js';
 import { leaveCurrentBalance, leaveYearOverride } from '../../engines/leave.js';
 import { calcFor } from '../finance/InsCalc.jsx';
 import { eosByLaw } from '../finance/Eos.jsx';
+import { noEos } from '../../engines/empkind.js';
 import { num, r2, money, monthCtx, saveXlsx, printOfficial, esc, empNoSort } from '../../lib/finance.js';
 
 const cap = (d) => (d == null ? '—' : d <= 0 ? 'منتهي' : d + 'ي');
@@ -34,7 +35,7 @@ export default function Reports() {
       { k: 'pay', i: 'ti-cash', t: T('الرواتب التفصيلي', 'Payroll detail'), h: [T('الموظف', 'Employee'), T('جهة العمل', 'Employer'), T('الأساسي', 'Basic'), T('الإجمالي', 'Total'), T('تأمين موظف', 'Emp. ins.'), T('الصافي', 'Net')], tot: [3, 4, 5, 6],
         rows: a.filter((e) => !e.isHourly).map((e) => { const sal = num(e.salary || e.sal), st = num(e.salaryTotal) || (sal + num(e.housingAllowance || e.hou) + num(e.transportAllowance || e.tra) + num(e.projectAllowance) + num(e.otherAllowance)); let ins = 0; try { ins = calcFor(e, mc).emp; } catch { /* ignore */ } return [no(e), nm(e), e.employer || '', r2(sal), r2(st), r2(ins), r2(st - ins - num(e.otherDeductions))]; }) },
       { k: 'eos', i: 'ti-award', t: T('نهاية الخدمة (المنتهية خدمتهم)', 'EOS (terminated)'), h: [T('الموظف', 'Employee'), T('جهة العمل', 'Employer'), T('آخر يوم عمل', 'Last day'), T('السبب', 'Reason'), T('المكافأة', 'EOS')], tot: [5],
-        rows: terminatedEmps.map((e) => { const amt = num(e.eosLaborLaw) || num(e.eosEndContract) || (e.eosCategory ? 0 : eosByLaw(num(e.salary), num(e.housingAllowance), num(e.yearsOfService), 'm84')); return { amt, e }; }).filter((x) => x.amt > 0).sort((x, y) => y.amt - x.amt)
+        rows: terminatedEmps.filter((e) => !noEos(e)).map((e) => { const amt = num(e.eosLaborLaw) || num(e.eosEndContract) || (e.eosCategory ? 0 : eosByLaw(num(e.salary), num(e.housingAllowance), num(e.yearsOfService), 'm84')); return { amt, e }; }).filter((x) => x.amt > 0).sort((x, y) => y.amt - x.amt)
           .map(({ e, amt }) => [no(e), nm(e), e.employer || '—', fD(e.lastDay || e.contractEnd), e.eosCategory || e.terminationReason || e.reason || '—', r2(amt)]) },
       { k: 'al', i: 'ti-alert-triangle', t: T('التنبيهات العاجلة', 'Urgent alerts'), h: [T('الموظف', 'Employee'), T('جهة العمل', 'Employer'), T('النوع', 'Type'), T('الانتهاء', 'Expiry'), T('المتبقي', 'Left')],
         rows: (() => { const o = []; a.forEach((e) => [['iqamaExpiry', T('الهوية / الإقامة', 'Iqama')], ['passportExpiry', T('الجواز', 'Passport')], ['contractEnd', T('العقد', 'Contract')]].forEach(([f, l]) => { const d = daysLeft(e[f]); if (d != null && d <= 90) o.push({ d, r: [nm(e), e.employer || '—', l, fD(e[f]), { d }] }); })); return o.sort((x, y) => x.d - y.d).map((x) => x.r); })() },

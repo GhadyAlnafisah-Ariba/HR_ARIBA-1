@@ -1,3 +1,4 @@
+import { shortName } from '../../lib/names.js';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useApp, usePerm } from '../../store/AppStore.jsx';
 import { useLang } from '../../lib/i18n.js';
@@ -18,12 +19,12 @@ export default function AllRequests() {
   const [rtf, setRtf] = useState(''); const [del, setDel] = useState(null); const [cloud, setCloud] = useState([]); const [local, setLocal] = useState([]); const [prev, setPrev] = useState(null); const [spin, setSpin] = useState(false);
   const loadAtts = useCallback(async () => { setSpin(true); try { setCloud(await fetchRequests()); } catch { setCloud([]); } try { await migrateLocalAtts(leaves); } catch { /* */ } try { setLocal(await listLeaveFiles()); } catch { setLocal([]); } setSpin(false); }, [leaves]);
   useEffect(() => { loadAtts(); }, [loadAtts]);
-  const nameOf = (id) => { const e = employees.find((x) => String(x.id) === String(id)); return e ? String(h ? (e.nameEn || e.nameAr) : (e.nameAr || e.nameEn) || '').split(' ').slice(0, 3).join(' ') : '—'; };
+  const nameOf = (id) => { const e = employees.find((x) => String(x.id) === String(id)); return e ? shortName(String(h ? (e.nameEn || e.nameAr) : (e.nameAr || e.nameEn) || '')) : '—'; };
   const stLbl = (v) => ({ pending: h ? 'Pending' : 'معلق', approved: h ? 'Approved' : 'موافق', rejected: h ? 'Rejected' : 'مرفوض' }[String(v || 'pending').toLowerCase()] || v);
   const tyLbl = (t, p) => { const v = lvl(t); if (String(t || '').startsWith('template:')) return '📄 ' + ((p && p.title) || (h ? 'Document' : 'مستند')); return v ? (h ? v.en : v.ar) : ({ forgot_punch: 'نسيان بصمة', overtime: 'عمل إضافي' }[t] || t); };
   const archive = useMemo(() => {
     const rows = [];
-    cloud.forEach((x) => (x.attachments || []).forEach((a) => rows.push({ key: 'c' + a.id, emp: (x.employee && (h ? x.employee.nameEn || x.employee.nameAr : x.employee.nameAr || x.employee.nameEn)) ? String(h ? x.employee.nameEn || x.employee.nameAr : x.employee.nameAr || x.employee.nameEn).split(' ').slice(0, 3).join(' ') : nameOf((x.request || {}).employee_id), type: tyLbl((x.request || {}).request_type, (x.request || {}).payload), status: stLbl((x.request || {}).status), name: a.file_name || '', size: a.file_size, at: String(a.created_at || '').slice(0, 10), get: () => getDocFile(a.id) })));
+    cloud.forEach((x) => (x.attachments || []).forEach((a) => rows.push({ key: 'c' + a.id, emp: (x.employee && (h ? x.employee.nameEn || x.employee.nameAr : x.employee.nameAr || x.employee.nameEn)) ? shortName(String(h ? x.employee.nameEn || x.employee.nameAr : x.employee.nameAr || x.employee.nameEn)) : nameOf((x.request || {}).employee_id), type: tyLbl((x.request || {}).request_type, (x.request || {}).payload), status: stLbl((x.request || {}).status), name: a.file_name || '', size: a.file_size, at: String(a.created_at || '').slice(0, 10), get: () => getDocFile(a.id) })));
     local.forEach((a) => { const l = leaves.find((q) => String(q.id) === String(a.leave_id)); if (!l) return; rows.push({ key: 'l' + a.id, emp: nameOf(l.empId), type: tyLbl(l.type), status: stLbl(l.status), name: a.file_name || '', size: a.file_size, at: String(a.created_at || l.from || '').slice(0, 10), get: () => getLeaveFile(a.id) }); });
     return rows.sort((p, q) => String(q.at).localeCompare(String(p.at)));
   }, [cloud, local, leaves, employees, h]); // eslint-disable-line
@@ -58,7 +59,7 @@ export default function AllRequests() {
       <div className="tw"><table><tbody>
         <tr>{(h ? ['Employee', 'Type', 'From', 'To', 'Days', 'Status', 'Action'] : ['الموظف', 'النوع', 'من', 'إلى', 'الأيام', 'الحالة', 'إجراء']).map((t) => <th key={t}>{t}</th>)}</tr>
         {list.map((l) => { const e = employees.find((x) => String(x.id) === l.empId); const lt = LVL[l.type] || { ar: l.type, en: l.type }; return (
-          <tr key={l.id}><td style={{ fontWeight: 600 }}>{e ? String(e.nameAr || '').split(' ').slice(0, 3).join(' ') : '—'}</td><td>{h ? lt.en : lt.ar}</td><td>{fD(l.from)}</td><td>{fD(l.to)}</td><td>{leaveRequestDays(l)}{refundNote(l)}</td><td>{stB[l.status]}</td>
+          <tr key={l.id}><td style={{ fontWeight: 600 }}>{e ? shortName(String(e.nameAr || '')) : '—'}</td><td>{h ? lt.en : lt.ar}</td><td>{fD(l.from)}</td><td>{fD(l.to)}</td><td>{leaveRequestDays(l)}{refundNote(l)}</td><td>{stB[l.status]}</td>
             <td>{can && l.hr && <>
               {l.status === 'pending' && <button className="btn bgl bsm" onClick={() => run(() => recordLeave({ ...l, days: leaveRequestDays(l) }, 'approved'), '✓ تمت الموافقة')}>✓</button>}{' '}
               {l.status !== 'pending' && <button className="btn bsm" title="تراجع عن القرار: إعادة الطلب لمعلق (أو احذفه بزر الحذف)" onClick={() => run(() => recordLeave({ ...l, days: leaveRequestDays(l) }, 'pending'), '↩ أُعيد الطلب لحالة معلق')}>↩</button>}{' '}
@@ -73,7 +74,7 @@ export default function AllRequests() {
         <select value={rtf} onChange={(e) => setRtf(e.target.value)} style={{ maxWidth: 170, marginInlineStart: 10 }}><option value="">{h ? 'All types' : 'كل الأنواع'}</option>{reqTypes.map((k) => <option key={k} value={k}>{k}</option>)}</select></div>
       <div className="tw"><table><tbody>
         <tr>{(h ? ['Employee', 'Type', 'Details', 'Status', 'Stage / reason', 'Date', 'Files'] : ['الموظف', 'النوع', 'التفاصيل', 'الحالة', 'المرحلة / السبب', 'التاريخ', 'مرفقات']).map((t) => <th key={t}>{t}</th>)}</tr>
-        {allReqs.map(({ r, e, n }) => <tr key={r.id}><td style={{ fontWeight: 600 }}>{String((h ? (e.nameEn || e.nameAr) : (e.nameAr || e.nameEn)) || nameOf(r.employee_id)).split(' ').slice(0, 3).join(' ')}</td><td>{tyLbl(r.request_type, r.payload)}</td><td style={{ fontSize: 11 }}>{detailOf(r)}{(r.payload || {}).notes ? <div style={{ color: 'var(--mu)' }}>{r.payload.notes}</div> : null}</td><td>{stB[r.status] || r.status}</td>
+        {allReqs.map(({ r, e, n }) => <tr key={r.id}><td style={{ fontWeight: 600 }}>{shortName(String((h ? (e.nameEn || e.nameAr) : (e.nameAr || e.nameEn)) || nameOf(r.employee_id)))}</td><td>{tyLbl(r.request_type, r.payload)}</td><td style={{ fontSize: 11 }}>{detailOf(r)}{(r.payload || {}).notes ? <div style={{ color: 'var(--mu)' }}>{r.payload.notes}</div> : null}</td><td>{stB[r.status] || r.status}</td>
           <td style={{ fontSize: 11 }}>{r.status === 'rejected' ? <span style={{ color: 'var(--rd)' }}>{r.reject_reason || '—'}</span> : r.status === 'pending' ? (STG[r.current_stage] ? STG[r.current_stage][h ? 0 : 1] : '—') : '—'}</td><td>{String(r.created_at || '').slice(0, 10)}</td><td>{n || ''}</td></tr>)}
         {!allReqs.length && <tr><td colSpan={7} style={{ textAlign: 'center', color: 'var(--mu)', padding: 22 }}>{h ? 'No requests' : 'لا توجد طلبات'}</td></tr>}
       </tbody></table></div>

@@ -279,9 +279,34 @@ def react_kind(e: dict) -> str:
     return ""
 
 
-def react_no_eos(e: dict) -> bool:
+_SPECIAL = ("tamheer", "trainee", "consultant")
+
+
+def kind_right(kind: str, what: str, rights: dict | None) -> bool:
+    """empkind.js kindRight: Settings › special-type entitlements (`special_rights`); default none."""
+    r = rights.get(kind) if isinstance(rights, dict) else None
+    return bool(isinstance(r, dict) and r.get(what) is True)
+
+
+def is_special(e: dict) -> bool:
     return bool(react_kind(e))
 
 
+def react_no_eos(e: dict, rights: dict | None = None) -> bool:
+    """noEos (22/10): special types have no end-of-service award unless Settings grants it for their type."""
+    k = react_kind(e)
+    if not k:
+        return False
+    return (not kind_right(k, "eos", rights)) if k in _SPECIAL else True
+
+
+def no_leave(e: dict, rights: dict | None = None) -> bool:
+    """noLeave (22/10): special types have no leave unless Settings grants it for their type."""
+    k = react_kind(e)
+    if not k:
+        return False
+    return (not kind_right(k, "leave", rights)) if k in _SPECIAL else True
+
+
 def react_ins_exempt(e: dict) -> bool:
-    return e.get("insSystem") == "exempt" or react_no_eos(e)
+    return e.get("insSystem") == "exempt" or is_special(e)

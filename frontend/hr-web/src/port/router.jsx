@@ -5,7 +5,7 @@ import { Children, createContext, isValidElement, useContext, useEffect, useMemo
 import { usePathname, useRouter } from 'next/navigation';
 
 export const ID_PATH = {
-  dash: '/dashboard', emps: '/employees', cand: '/candidates', goals: '/goals', eval: '/evaluation', att: '/attendance',
+  dash: '/dashboard', emps: '/employees', cand: '/candidates', ann: '/announcements', goals: '/goals', eval: '/evaluation', att: '/attendance',
   loc: '/locations', lv: '/leaves', team: '/team', pay: '/payroll', insc: '/insurance-calculator', salcalc: '/salary-calculator',
   taxcalc: '/tax-calculator', wps: '/wps', prov: '/provisions', assets: '/assets', slip: '/payslips', eos: '/end-of-service',
   eoscalc: '/settlement', docs: '/documents', rpt: '/reports', set: '/settings', audit: '/audit', forms: '/templates',

@@ -52,6 +52,7 @@ function Detail({ e, h }) {
   const years = Array.from({ length: Math.max(1, yr - s + 1) }, (_, i) => s + i);
   return (
     <>
+      {L.leaveExempt(e) && <div className="al alo" style={{ marginBottom: 8 }}><i className="ti ti-info-circle" />{h ? 'Consultant / Tamheer / Trainee: no annual leave entitlement (Settings → Leaves → Special-type entitlements).' : 'استشاري / تمهير / تدريب: لا يستحق إجازات سنوية (الرصيد صفر) — حسب الإعدادات ← استحقاقات الأنواع الخاصة.'}</div>}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(165px,1fr))', gap: 8, marginBottom: 12 }}>
         {cards.map((c) => <div key={c[1]} style={{ padding: 12, border: '1px solid var(--bd)', borderRadius: 10, background: 'var(--c2)' }}><div style={{ fontSize: 10, color: 'var(--mu)' }}>{h ? c[1] : c[0]}</div><div style={{ fontSize: 20, fontWeight: 900, color: c[3] }}>{f2(c[2])} <span style={{ fontSize: 11, fontWeight: 500 }}>{h ? 'days' : 'يوم'}</span></div></div>)}
       </div>

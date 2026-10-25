@@ -5,7 +5,7 @@ import { toast } from '../../components/Toast.jsx';
 import { LVL, HR_LEAVE_TYPES, recordLeave, newLeaveId, fileToData } from '../../lib/leaves.js';
 import { saveLeaveFile } from '../../lib/leaveFiles.js';
 import { rpc } from '../../lib/api.js';
-import { leaveCurrentBalance, overlapWithAnnual } from '../../engines/leave.js';
+import { leaveCurrentBalance, leaveExempt, overlapWithAnnual } from '../../engines/leave.js';
 import { countAnnualLeaveDays } from '../../engines/holidays.js';
 
 export default function NewRequest({ onDone }) {
@@ -26,6 +26,7 @@ export default function NewRequest({ onDone }) {
   async function submit() {
     if (!emp || !from || !to) return toast(h ? 'Fill required fields' : 'يرجى تعبئة جميع الحقول', 'ter');
     if (to < from) return toast('تاريخ النهاية قبل البداية', 'ter');
+    if (type === 'annual' && leaveExempt(e)) return toast(h ? 'Consultants, Tamheer and trainees have no annual leave' : 'الاستشاري/التمهير/التدريب لا يستحق إجازات سنوية', 'ter');
     if (type === 'annual' && days > bal) return toast(h ? 'Exceeds available balance' : 'يتجاوز الرصيد المتاح', 'ter');
     let att = null; try { att = await fileToData(file); } catch (er) { return toast(er.message || 'تعذر قراءة المرفق', 'ter'); }
     setBusy(true);

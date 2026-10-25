@@ -7,6 +7,7 @@ export const rt = {
   egRules: null,                 // تعديلات المستخدم على قواعد مصر
   leaveCarry: { enabled: true, days: 10 },
   leaveAccrual: 'calendar',
+  kindRights: null,              // استحقاقات التمهير/التدريب/الاستشاري { tamheer:{leave,eos}, ... } — الافتراضي بدون
   insRules: null,                // إعدادات التأمينات المخزنة (insuranceRules)
   holidays: [],                  // الإجازات الرسمية [{date,days,recurring}]
   leaves: [],                    // طلبات الإجازة

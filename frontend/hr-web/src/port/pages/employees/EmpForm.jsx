@@ -1,3 +1,4 @@
+import { shortName } from '../../lib/names.js';
 import PwReset from './PwReset.jsx';
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from '../../router.jsx';
@@ -185,7 +186,7 @@ export default function EmpForm() {
             </div>
             <Fi value={f.bk} onChange={set('bk')} label="البنك" /><Fi value={f.ib} onChange={set('ib')} label="الIBAN" /><Fi value={f.sp} onChange={set('sp')} label="الكفيل" />
             <Fs value={f.rel} onChange={set('rel')} label="الديانة" opts={['مسلم', 'مسلمة', 'أخرى'].map((x) => <option key={x}>{x}</option>)} />
-            <div><label>المدير المباشر<UndoBtn k="managerId" /></label><select value={f.managerId} onChange={set('managerId')}><option value="">لا يوجد مدير مباشر</option>{managers.map((m) => <option key={m.id} value={m.id}>{String(m.nameAr || '').split(' ').slice(0, 3).join(' ')} — {m.jobTitle || m.employer}</option>)}</select></div>
+            <div><label>المدير المباشر<UndoBtn k="managerId" /></label><select value={f.managerId} onChange={set('managerId')}><option value="">لا يوجد مدير مباشر</option>{managers.map((m) => <option key={m.id} value={m.id}>{shortName(String(m.nameAr || ''))} — {m.jobTitle || m.employer}</option>)}</select></div>
             <div className="ff"><label>ملاحظات</label><textarea rows={2} value={f.notes} onChange={set('notes')} /></div>
           </div>}
           {tab === 1 && <div className="fg">

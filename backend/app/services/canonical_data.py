@@ -126,7 +126,8 @@ def leave_settings(db: Session) -> dict[str, Any]:
     carry = {"enabled": carry.get("enabled") is not False, "days": carry.get("days")} if isinstance(carry, dict) else None
     from app.services.country import mode_of
     country, eg_rules = mode_of(setting(db, "country_system"))
-    return {"method": method, "carry": carry, "country": country, "eg_rules": eg_rules}
+    rights = setting(db, "special_rights")
+    return {"method": method, "carry": carry, "country": country, "eg_rules": eg_rules, "kind_rights": rights if isinstance(rights, dict) else None}
 
 
 def leave_book(db: Session, today: date, emps: list[EmpView] | None = None) -> LeaveBook:
@@ -134,4 +135,4 @@ def leave_book(db: Session, today: date, emps: list[EmpView] | None = None) -> L
     employee_directory, every leave request, holidays and the leave settings."""
     cfg = leave_settings(db)
     return LeaveBook(holidays=holidays(db), leaves=leaves(db), adjustments=[], today=today, method=cfg["method"],
-                     carry=cfg["carry"], country=cfg["country"], eg_rules=cfg["eg_rules"])
+                     carry=cfg["carry"], country=cfg["country"], eg_rules=cfg["eg_rules"], kind_rights=cfg["kind_rights"])

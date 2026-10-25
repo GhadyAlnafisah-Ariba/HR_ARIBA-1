@@ -1,4 +1,4 @@
-// Pure functions from ARIBA_HR_React/src/pages/finance/EosCalc.jsx (lines 12-34, verbatim).
+// Pure functions from ARIBA_HR_React_22oct/src/pages/finance/EosCalc.jsx (22/10 update, verbatim cut).
 import { isEG, resignFactor, leaveCum, rules } from '../../engines/country.js';
 import { num, r2, pd } from '../../lib/finance.js';
 import { duration } from './Eos.js';
@@ -16,10 +16,11 @@ export function settle(p) {
   else if (r === 'm85' || r === 'm75') { if (ty < 2) { ef = 0; note = 'أقل من سنتين — لا تستحق.|Under 2 years — nothing due.'; } else if (ty < 5) { ef = r2(e84 / 3); note = 'ثلث م.84.|One third of Art.84.'; } else if (ty < 10) { ef = r2(e84 * 2 / 3); note = 'ثلثان م.84.|Two thirds of Art.84.'; } else { ef = e84; note = 'م.84 كاملة.|Full Art.84.'; } }
   else if (r === 'm77') { const c77 = eg ? Math.round(sal * rules().arbMonths * ty) : Math.max(Math.round(sal * 2), Math.round((sal / 30) * 15 * ty)); ef = r2(e84 + c77); note = 'تعويض + م.84.|Compensation + Art.84.'; }
   else if (r === 'm80' || r === 'm53') { ef = 0; note = 'لا مكافأة.|No award.'; }
+  if (p.noEos) { ef = 0; note = (p.noLeave ? 'استشاري/تمهير/تدريب — لا مكافأة نهاية خدمة ولا إجازات.|Consultant/Tamheer/Trainee — no EOS and no leave.' : 'استشاري/تمهير/تدريب — لا مكافأة نهاية خدمة.|Consultant/Tamheer/Trainee — no EOS.'); }
   const ld = num(p.leaveD) || 21, lt = num(p.taken);
-  const ldue = eg ? r2(leaveCum(d1, d2, null)) : r2(ty * ld), lrem = Math.max(0, r2(ldue - lt)), lcomp = r2((sal / 30) * lrem);
+  const ldue = p.noLeave ? 0 : eg ? r2(leaveCum(d1, d2, null)) : r2(ty * ld), lrem = Math.max(0, r2(ldue - lt)), lcomp = r2((sal / 30) * lrem);
   const wd = num(p.wd), ad = num(p.ad), lmsf = wd > 0 && ad > 0 ? r2((sal / wd) * ad) : sal;
-  const lexc = Math.max(0, r2(lt - ldue)), lded = r2((sal / 30) * lexc);
+  const lexc = p.noLeave ? 0 : Math.max(0, r2(lt - ldue)), lded = r2((sal / 30) * lexc);
   const extT = p.extras.reduce((a, x) => a + num(x.v), 0);
   const dedT = p.deds.reduce((a, x) => { const v = num(x.v); if (!v) return a; return a + (x.t === 'days' ? r2((sal / (wd || 30)) * v) : v); }, 0);
   const total = Math.max(0, r2(ef + lcomp + lmsf + extT - dedT - lded));
