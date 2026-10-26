@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import * as auth from '../lib/auth.js';
 import * as vault from '../lib/vault.js';
 import { functionCall } from '../lib/api.js';
+import ChangePw from '../employee/ChangePw.jsx';
 import { T, useLang } from '../lib/i18n.js';
 
 const EYE = <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" /><circle cx="12" cy="12" r="3" /></svg>;
@@ -23,6 +24,7 @@ export default function Login() {
   const [bio, setBio] = useState(false);
   const [rec2, setRec2] = useState(rec);
   const [forgot, setForgot] = useState(false);
+  const [mustPw, setMustPw] = useState(null);
 
   useEffect(() => {
     vault.biometricAvailable().then(setBio);
@@ -37,6 +39,7 @@ export default function Login() {
     setBusy(true); setErr('');
     const r = await auth.login(uu, pp);
     setBusy(false);
+    if (r.mustChange) { setMustPw(r.username); return; }
     if (!r.ok) { setErr('❌ ' + r.error); return; }
     if (rm) { await vault.rememberUser(uu); const rc = vault.getRec(); if (rc && rc.cred) await vault.storeRefresh(auth.state.rt); setRec2(vault.getRec()); if (bio && !(rc && rc.cred) && !(rc && rc.nudged)) { try { sessionStorage.setItem('ariba_bio_nudge', '1'); } catch { /* ignore */ } } }
     else vault.forget();
@@ -84,6 +87,7 @@ export default function Login() {
         {err && <div id="LE" role="alert" style={{ display: 'block', color: '#9f2d2d', fontSize: 12, marginTop: 10, padding: 9, background: 'rgba(248,113,113,.08)', borderRadius: 8 }}>{err}</div>}
       </form>
       {forgot && <ForgotDialog onClose={() => setForgot(false)} />}
+      {mustPw && <ChangePw forced username={mustPw} onClose={async (done) => { if (done) { const l = await auth.finishLogin(); if (!l.ok) { setMustPw(null); setErr('❌ ' + T('تعذر تحميل بيانات الحساب', 'Could not load the account')); } } }} />}
     </div>
   );
 }

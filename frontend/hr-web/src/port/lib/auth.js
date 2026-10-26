@@ -59,8 +59,19 @@ export async function login(username, password) {
     return { ok: false, error: e && e.status === 429 ? T('محاولات كتير. حاول بعد شوية.', 'Too many attempts. Try again shortly.') : T('بيانات الدخول غير صحيحة', 'Invalid login details') };
   }
   setSession(d, false);
+  // a temporary password (HR reset / first sign-in): the server only lets the change-password call through, so ask for the new
+  // password now instead of failing on /me/perms; finishLogin() completes the sign-in afterwards
+  if (d.user && d.user.must_change_password) return { ok: false, mustChange: true, username: u };
   const me = await loadMe();
   if (!me) { await signOut(); return { ok: false, error: T('تعذر تحميل بيانات الحساب', 'Could not load the account') }; }
+  bump(); return { ok: true, me };
+}
+/** After the forced password change: the change call stored fresh tokens; adopt them and load my profile. */
+export async function finishLogin() {
+  const at = cookieAccess(), rt = getRefreshToken();
+  if (!at) { clear(); return { ok: false }; }
+  Object.assign(state, { jwt: at, rt, token: at, exp: Date.now() + 3600 * 1000, t0: Date.now() }); saveMeta();
+  const me = await loadMe(); if (!me) { await signOut(); return { ok: false }; }
   bump(); return { ok: true, me };
 }
 /** Sign-in with a session the server already issued (fingerprint / Face ID — WebAuthn). */
