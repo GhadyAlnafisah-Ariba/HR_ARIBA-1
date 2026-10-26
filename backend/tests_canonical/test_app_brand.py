@@ -44,9 +44,9 @@ def test_app_identity_is_set_apart_and_carries_its_own_logo(api, port_engine):
     hr = h(api, "hr.test")
     assert api.put(f"{V1}/settings/kv/company_logo", json={"value": {"data": "data:image/png;base64,AAAA"}}, headers=hr).status_code == 200
     assert api.get(f"{V1}/public/brand").json()["logo"] == "data:image/png;base64,AAAA"      # no app logo yet: the company logo
-    assert api.put(f"{V1}/settings/kv/app_brand", json={"value": {"p": "#014D3D", "s": "#F4F0E4", "hero": "#0B6B4F", "logo": "data:image/png;base64,BBBB", "punch": "data:image/png;base64,CCCC"}}, headers=hr).status_code == 200
+    assert api.put(f"{V1}/settings/kv/app_brand", json={"value": {"p": "#014D3D", "s": "#F4F0E4", "hero": "#0B6B4F", "logo": "data:image/png;base64,BBBB", "punch": "data:image/png;base64,CCCC", "heroImage": "data:image/png;base64,DDDD"}}, headers=hr).status_code == 200
     r = api.get(f"{V1}/public/brand").json()
-    assert r["brand"]["hero"] == "#0B6B4F" and r["brand"]["punch"] == "data:image/png;base64,CCCC" and r["logo"] == "data:image/png;base64,BBBB"
+    assert r["brand"]["hero"] == "#0B6B4F" and r["brand"]["punch"] == "data:image/png;base64,CCCC" and r["logo"] == "data:image/png;base64,BBBB" and r["brand"]["heroImage"] == "data:image/png;base64,DDDD"
     assert api.put(f"{V1}/settings/kv/app_brand", json={"value": {"p": "#000000"}}, headers=h(api, "emp.test")).status_code == 403
     assert api.put(f"{V1}/settings/kv/brand_colors", json={"value": {"p": "#999999", "s": "#FFFFFF"}}, headers=hr).status_code == 200
     assert api.get(f"{V1}/public/brand").json()["brand"]["p"] == "#014D3D"                    # the site's colours never reach the app
