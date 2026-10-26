@@ -11,7 +11,7 @@ export default function CarryCard() {
   const go = async () => {
     const days = Math.max(0, Number(d) || 0);
     if (en && days <= 0) { setErr(T('اكتب عدد الأيام', 'Enter the number of days')); return; }
-    setErr(''); await save('carry', 'leave_carry', { enabled: en, days }, T('اتحفظ إعداد ترحيل الإجازات', 'Leave carry-over saved'));
+    setErr(''); await save('carry', 'leave_carry', { enabled: en, days }, T('تم حفظ إعداد ترحيل الإجازات', 'Leave carry-over saved'));
   };
   return (
     <Card icon="calendar-repeat" title={T('ترحيل أرصدة الإجازات', 'Leave balance carry-over')} id="LC_CARD">
@@ -22,8 +22,8 @@ export default function CarryCard() {
         <button className="btn bpl bsm" id="LC_SAVE" onClick={go}>{T('حفظ', 'Save')}</button>
         {err && <span style={{ color: 'var(--rd)', fontSize: 12 }}>{err}</span>}
       </div>
-      <Note style={{ marginTop: 8 }}>{en ? T(`الترحيل شغال: أقصى ${Number(d) || 0} يوم يتنقل للسنة الجديدة والباقي بيروح لرصيد نهاية الخدمة.`, `Carry-over ON: up to ${Number(d) || 0} days roll into the new year; the rest goes to end-of-service leave.`) : T('الترحيل مفتوح بدون حد: كل الرصيد المتبقي بيتنقل للسنة الجديدة ومفيش فائض نهاية خدمة.', 'Unlimited carry-over: the whole remaining balance rolls into the new year; no end-of-service excess.')}</Note>
-      <div style={{ fontSize: 11, color: 'var(--mu)', marginTop: 6, lineHeight: 1.7 }}>{T('بيتطبق على كل الموظفين وكل السنين (الجدول والكروت وتطبيق الموظف). السنوات اللي عدّلتها يدوياً من "تعديل الرصيد" بتفضل بقيمها المحفوظة.', 'Applies to all employees and years (table, cards, Employee App). Years you edited manually via "Edit balance" keep their saved values.')}</div>
+      <Note style={{ marginTop: 8 }}>{en ? T(`الترحيل مفعّل: أقصى ${Number(d) || 0} يوم يُنقل إلى السنة الجديدة والباقي يذهب إلى رصيد نهاية الخدمة.`, `Carry-over ON: up to ${Number(d) || 0} days roll into the new year; the rest goes to end-of-service leave.`) : T('الترحيل مفتوح بلا حد: كل الرصيد المتبقي يُنقل إلى السنة الجديدة ولا يوجد فائض نهاية خدمة.', 'Unlimited carry-over: the whole remaining balance rolls into the new year; no end-of-service excess.')}</Note>
+      <div style={{ fontSize: 11, color: 'var(--mu)', marginTop: 6, lineHeight: 1.7 }}>{T('يُطبَّق على كل الموظفين وكل السنوات (الجدول والكروت وتطبيق الموظف). السنوات التي عدّلتها يدويًا من "تعديل الرصيد" تبقى بقيمها المحفوظة.', 'Applies to all employees and years (table, cards, Employee App). Years you edited manually via "Edit balance" keep their saved values.')}</div>
     </Card>
   );
 }
@@ -32,14 +32,14 @@ export default function CarryCard() {
 export function AccrualCard() {
   const { settings } = useApp(); const save = useSaveSetting();
   const am = settings.accrual && settings.accrual.method ? settings.accrual.method : 'calendar';
-  const setAm = (m) => save('accrual', 'leave_accrual_method', { method: m }, T('اتحفظت طريقة احتساب الاستحقاق', 'Accrual method saved'));
+  const setAm = (m) => save('accrual', 'leave_accrual_method', { method: m }, T('تم الحفظ طريقة احتساب الاستحقاق', 'Accrual method saved'));
   const AM = [['calendar', T('أيام تقويمية', 'Calendar days'), T('السنوي × (عدد الأيام من أول السنة/المباشرة حتى اليوم ÷ أيام السنة 365)', 'Annual × (days elapsed ÷ days in year)')], ['workdays', T('أيام العمل', 'Workdays'), T('السنوي × (أيام العمل المنقضية أحد–خميس بدون الإجازات الرسمية ÷ أيام عمل السنة)', 'Annual × (workdays elapsed ÷ workdays in year)')], ['monthly', T('شهرياً', 'Monthly'), T('السنوي ÷ 12 لكل شهر، والشهر الحالي بالتناسب', 'Annual ÷ 12 per month, current month prorated')]];
   return (
     <Card icon="calculator" title={T('طريقة احتساب الاستحقاق السنوي حتى اليوم', 'Annual leave accrual method')} id="LC_ACC_CARD">
       <div id="LC_ACCRUAL" style={{ display: 'grid', gap: 6 }}>
         {AM.map(([k, l, d]) => <label key={k} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: 12.5, cursor: 'pointer', padding: '6px 8px', borderRadius: 8, border: '1px solid ' + (am === k ? 'var(--gr)' : 'var(--bd)') }}><input type="radio" name="lcam" checked={am === k} onChange={() => setAm(k)} style={{ marginTop: 3 }} /><span><b>{l}</b><br /><span style={{ color: 'var(--mu)', fontSize: 11.5 }}>{d}</span></span></label>)}
       </div>
-      <Note style={{ marginTop: 6 }}>{T('يتطبق على كل الموظفين وكل السنين، ومعادلة الرصيد في صفحة الأرصدة بتتغير معاه.', 'Applies to all employees and years; the balance equation follows it.')}</Note>
+      <Note style={{ marginTop: 6 }}>{T('يُطبَّق على كل الموظفين وكل السنوات، وتتغير معه معادلة الرصيد في صفحة الأرصدة.', 'Applies to all employees and years; the balance equation follows it.')}</Note>
     </Card>
   );
 }

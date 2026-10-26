@@ -100,7 +100,7 @@ export default function Layout() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 10px', background: 'var(--c2)', border: '1px solid var(--bd)', borderRadius: 8, fontSize: 11 }}>
                 <div className="av" style={{ width: 26, height: 26, background: 'linear-gradient(135deg,var(--ariba-bright,#29B35E),var(--ariba-dark,#014D3D))', color: '#fff', fontSize: 10 }}>HR</div>
                 <span id="HRL" style={{ fontWeight: 700 }}>{roleLabel}</span>
-                <button id="aribaPwHdrBtn" type="button" className="ib" title={en ? 'Change my password' : 'تغيير كلمة مرور حسابي'} aria-label={en ? 'Change my password' : 'تغيير كلمة مرور حسابي'} style={{ fontSize: 12, color: theme === 'dark' ? '#E4E4BC' : undefined }} onClick={() => (auth.state.token ? setChgPw(true) : toast(en ? 'Please sign in first' : 'سجّل الدخول بحسابك الأول', 'ter'))}><i className="ti ti-key" /></button>
+                <button id="aribaPwHdrBtn" type="button" className="ib" title={en ? 'Change my password' : 'تغيير كلمة مرور حسابي'} aria-label={en ? 'Change my password' : 'تغيير كلمة مرور حسابي'} style={{ fontSize: 12, color: theme === 'dark' ? '#E4E4BC' : undefined }} onClick={() => (auth.state.token ? setChgPw(true) : toast(en ? 'Please sign in first' : 'سجّل الدخول بحسابك أولًا', 'ter'))}><i className="ti ti-key" /></button>
                 <button className="ib" onClick={() => { auth.signOut(); nav('/'); }} title="تسجيل الخروج" style={{ color: theme === 'dark' ? '#E4E4BC' : 'var(--ariba-dark,#014D3D)', fontSize: 12, marginInlineStart: 5, paddingInline: 8 }} aria-label="تسجيل الخروج"><i className="ti ti-logout" /></button>
               </div>
             </div>

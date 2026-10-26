@@ -12,7 +12,7 @@ export default function BioAsk({ onClose }) {
         <div style={{ fontWeight: 800, fontSize: 16, margin: '8px 0' }}>{T('تفعيل الدخول بالبصمة؟', 'Enable fingerprint / Face ID sign-in?')}</div>
         <div style={{ fontSize: 13, color: '#555', marginBottom: 16 }}>{T('بدل كتابة كلمة المرور كل مرة، تدخل بالبصمة أو Face ID على هذا الجهاز.', 'Sign in with your fingerprint or Face ID on this device instead of typing your password.')}</div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button style={bs(0)} onClick={onClose}>{T('مش دلوقتي', 'Not now')}</button>
+          <button style={bs(0)} onClick={onClose}>{T('ليس الآن', 'Not now')}</button>
           <button style={bs(1)} onClick={async () => { const r = await vault.enableBiometric(auth.state.rt || ''); toast(r.msg || '', r.ok ? 'tin' : 'ter'); onClose(); }}>{T('تفعيل', 'Enable')}</button>
         </div>
       </div>

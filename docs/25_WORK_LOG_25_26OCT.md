@@ -87,6 +87,16 @@ Commits of the PWA and the 26 Oct work: `0bef2b9`, `eac774c`, `f6ddbcf`, `eafb7c
 - **Decided by the owner (26 Oct):** the colleague restructures the whole database after adding the two new tables and fixes the schema used by demo and production — no database work from us meanwhile; no production service for the employee PWA; the Gmail token renewal (expires about 1 Nov 2026) is left alone.
 - **Remaining:** check the installed app on real phones (iOS and Android); the native Expo app and store publishing; optional `ANTHROPIC_API_KEY` for the AI assistant; a higher-resolution logo for the install icons; the Tamheer leave presentation decision for the management demo; after the colleague's schema is ready, re-test the server and both apps on it and re-run the parity suites.
 
+## 9. Management feedback after the meeting (26 Oct, evening)
+
+| Request | Cause found | Fix |
+|---|---|---|
+| Egyptian dialect anywhere in the site or the app → formal Arabic | HR's ported screens, their translation dictionary (`trDict.js`), messages from the server and a few app texts were written in Egyptian dialect (about 200 strings) | Rewritten into plain formal Arabic in 76 files, with the same rewrite applied to the dictionary keys so the English mode still finds its translations. Texts that **recognise what a user types** (the AI assistant's command parser, `empFields.js`, `aiActions.js`) were left on purpose: they must understand both dialects. Backend tests: 129 passed |
+| Files cannot be shared / exported to Teams | There was no Teams path at all; and on a phone the share sheet is refused when the file takes a few seconds to build because the tap has expired | Employee app: after a PDF is built a dialog offers «مشاركة (Teams وغيرها)» (a fresh tap, so the browser accepts it), «تنزيل», and on desktop «فتح Teams». HR site: «مشاركة / Teams» in every export dialog and «مشاركة PDF (Teams وغيره)» for official forms and the salary certificate; where the browser cannot share files the file is downloaded and a Teams chat is opened with the recipients and message filled in |
+| A PDF prints as one page and a little more | The PDF builder cut a second page for any overflow; HR's print path only fitted documents with the official letterhead | Up to 1.35 pages of content is shrunk onto **one full page**; a longer document keeps normal pages (checked: 1.04 and 1.23 pages → 1 page, 1.52 → 2, 2.24 → 3). Same rule in the HR site PDF builder and in print for documents without a letterhead |
+
+Not done, needs the company's Microsoft 365 admin: posting a file straight into a **Teams channel**. A file cannot be attached to a channel from a link; it needs a Graph app (Files.ReadWrite + ChannelMessage.Send) or a Power Automate flow. Sharing from the share sheet and the prefilled chat cover the daily need meanwhile.
+
 ---
 
 # العربية
@@ -170,3 +180,13 @@ commits الـPWA وعمل 26 أكتوبر: `0bef2b9` و`eac774c` و`f6ddbcf` و
 
 - **قرارات المالك (26 أكتوبر):** الزميلة تعيد هيكلة قاعدة البيانات كاملة بعد إضافة الجدولين وتضبط السكيما المستخدمة في demo والإنتاج، ولا عمل منا على قاعدة البيانات في هذه الأثناء؛ لا خدمة إنتاج لتطبيق الموظف PWA؛ تجديد توكن Gmail (ينتهي نحو 1 نوفمبر 2026) يُترك.
 - **المتبقي:** فحص التطبيق المثبّت على جوالات حقيقية (iOS وAndroid)؛ تطبيق Expo الأصلي والنشر في المتجرين؛ `ANTHROPIC_API_KEY` اختياري للمساعد الذكي؛ شعار بدقة أعلى لأيقونات التثبيت؛ قرار عرض إجازات «تمهير» أمام الإدارة؛ وبعد جاهزية سكيما الزميلة: إعادة اختبار الخادم والتطبيقين عليها وإعادة تشغيل اختبارات التطابق.
+
+## 9. ملاحظات الإدارة بعد الاجتماع (26 أكتوبر، مساءً)
+
+| الطلب | السبب الذي وُجد | الإصلاح |
+|---|---|---|
+| اللهجة المصرية في الموقع أو التطبيق ← عربية فصحى رسمية | شاشات HR المنقولة وقاموس الترجمة (`trDict.js`) ورسائل من الخادم وبعض نصوص التطبيق كانت بلهجة مصرية (نحو 200 نص) | أُعيدت صياغتها بعربية رسمية بسيطة في 76 ملفاً، مع تطبيق نفس الصياغة على مفاتيح القاموس ليبقى الوضع الإنجليزي يجد ترجماته. النصوص التي **تتعرف على ما يكتبه المستخدم** (محلل أوامر المساعد الذكي و`empFields.js` و`aiActions.js`) تُركت عمداً لأنها يجب أن تفهم اللهجتين. اختبارات الباك إند: 129 ناجحة |
+| لا يمكن مشاركة الملفات أو تصديرها إلى Teams | لم يكن هناك أي مسار لـ Teams أصلاً؛ وعلى الجوال تُرفض نافذة المشاركة إذا تأخر بناء الملف بضع ثوانٍ لأن النقرة انتهت | تطبيق الموظف: بعد بناء PDF يظهر حوار فيه «مشاركة (Teams وغيرها)» (بنقرة جديدة فيقبلها المتصفح) و«تنزيل»، وعلى الحاسوب «فتح Teams». موقع HR: «مشاركة / Teams» في كل نافذة تصدير و«مشاركة PDF (Teams وغيره)» للنماذج الرسمية وخطاب تعريف الراتب؛ وإن لم يدعم المتصفح مشاركة الملفات يُنزَّل الملف وتُفتح محادثة Teams بمستلميها ورسالتها جاهزين |
+| طباعة PDF تخرج صفحة وقليلاً | بانى PDF كان يقص صفحة ثانية لأي زيادة، ومسار الطباعة في HR كان يضبط الصفحة الواحدة للمستندات ذات الورق الرسمي فقط | ما يصل إلى 1.35 صفحة يُصغَّر على **صفحة واحدة كاملة**، والمستند الأطول يبقى بصفحات عادية (جُرّب: 1.04 و1.23 صفحة ← صفحة واحدة، و1.52 ← صفحتان، و2.24 ← ثلاث). نفس القاعدة في بانى PDF بموقع HR وفي الطباعة للمستندات بدون ورق رسمي |
+
+لم يُنفَّذ ويحتاج مسؤول Microsoft 365 في الشركة: نشر ملف مباشرة داخل **قناة في Teams**. لا يمكن إرفاق ملف بقناة من رابط؛ يلزم تطبيق Graph (صلاحيتا Files.ReadWrite وChannelMessage.Send) أو تدفق Power Automate. المشاركة من نافذة المشاركة والمحادثة الجاهزة تغطيان الاستخدام اليومي في الأثناء.

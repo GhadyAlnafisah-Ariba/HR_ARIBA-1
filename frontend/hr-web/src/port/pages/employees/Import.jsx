@@ -32,7 +32,7 @@ export default function Import({ open, onClose }) {
       if (r.salary === undefined) warns.push(T('الراتب الأساسي ناقص', 'Basic salary missing')); else if (r.salary <= 0) warns.push(T('الراتب الأساسي صفر', 'Basic salary is zero'));
       if (!r.nationality) warns.push(T('الجنسية ناقصة', 'Nationality missing')); if (!r.contractJoin) warns.push(T('تاريخ المباشرة ناقص', 'Joining date missing'));
       const ke = r.empNo ? nn(r.empNo) : '', ki = r.iqamaNo ? nn(r.iqamaNo) : '';
-      if ((ke && seenNo[ke]) || (ki && seenIq[ki])) issues.push(T('مكرر جوه الملف (نفس الرقم الوظيفي أو الهوية)', 'Duplicate inside the file'));
+      if ((ke && seenNo[ke]) || (ki && seenIq[ki])) issues.push(T('مكرر داخل الملف (نفس الرقم الوظيفي أو الهوية)', 'Duplicate inside the file'));
       if (ke) seenNo[ke] = 1; if (ki) seenIq[ki] = 1;
       const ex = (ke && byNo[ke]) || (ki && byIq[ki]) || (r.email && byMail[nn(r.email)]) || null;
       const action = issues.length ? 'error' : ex ? (upd ? 'update' : 'skip') : 'new';
@@ -41,7 +41,7 @@ export default function Import({ open, onClose }) {
   }, [S, upd, employees, sh]); // eslint-disable-line
   const cnt = (a) => rows.filter((x) => x.action === a).length;
   async function run() {
-    const todo = rows.filter((x) => x.action === 'new' || x.action === 'update'); if (!todo.length) return toast(T('مفيش حاجة تتضاف أو تتحدّث', 'Nothing to add or update'), 'ter');
+    const todo = rows.filter((x) => x.action === 'new' || x.action === 'update'); if (!todo.length) return toast(T('لا يوجد ما يُضاف أو يُحدَّث', 'Nothing to add or update'), 'ter');
     setBusy(true); let added = 0, updated = 0, bad = 0, i = 0; const all = employees.slice(); const errs = [];
     for (const x of todo) {
       i++; setProg(i + ' / ' + todo.length);
@@ -56,7 +56,7 @@ export default function Import({ open, onClose }) {
     }
     log('employees', 'استيراد موظفين من Excel', { summary: 'استيراد ملف "' + S.file + '": إضافة ' + added + ' وتحديث ' + updated + ' ورفض ' + (bad + cnt('error')), details: { file: S.file, added, updated, rejected: bad } });
     await reload({ silent: true }); setBusy(false); setProg('');
-    toast('✓ ' + T('اتضاف ' + added + ' موظف' + (updated ? ' واتحدّث ' + updated : '') + (bad ? ' — ' + bad + ' مرفوض: ' + errs[0] : ''), 'Added ' + added + (updated ? ', updated ' + updated : '') + (bad ? ', rejected ' + bad : '')), bad ? 'ter' : 'tin');
+    toast('✓ ' + T('تمت الإضافة ' + added + ' موظف' + (updated ? ' وتم التحديث ' + updated : '') + (bad ? ' — ' + bad + ' مرفوض: ' + errs[0] : ''), 'Added ' + added + (updated ? ', updated ' + updated : '') + (bad ? ', rejected ' + bad : '')), bad ? 'ter' : 'tin');
     if (!bad) { setS({ sheets: [], sheet: 0, map: [], file: '' }); onClose(); }
   }
   function tpl() { saveXlsx('employees_import_template.xlsx', [{ name: 'Employees', rows: [templateHead()], widths: templateHead().map(() => 20) }]); }

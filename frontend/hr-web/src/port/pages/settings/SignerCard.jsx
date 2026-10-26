@@ -50,7 +50,7 @@ export default function SignerCard() {
   const isEn = getLang() === 'en';
   const persist = async (next, msg) => {
     const ok = await save('signer', 'hr_signer', { ...next, updated: Date.now() }, msg);
-    setStat({ t: (msg ? msg + ' — ' : '') + (ok ? T('اتحفظ على السيرفر ✓', 'Saved to the server ✓') : T('تعذر الحفظ على السيرفر', 'Could not save to the server')), ok });
+    setStat({ t: (msg ? msg + ' — ' : '') + (ok ? T('تم الحفظ على الخادم ✓', 'Saved to the server ✓') : T('تعذر الحفظ على السيرفر', 'Could not save to the server')), ok });
   };
   const list = [...employees].sort((a, b) => String(a.nameAr || '').localeCompare(String(b.nameAr || ''), 'ar'));
   const chooseEmp = (id) => { const e = id === 'default' ? null : employees.find((x) => String(x.id) === id); setS((s) => ({ ...s, empId: id, ...(e ? { nameAr: e.nameAr || '', nameEn: e.nameEn || '' } : {}) })); };
@@ -59,7 +59,7 @@ export default function SignerCard() {
     try {
       const d = await cropAlpha(await readImage(f, { maxW: kind === 'sig' ? 520 : 420, maxH: kind === 'sig' ? 520 : 420, maxLen: 200000, whiteToAlpha: true }));
       const n = kind === 'sig' ? { ...S, sigs: { ...S.sigs, [key]: d } } : { ...S, stamp: d };
-      setS(n); await persist(n, kind === 'sig' ? T('اتحدّث التوقيع', 'Signature updated') : T('اتحدّث الختم', 'Stamp updated'));
+      setS(n); await persist(n, kind === 'sig' ? T('تم تحديث التوقيع', 'Signature updated') : T('تم تحديث الختم', 'Stamp updated'));
     } catch { toast(T('تعذر قراءة الصورة', 'Could not read the image'), 'ter'); }
     ev.target.value = '';
   };
@@ -69,7 +69,7 @@ export default function SignerCard() {
   return (
     <div className="card hs-card" id="HS_CARD" style={{ marginTop: 12, maxWidth: 900, padding: 12 }}>
       <div className="ct" style={{ marginBottom: 8 }}><i className="ti ti-signature" /> {T('مدير الموارد البشرية والتوقيع والختم (لكل النماذج)', 'HR manager, signature & stamp (all forms)')}</div>
-      <div className="hs-note" style={{ marginBottom: 8 }}>{T('الاسم والمسمى والتوقيع والختم اللي هنا بيظهروا في كل النماذج وخطابات الراتب بعد كده (على يسار الورقة في العربي، وعلى اليمين في الإنجليزي).', 'The name, title, signature and stamp set here appear on every form and letter (left side in Arabic, right side in English).')}</div>
+      <div className="hs-note" style={{ marginBottom: 8 }}>{T('الاسم والمسمى والتوقيع والختم المحفوظة هنا تظهر في كل النماذج وخطابات الراتب لاحقًا (على يسار الورقة في العربي، وعلى اليمين في الإنجليزي).', 'The name, title, signature and stamp set here appear on every form and letter (left side in Arabic, right side in English).')}</div>
       <div className="row">
         <div><label>{T('مدير الموارد البشرية', 'HR manager')}</label>
           <select id="HS_EMP" value={String(S.empId || 'default')} onChange={(e) => chooseEmp(e.target.value)}>
@@ -86,19 +86,19 @@ export default function SignerCard() {
         </select></div></div>
       <div className="row">
         <div><label>{T('توقيع المدير المختار', 'Signature of the selected manager')}</label><input type="file" id="HS_SIGFILE" accept="image/*" onChange={upImg('sig')} />
-          <div className="hs-note">{T('ارفع صورة التوقيع (PNG/JPG) — الخلفية البيضاء بتتشال تلقائياً.', 'Upload the signature image (PNG/JPG) — the white background is removed automatically.')}</div></div>
+          <div className="hs-note">{T('ارفع صورة التوقيع (PNG/JPG) — تُزال الخلفية البيضاء تلقائيًا.', 'Upload the signature image (PNG/JPG) — the white background is removed automatically.')}</div></div>
         <div><label>{T('ختم الشركة', 'Company stamp')}</label><input type="file" id="HS_STAMPFILE" accept="image/*" onChange={upImg('stamp')} />
-          <div className="hs-note"><a href="#" id="HS_STAMPRESET" onClick={(ev) => { ev.preventDefault(); const n = { ...S, stamp: '' }; setS(n); persist(n, T('اتشال الختم', 'Stamp removed')); }}>{T('إزالة الختم', 'Remove the stamp')}</a></div></div>
+          <div className="hs-note"><a href="#" id="HS_STAMPRESET" onClick={(ev) => { ev.preventDefault(); const n = { ...S, stamp: '' }; setS(n); persist(n, T('تمت إزالة الختم', 'Stamp removed')); }}>{T('إزالة الختم', 'Remove the stamp')}</a></div></div>
       </div>
-      <div id="HS_WARN" style={{ display: (!hasSig && S.empId && S.empId !== 'default') ? 'block' : 'none', background: 'rgba(245,158,11,.12)', border: '1px solid rgba(245,158,11,.4)', color: 'var(--am)', borderRadius: 8, padding: '7px 10px', fontSize: 12, marginBottom: 8 }}>{T('لسه ما اترفعش توقيع للمدير ده — هيظهر اسمه بخط للتوقيع لحد ما ترفعه.', 'No signature uploaded for this manager yet — his name will show with a signature line until you upload it.')}</div>
+      <div id="HS_WARN" style={{ display: (!hasSig && S.empId && S.empId !== 'default') ? 'block' : 'none', background: 'rgba(245,158,11,.12)', border: '1px solid rgba(245,158,11,.4)', color: 'var(--am)', borderRadius: 8, padding: '7px 10px', fontSize: 12, marginBottom: 8 }}>{T('لم يُرفع توقيع لهذا المدير بعد — سيظهر اسمه بخط التوقيع إلى أن يُرفع.', 'No signature uploaded for this manager yet — his name will show with a signature line until you upload it.')}</div>
       <div className="row" style={{ alignItems: 'center' }}>
         <label style={{ display: 'flex', gap: 6, alignItems: 'center', fontSize: 12, margin: 0 }}><input type="checkbox" id="HS_USESIG" checked={S.useSig !== false} onChange={(e) => setS({ ...S, useSig: e.target.checked })} /> {T('إظهار التوقيع', 'Show signature')}</label>
         <label style={{ display: 'flex', gap: 6, alignItems: 'center', fontSize: 12, margin: 0 }}><input type="checkbox" id="HS_USESTAMP" checked={S.useStamp !== false} onChange={(e) => setS({ ...S, useStamp: e.target.checked })} /> {T('إظهار ختم الشركة', 'Show company stamp')}</label>
       </div>
       <div className="hs-prev" id="HS_PREV"><Box g={g} /><Box en g={g} /></div>
       <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8 }}>
-        <button type="button" className="btn bpl bsm" id="HS_SAVE" onClick={() => { const e = (S.empId && S.empId !== 'default') ? employees.find((x) => String(x.id) === String(S.empId)) : null; const n = { ...S, titleAr: (S.titleAr || '').trim() || DEF.titleAr, titleEn: (S.titleEn || '').trim() || DEF.titleEn, nameAr: e ? e.nameAr || S.nameAr : S.nameAr, nameEn: e ? e.nameEn || S.nameEn : S.nameEn }; setS(n); persist(n, T('اتحفظ', 'Saved')); }}><i className="ti ti-device-floppy" /> {T('حفظ', 'Save')}</button>
-        <button type="button" className="btn bgr bsm" id="HS_DELSIG" onClick={() => { const sigs = { ...S.sigs }; delete sigs[key]; const n = { ...S, sigs }; setS(n); persist(n, T('اتحذف التوقيع', 'Signature removed')); }}>{T("حذف توقيع المدير المختار", "Remove selected manager's signature")}</button>
+        <button type="button" className="btn bpl bsm" id="HS_SAVE" onClick={() => { const e = (S.empId && S.empId !== 'default') ? employees.find((x) => String(x.id) === String(S.empId)) : null; const n = { ...S, titleAr: (S.titleAr || '').trim() || DEF.titleAr, titleEn: (S.titleEn || '').trim() || DEF.titleEn, nameAr: e ? e.nameAr || S.nameAr : S.nameAr, nameEn: e ? e.nameEn || S.nameEn : S.nameEn }; setS(n); persist(n, T('تم الحفظ', 'Saved')); }}><i className="ti ti-device-floppy" /> {T('حفظ', 'Save')}</button>
+        <button type="button" className="btn bgr bsm" id="HS_DELSIG" onClick={() => { const sigs = { ...S.sigs }; delete sigs[key]; const n = { ...S, sigs }; setS(n); persist(n, T('تم حذف التوقيع', 'Signature removed')); }}>{T("حذف توقيع المدير المختار", "Remove selected manager's signature")}</button>
         <span id="HS_STAT" style={{ fontSize: 12, color: stat.ok ? 'var(--gr)' : 'var(--am)' }}>{stat.t}</span>
       </div>
     </div>

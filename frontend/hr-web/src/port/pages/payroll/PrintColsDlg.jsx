@@ -23,7 +23,7 @@ export default function PrintColsDlg({ open, rows, en, onClose, onPrint }) {
             onClick={() => { savePrintCols(ordered); onPrint(ordered); }}><i className="ti ti-printer" /> {en ? 'Print' : 'طباعة'} ({ordered.length})</button>
         </span>
       </div>}>
-      <div style={{ fontSize: 12, color: 'var(--mu)', marginBottom: 8 }}>{en ? 'Tick only the columns needed on the printed sheet. Your choice is remembered.' : 'علّم الأعمدة المطلوبة في الورقة المطبوعة فقط. اختيارك بيتحفظ للمرات الجاية.'}</div>
+      <div style={{ fontSize: 12, color: 'var(--mu)', marginBottom: 8 }}>{en ? 'Tick only the columns needed on the printed sheet. Your choice is remembered.' : 'علّم الأعمدة المطلوبة في الورقة المطبوعة فقط. يُحفظ اختيارك للمرات القادمة.'}</div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(170px,1fr))', gap: 6 }}>
         {PRINT_COLS.map((c) => (
           <label key={c.k} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 8px', border: '1px solid var(--bd)', borderRadius: 8, cursor: 'pointer', background: on.has(c.k) ? 'rgba(41,179,94,.12)' : 'transparent', fontSize: 12 }}>

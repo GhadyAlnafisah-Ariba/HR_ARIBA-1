@@ -167,8 +167,8 @@ function SyncBadge({ h }) {
   const t = st.at ? st.at.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '';
   const box = (bg, c, txt) => <div id="LB_SYNC" style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', padding: '8px 12px', borderRadius: 10, background: bg, color: c, fontSize: 12, fontWeight: 700, marginBottom: 10 }}><i className="ti ti-device-mobile" /><span style={{ flex: 1 }}>{txt}</span><button className="btn bsm" disabled={busy} onClick={now}><i className="ti ti-refresh" /> {h ? 'Sync now' : 'مزامنة الآن'}</button></div>;
   if (!st.at) return box('rgba(100,116,139,.12)', 'var(--mu)', h ? 'Employee App sync: starting…' : 'ربط تطبيق الموظف: جاري المزامنة…');
-  if (st.ok) return box('rgba(16,185,129,.12)', '#0a7a3f', (h ? '✓ Employee App shows exactly these balances — last sync ' : '✓ تطبيق الموظف بيعرض نفس الأرصدة دي بالظبط — آخر مزامنة ') + t + (st.saved ? (h ? ` (${st.saved} updated)` : ` (اتحدّث ${st.saved})`) : ''));
-  if (st.error === 'SQL19_MISSING') return box('rgba(245,158,11,.14)', '#a16207', h ? '⚠ Run sql/19_leave_snapshot.sql once in Supabase so the Employee App reads the same balances' : '⚠ شغّل ملف sql/19_leave_snapshot.sql مرة واحدة في Supabase › SQL Editor عشان تطبيق الموظف يقرا نفس الأرصدة دي');
+  if (st.ok) return box('rgba(16,185,129,.12)', '#0a7a3f', (h ? '✓ Employee App shows exactly these balances — last sync ' : '✓ يعرض تطبيق الموظف نفس هذه الأرصدة تمامًا — آخر مزامنة ') + t + (st.saved ? (h ? ` (${st.saved} updated)` : ` (تم التحديث ${st.saved})`) : ''));
+  if (st.error === 'SQL19_MISSING') return box('rgba(245,158,11,.14)', '#a16207', h ? '⚠ Run sql/19_leave_snapshot.sql once in Supabase so the Employee App reads the same balances' : '⚠ شغّل ملف sql/19_leave_snapshot.sql مرة واحدة في Supabase › SQL Editor ليقرأ تطبيق الموظف نفس هذه الأرصدة');
   return box('rgba(239,68,68,.12)', 'var(--rd)', (h ? '⚠ Sync failed: ' : '⚠ تعذرت المزامنة: ') + st.error);
 }
 

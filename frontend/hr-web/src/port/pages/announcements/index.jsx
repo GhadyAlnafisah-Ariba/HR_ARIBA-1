@@ -101,14 +101,14 @@ function Auto({ can, onNoDb }) {
   if (!c) return <div className="card" style={{ padding: 14 }}>جاري التحميل…</div>;
   const set = (p) => setC((x) => ({ ...x, ...p }));
   const tpl = (k, f, v) => setC((x) => ({ ...x, tpl: { ...(x.tpl || {}), [k]: { ...((x.tpl || {})[k] || {}), [f]: v } } }));
-  async function save(next) { setBusy(true); try { await setAuto(next || c); toast('✓ اتحفظ إعداد التهاني التلقائية', 'tin'); } catch (e) { toast('⚠️ ' + e.message, 'ter'); } finally { setBusy(false); } }
-  async function runNow() { setBusy(true); try { const r = await rpc('ariba_occ_run_auto', {}); toast(r.sent ? '✓ اتبعت ' + r.sent + ' تهنئة اليوم' : 'لا توجد مناسبات اليوم (أو اتبعت قبل كده / التلقائي موقوف)', 'tin'); } catch (e) { if (noDb(e)) onNoDb(); toast('⚠️ ' + e.message, 'ter'); } finally { setBusy(false); } }
+  async function save(next) { setBusy(true); try { await setAuto(next || c); toast('✓ تم حفظ إعداد التهاني التلقائية', 'tin'); } catch (e) { toast('⚠️ ' + e.message, 'ter'); } finally { setBusy(false); } }
+  async function runNow() { setBusy(true); try { const r = await rpc('ariba_occ_run_auto', {}); toast(r.sent ? '✓ أُرسل ' + r.sent + ' تهنئة اليوم' : 'لا توجد مناسبات اليوم (أو أُرسلت من قبل / الإرسال التلقائي موقوف)', 'tin'); } catch (e) { if (noDb(e)) onNoDb(); toast('⚠️ ' + e.message, 'ter'); } finally { setBusy(false); } }
   const T = (k) => (c.tpl && c.tpl[k]) || {};
   return (
     <div className="card"><div className="ch"><div className="ct"><i className="ti ti-robot" /> <span>التهاني التلقائية</span></div></div>
       <div style={{ padding: 12, display: 'grid', gap: 12 }}>
         <label style={{ display: 'flex', gap: 8, alignItems: 'center', fontWeight: 700 }}><input type="checkbox" id="OCC_ON" checked={!!c.enabled} disabled={!can} onChange={(e) => { const n = { ...c, enabled: e.target.checked }; setC(n); save(n); }} /> تفعيل الإرسال التلقائي {c.enabled ? <span className="b bg">شغّال</span> : <span className="b br">موقوف — لن يُرسل شيء إلا يدويًا</span>}</label>
-        <div style={{ fontSize: 12, color: 'var(--mu)', lineHeight: 1.8 }}>لما يكون شغّال: كل موظف يوصله تهنئة <b>في يوم المناسبة</b> تلقائيًا (مرة واحدة في السنة لكل مناسبة). بتتولّد أول ما يفتح أي مستخدم برنامج الموارد أو تطبيق الموظف في اليوم، ولو إضافة <b>pg_cron</b> مفعّلة على Supabase بتتولّد الساعة 6 صباحًا بدون فتح أي برنامج.</div>
+        <div style={{ fontSize: 12, color: 'var(--mu)', lineHeight: 1.8 }}>لما يكون شغّال: كل موظف يوصله تهنئة <b>في يوم المناسبة</b> تلقائيًا (مرة واحدة في السنة لكل مناسبة). تُولَّد عند أول فتح لبرنامج الموارد أو تطبيق الموظف في اليوم، ولو إضافة <b>pg_cron</b> مفعّلة على Supabase تُولَّد الساعة 6 صباحًا دون فتح أي برنامج.</div>
         <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
           {[['birthday', '🎂 عيد الميلاد (من تاريخ الميلاد)'], ['anniversary', '🎉 سنوية التعيين (من تاريخ المباشرة)'], ['custom', '🎓 المناسبات المسجّلة للموظفين (تخرج، زواج، مولود…)']].map(([k, l]) =>
             <label key={k} style={{ display: 'flex', gap: 6, alignItems: 'center', fontSize: 13 }}><input type="checkbox" checked={c[k] !== false} disabled={!can} onChange={(e) => set({ [k]: e.target.checked })} /> {l}</label>)}
@@ -118,7 +118,7 @@ function Auto({ can, onNoDb }) {
             <b style={{ fontSize: 13 }}>{l}</b>
             <input style={INP} placeholder={occ(k).t} value={T(k).title || ''} onChange={(e) => tpl(k, 'title', e.target.value)} disabled={!can} />
             <textarea style={{ ...INP, minHeight: 60 }} placeholder={occ(k).b} value={T(k).body || ''} onChange={(e) => tpl(k, 'body', e.target.value)} disabled={!can} />
-            <div style={{ fontSize: 11, color: 'var(--mu)' }}>المتغيرات: {'{name}'} = الاسم الأول{k === 'anniversary' ? ' ، {years} = عدد السنوات' : ''}. اتركه فاضي لاستخدام النص الافتراضي.</div>
+            <div style={{ fontSize: 11, color: 'var(--mu)' }}>المتغيرات: {'{name}'} = الاسم الأول{k === 'anniversary' ? ' ، {years} = عدد السنوات' : ''}. اتركه فارغًا لاستخدام النص الافتراضي.</div>
           </div>))}
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <button className="btn bpl" disabled={busy || !can} onClick={() => save()}><i className="ti ti-device-floppy" /> حفظ</button>
@@ -137,14 +137,14 @@ function Occasions({ can, act, onNoDb }) {
   async function add() {
     if (!f.emp) return toast('اختر الموظف', 'ter');
     setBusy(true);
-    try { await rpc('ariba_occ_save', { p_employee_id: String(f.emp), p_occasion: f.k, p_date: f.d, p_yearly: f.y, p_note: f.note || null }); toast('✓ اتسجّلت المناسبة — هتتبعت تلقائيًا في يومها (لو التلقائي شغّال)', 'tin'); setF({ ...f, note: '' }); load(); }
+    try { await rpc('ariba_occ_save', { p_employee_id: String(f.emp), p_occasion: f.k, p_date: f.d, p_yearly: f.y, p_note: f.note || null }); toast('✓ تم تسجيل المناسبة — ستُرسل تلقائيًا في يومها (إن كان الإرسال التلقائي مفعّلًا)', 'tin'); setF({ ...f, note: '' }); load(); }
     catch (e) { toast('⚠️ ' + e.message, 'ter'); } finally { setBusy(false); }
   }
   async function del(id) { if (!window.confirm('حذف المناسبة؟')) return; try { await rpc('ariba_occ_delete', { p_id: id }); load(); } catch (e) { toast('⚠️ ' + e.message, 'ter'); } }
   return (
     <div className="card"><div className="ch"><div className="ct"><i className="ti ti-calendar-heart" /> <span>مناسبات الموظفين المسجّلة</span></div></div>
       <div style={{ padding: 12, display: 'grid', gap: 10 }}>
-        <div style={{ fontSize: 12, color: 'var(--mu)', lineHeight: 1.8 }}>سجّل مناسبة لموظف بتاريخها (تخرج، زواج، مولود، ترقية…) وهتتبعت له تهنئة <b>تلقائيًا في ذلك اليوم</b> لو «التهاني التلقائية» شغّالة. «تتكرر سنويًا» مناسبة لحاجة زي ذكرى الزواج. عيد الميلاد وسنوية التعيين بيتحسبوا من بيانات الموظف تلقائيًا فلا تحتاج تسجلهم.</div>
+        <div style={{ fontSize: 12, color: 'var(--mu)', lineHeight: 1.8 }}>سجّل مناسبة لموظف بتاريخها (تخرج، زواج، مولود، ترقية…) وستُرسل له تهنئة <b>تلقائيًا في ذلك اليوم</b> إذا كانت «التهاني التلقائية» مفعّلة. «تتكرر سنويًا» مناسبة لأمر مثل ذكرى الزواج. أما عيد الميلاد وسنوية التعيين فتُحسب من بيانات الموظف تلقائيًا فلا تحتاج إلى تسجيلها.</div>
         {can && <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(170px,1fr))', gap: 8, alignItems: 'end' }}>
           <div><Lb>الموظف</Lb><select style={INP} value={f.emp} onChange={(e) => setF({ ...f, emp: e.target.value })}><option value="">— اختر —</option>{act.map((e) => <option key={e.id} value={e.id}>{e.nameAr || e.nameEn}</option>)}</select></div>
           <div><Lb>المناسبة</Lb><select style={INP} value={f.k} onChange={(e) => setF({ ...f, k: e.target.value })}>{REGISTERABLE.map((o) => <option key={o.k} value={o.k}>{o.ic} {o.ar}</option>)}</select></div>

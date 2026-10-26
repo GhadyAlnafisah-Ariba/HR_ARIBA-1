@@ -21,7 +21,7 @@ export default function BrandCard() {
   const timer = useRef(null); const savedBrand = settings.brand && settings.brand.p && !settings.brand.reset ? settings.brand : null;
   useEffect(() => { setB(savedBrand ? { p: savedBrand.p, s: savedBrand.s, a: savedBrand.a || '' } : { p: DEFC.p, s: DEFC.s, a: '' }); }, [savedBrand && savedBrand.p, savedBrand && savedBrand.s, savedBrand && savedBrand.a]); // eslint-disable-line
   useEffect(() => () => clearTimeout(timer.current), []);
-  const say = (m, ok) => { setKeep(true); setStat(m + ' — ' + (ok ? T('اتحفظ على السيرفر ✓ (بيظهر عند كل المستخدمين)', 'Saved to the server ✓ (everyone sees it)') : T('اتحفظ على الجهاز ده بس — ما اتبعتش للسيرفر', 'Saved on this device only — not sent to the server'))); setTimeout(() => setKeep(false), ok ? 6000 : 60000); };
+  const say = (m, ok) => { setKeep(true); setStat(m + ' — ' + (ok ? T('تم الحفظ على الخادم ✓ (يظهر لدى جميع المستخدمين)', 'Saved to the server ✓ (everyone sees it)') : T('تم الحفظ على هذا الجهاز فقط — ولم يُرسل إلى الخادم', 'Saved on this device only — not sent to the server'))); setTimeout(() => setKeep(false), ok ? 6000 : 60000); };
   const commit = async (n, msg) => { // n=null → رجوع للألوان الأصلية
     clearTimeout(timer.current);
     const val = brandValue(n ? { p: n.p, s: n.s, a: n.a || '' } : null, settings.punch && settings.punch.data);
@@ -29,7 +29,7 @@ export default function BrandCard() {
     let ok = true; try { await setSetting('brand_colors', val); patchSettings('brand', val); } catch { ok = false; toast(T('تعذر الحفظ على السيرفر', 'Could not save to the server'), 'ter'); }
     say(msg, ok);
   };
-  const live = (n) => { setB(n); if (validHex(n.p) && validHex(n.s)) applyBrand(n); clearTimeout(timer.current); timer.current = setTimeout(() => { if (validHex(n.p) && validHex(n.s)) commit(n, T('اتحفظ تلقائياً', 'Auto-saved')); }, 1200); };
+  const live = (n) => { setB(n); if (validHex(n.p) && validHex(n.s)) applyBrand(n); clearTimeout(timer.current); timer.current = setTimeout(() => { if (validHex(n.p) && validHex(n.s)) commit(n, T('تم الحفظ تلقائيًا', 'Auto-saved')); }, 1200); };
   const pick = (hex) => { const k = hex.toLowerCase(); const n = { ...B, [target]: k }; if (target === 'a') n.a = k; live(n); };
   const pal = validHex(B.p) && validHex(B.s) ? palette(B) : palette(DEFC);
   const cust = !!savedBrand; const swPv = { width: 34, height: 34, borderRadius: 8 };
@@ -41,7 +41,7 @@ export default function BrandCard() {
       const j = await functionCall('ariba-brand-colors', { url: u });
       if (!j || !j.ok) { setFound({ msg: T('تعذر قراءة الموقع (', 'Could not read the site (') + ((j && j.error) || '?') + ')' }); return; }
       const list = (j.theme_color ? [j.theme_color] : []).concat((j.colors || []).map((x) => x.color)).filter((v, i, a) => validHex(v) && a.indexOf(v) === i);
-      if (!list.length) { setFound({ msg: T('مفيش ألوان واضحة في الصفحة', 'No clear colors found') }); return; }
+      if (!list.length) { setFound({ msg: T('لا توجد ألوان واضحة في الصفحة', 'No clear colors found') }); return; }
       setFound({ list });
     } catch { setFound({ msg: T('تعذر الاتصال', 'Connection failed') }); }
   };
@@ -61,16 +61,16 @@ export default function BrandCard() {
       </div>
       <div style={{ marginTop: 12, fontSize: 11.5, color: 'var(--mu)' }}>{T('ألوان جاهزة: ', 'Presets: ')}</div>
       <div id="BR_PRE" style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 6 }}>
-        {PRESETS.map((p) => <button key={p[0]} type="button" className="btn bsm" style={{ display: 'flex', gap: 6, alignItems: 'center' }} onClick={() => { const orig = p[0] === DEFC.p && p[1] === DEFC.s; setB({ p: p[0], s: p[1], a: '' }); commit(orig ? null : { p: p[0], s: p[1], a: '' }, T('اتطبق: ', 'Applied: ') + T(p[2], p[3])); }}>
+        {PRESETS.map((p) => <button key={p[0]} type="button" className="btn bsm" style={{ display: 'flex', gap: 6, alignItems: 'center' }} onClick={() => { const orig = p[0] === DEFC.p && p[1] === DEFC.s; setB({ p: p[0], s: p[1], a: '' }); commit(orig ? null : { p: p[0], s: p[1], a: '' }, T('تم التطبيق: ', 'Applied: ') + T(p[2], p[3])); }}>
           <span data-keep-color="" style={{ width: 14, height: 14, borderRadius: 4, background: p[0] }} /><span data-keep-color="" style={{ width: 14, height: 14, borderRadius: 4, background: p[1], border: '1px solid #ccc' }} />{T(p[2], p[3])}</button>)}
       </div>
       <div id="BR_ALL" style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid var(--bd)' }}>
-        <div style={{ fontWeight: 700, fontSize: 12.5, marginBottom: 6 }}>{T('كل الألوان — اختار اللون وبعدين اضغط عليه', 'All colors — pick, then click a swatch')}</div>
-        <div style={{ marginBottom: 8 }}>{T('هتغيّر: ', 'Change: ')}{radio('p', T('الأساسي', 'Primary'))}{radio('a', T('المميز', 'Accent'))}{radio('s', T('الخلفية الفاتحة', 'Light background'))}</div>
+        <div style={{ fontWeight: 700, fontSize: 12.5, marginBottom: 6 }}>{T('كل الألوان — اختر اللون ثم اضغط عليه', 'All colors — pick, then click a swatch')}</div>
+        <div style={{ marginBottom: 8 }}>{T('التغيير: ', 'Change: ')}{radio('p', T('الأساسي', 'Primary'))}{radio('a', T('المميز', 'Accent'))}{radio('s', T('الخلفية الفاتحة', 'Light background'))}</div>
         <div style={{ fontSize: 11, color: 'var(--mu)', margin: '4px 0' }}>{T('ألوان غامقة', 'Dark')}</div><div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>{DARK.map((c) => <Sw key={c} c={c} onPick={pick} />)}</div>
         <div style={{ fontSize: 11, color: 'var(--mu)', margin: '8px 0 4px' }}>{T('ألوان متوسطة وزاهية', 'Medium & bright')}</div><div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>{MID.map((c) => <Sw key={c} c={c} onPick={pick} />)}</div>
         <div style={{ fontSize: 11, color: 'var(--mu)', margin: '8px 0 4px' }}>{T('ألوان فاتحة (للخلفية)', 'Light (backgrounds)')}</div><div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>{LIGHT.map((c) => <Sw key={c} c={c} onPick={pick} />)}</div>
-        <div style={{ fontWeight: 700, fontSize: 12.5, margin: '14px 0 6px' }}>{T('أو خد ألوان الشركة من موقعها', 'Or take the company colors from its website')}</div>
+        <div style={{ fontWeight: 700, fontSize: 12.5, margin: '14px 0 6px' }}>{T('أو خذ ألوان الشركة من موقعها', 'Or take the company colors from its website')}</div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
           <input type="text" id="BR_URL" dir="ltr" placeholder="https://www.company.com" value={url} onChange={(e) => setUrl(e.target.value)} style={{ flex: 1, minWidth: 220, background: 'var(--c2)', border: '1px solid var(--bd)', borderRadius: 8, color: 'var(--tx)', padding: '7px 10px', fontSize: 12 }} />
           <button type="button" className="btn bgr bsm" id="BR_FETCH" onClick={extract}>{T('استخرج الألوان', 'Extract colors')}</button>
@@ -80,11 +80,11 @@ export default function BrandCard() {
         </div>
       </div>
       <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 12, flexWrap: 'wrap' }}>
-        <button type="button" className="btn bpl bsm" id="BR_SAVE" onClick={() => commit(B, T('اتحفظ', 'Saved'))}><i className="ti ti-device-floppy" /> {T('تطبيق وحفظ', 'Apply & save')}</button>
+        <button type="button" className="btn bpl bsm" id="BR_SAVE" onClick={() => commit(B, T('تم الحفظ', 'Saved'))}><i className="ti ti-device-floppy" /> {T('تطبيق وحفظ', 'Apply & save')}</button>
         <button type="button" className="btn bgr bsm" id="BR_RESET" onClick={() => { setB({ p: DEFC.p, s: DEFC.s, a: '' }); commit(null, T('رجعت الألوان الأصلية', 'Original colors restored')); }}>{T('رجوع للألوان الأصلية', 'Restore the original colors')}</button>
         <span id="BR_STAT" style={{ fontSize: 12, color: 'var(--mu)' }}>{keep && stat ? stat : (cust ? T('ألوان مخصصة', 'Custom colors') : T('الألوان الأصلية', 'Original colors'))}</span>
       </div>
-      <div style={{ fontSize: 11, color: 'var(--mu)', marginTop: 8, lineHeight: 1.7 }}>{T('الألوان بتتطبق على الوضع الفاتح والليلي. بعض الرسومات (الرسوم البيانية وورق الطباعة الرسمي) ليها ألوانها الخاصة.', 'The colors apply to the light and dark modes. Some graphics (charts and the official letterhead) keep their own colors.')}</div>
+      <div style={{ fontSize: 11, color: 'var(--mu)', marginTop: 8, lineHeight: 1.7 }}>{T('تُطبَّق الألوان على الوضع الفاتح والليلي. بعض الرسومات (الرسوم البيانية وورق الطباعة الرسمي) لها ألوانها الخاصة.', 'The colors apply to the light and dark modes. Some graphics (charts and the official letterhead) keep their own colors.')}</div>
     </Card>
   );
 }

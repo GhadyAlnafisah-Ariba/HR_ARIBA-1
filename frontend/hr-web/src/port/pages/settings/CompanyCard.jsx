@@ -20,10 +20,10 @@ export default function CompanyCard() {
     const tol = Math.max(0, Math.min(240, parseInt(f.tol, 10) || 0)), rmt = Math.max(0, Math.min(366, parseInt(f.rmt, 10) || 0));
     const wst = /^\d{2}:\d{2}$/.test(f.wst) ? f.wst : '08:00';
     const v = { coAr: f.coAr.trim().slice(0, 120), coEn: f.coEn.trim().slice(0, 120), wst, tol, rmt, updated: Date.now() };
-    const ok = await save('names', 'company_names', v, T('اتحفظت بيانات الشركة', 'Company details saved'));
+    const ok = await save('names', 'company_names', v, T('تم حفظ بيانات الشركة', 'Company details saved'));
     if (ok) {
       try { await rpc('ariba_hr_set_attendance_settings', { p_work_start: wst + ':00', p_tolerance_minutes: tol, p_remote_days_per_year: rmt }); toast(T('✓ حد العمل عن بعد وصل لتطبيق الموظف', '✓ Remote-work limit reached the Employee App'), 'tin'); }
-      catch (e) { toast(T('⚠️ حد العمل عن بعد اتحفظ محليًا بس: ', '⚠️ Remote-work limit saved locally only: ') + (e && e.message || e), 'ter'); }
+      catch (e) { toast(T('⚠️ تم حفظ حد العمل عن بعد محليًا فقط: ', '⚠️ Remote-work limit saved locally only: ') + (e && e.message || e), 'ter'); }
     }
     return ok;
   };
@@ -33,7 +33,7 @@ export default function CompanyCard() {
         <div><label>{T('اسم الشركة بالعربي', 'Company name (Arabic)')}</label><input id="CN_AR" value={f.coAr} onChange={set('coAr')} maxLength={120} /></div>
         <div><label>{T('اسم الشركة بالإنجليزي', 'Company name (English)')}</label><input id="CN_EN" value={f.coEn} onChange={set('coEn')} maxLength={120} style={{ direction: 'ltr' }} /></div>
         <div><label>{T('نظام العمل', 'Labor law')}</label>
-          <select id="CO_LAW" disabled value={rt.country === 'EG' ? 'EG' : 'SA'} onChange={() => {}} title={T('بيتحدد من كارت "نظام الدولة" تحت', 'Set from the "Country system" card below')}>
+          <select id="CO_LAW" disabled value={rt.country === 'EG' ? 'EG' : 'SA'} onChange={() => {}} title={T('يُحدَّد من بطاقة "نظام الدولة" أدناه', 'Set from the "Country system" card below')}>
             <option value="SA">{T('المملكة العربية السعودية', 'Saudi Arabia')}</option><option value="EG">{T('مصر', 'Egypt')}</option><option value="AE">{T('الإمارات', 'UAE')}</option>
           </select></div>
         <div><label>{T('وقت بدء العمل', 'Work start time')}</label><input type="time" id="CO_ST" value={f.wst} onChange={set('wst')} /></div>

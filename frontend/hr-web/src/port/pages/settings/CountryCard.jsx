@@ -12,10 +12,10 @@ const Fld = ({ id, label, val, set, step }) => <div><label style={{ fontSize: 11
 const tinp = { width: '100%', minWidth: 92, maxWidth: 130, textAlign: 'center', padding: '6px 4px' };
 
 function validate(R) {
-  if (R.insEmp < 0 || R.insEmp > 50 || R.insEr < 0 || R.insEr > 50) return T('نسب التأمينات لازم تكون بين 0 و50', 'Insurance rates must be between 0 and 50');
+  if (R.insEmp < 0 || R.insEmp > 50 || R.insEr < 0 || R.insEr > 50) return T('يجب أن تكون نسب التأمينات بين 0 و50', 'Insurance rates must be between 0 and 50');
   const b = R.taxBrackets; if (!b.length) return T('أضف شريحة ضريبة واحدة على الأقل', 'Add at least one tax bracket');
-  for (let i = 1; i < b.length; i++) if (b[i - 1][1] === null || Math.abs(b[i - 1][1] - b[i][0]) > 0.001) return T('شرائح الضريبة لازم تكون متصلة (نهاية كل شريحة = بداية اللي بعدها)', 'Tax brackets must be contiguous');
-  if (b[b.length - 1][1] !== null) return T('آخر شريحة لازم تكون مفتوحة (من غير "إلى")', 'The last bracket must be open-ended');
+  for (let i = 1; i < b.length; i++) if (b[i - 1][1] === null || Math.abs(b[i - 1][1] - b[i][0]) > 0.001) return T('يجب أن تكون شرائح الضريبة متصلة (نهاية كل شريحة = بداية التي بعدها)', 'Tax brackets must be contiguous');
+  if (b[b.length - 1][1] !== null) return T('يجب أن تكون آخر شريحة مفتوحة (بدون "إلى")', 'The last bracket must be open-ended');
   return '';
 }
 
@@ -38,7 +38,7 @@ export default function CountryCard() {
     const rs = x.resignTiers.map((t) => [(t[0] === '' || t[0] === null) ? null : num(t[0]), Math.max(0, Math.min(1, num(t[1])))]).sort((a, b) => (a[0] === null ? 1e9 : a[0]) - (b[0] === null ? 1e9 : b[0]));
     if (!rs.length || rs[rs.length - 1][0] !== null) rs.push([null, 1]); x.resignTiers = rs;
     const e = validate(x); if (e) { say(e, true); return; }
-    const ok = await save('country', 'country_system', { mode: 'EG', rules: x, updated: Date.now() }, T('اتحفظت القواعد', 'Rules saved')); if (ok) say(T('اتحفظت القواعد على السيرفر ✓', 'Rules saved to the server ✓'));
+    const ok = await save('country', 'country_system', { mode: 'EG', rules: x, updated: Date.now() }, T('تم الحفظ القواعد', 'Rules saved')); if (ok) say(T('تم الحفظ القواعد على السيرفر ✓', 'Rules saved to the server ✓'));
   };
   const up = (k) => (v) => setR((s) => ({ ...s, [k]: v }));
   const limKeys = Object.keys(R.insLimits).sort();
@@ -46,16 +46,16 @@ export default function CountryCard() {
   const del = (fn) => <a href="#" style={{ color: 'var(--rd)' }} onClick={(e) => { e.preventDefault(); fn(); }}>✕</a>;
   return (
     <Card icon="world" title={T('إعدادات الشركة — نظام الدولة (السعودي / المصري)', 'Company — country system (Saudi / Egypt)')} max={1000} id="CN_CARD">
-      <div className="cn-note" style={{ marginBottom: 10 }}>{T(<>اختار النظام اللي الشركة شغالة بيه. <b>السعودي</b> = التأمينات (GOSI) ونظام العمل السعودي كما هو. <b>المصري</b> = التأمينات الاجتماعية المصرية (قانون 148/2019) + ضريبة كسب العمل + صندوق الشهداء + قانون العمل 14/2025 (الإجازات ونهاية الخدمة) + الإجازات الرسمية المصرية + العملة الجنيه المصري. بيانات الموظفين نفسها مش بتتغير، والتبديل بيرجّعك لأي نظام في أي وقت.</>, <>Choose the system your company runs on. <b>Saudi</b> = GOSI and Saudi labor law as is. <b>Egyptian</b> = Egyptian social insurance (Law 148/2019) + income tax + martyrs fund + labor law 14/2025 (leave and end of service) + Egyptian public holidays + the Egyptian pound. Employee data is not changed and you can switch back at any time.</>)}</div>
+      <div className="cn-note" style={{ marginBottom: 10 }}>{T(<>اختر النظام الذي تعمل به الشركة. <b>السعودي</b> = التأمينات (GOSI) ونظام العمل السعودي كما هو. <b>المصري</b> = التأمينات الاجتماعية المصرية (قانون 148/2019) + ضريبة كسب العمل + صندوق الشهداء + قانون العمل 14/2025 (الإجازات ونهاية الخدمة) + الإجازات الرسمية المصرية + العملة الجنيه المصري. بيانات الموظفين نفسها لا تتغير، ويمكنك التبديل إلى أي نظام في أي وقت.</>, <>Choose the system your company runs on. <b>Saudi</b> = GOSI and Saudi labor law as is. <b>Egyptian</b> = Egyptian social insurance (Law 148/2019) + income tax + martyrs fund + labor law 14/2025 (leave and end of service) + Egyptian public holidays + the Egyptian pound. Employee data is not changed and you can switch back at any time.</>)}</div>
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
         <label className={'cn-opt' + (pick === 'SA' ? ' on' : '')}><input type="radio" name="cn_mode" value="SA" checked={pick === 'SA'} onChange={() => setPick('SA')} /><div><b>🇸🇦 {T('النظام السعودي', 'Saudi system')}</b><span>{T('GOSI · نظام العمل السعودي · الريال · إجازات المملكة', 'GOSI · Saudi labor law · Riyal · Kingdom holidays')}</span></div></label>
         <label className={'cn-opt' + (pick === 'EG' ? ' on' : '')}><input type="radio" name="cn_mode" value="EG" checked={pick === 'EG'} onChange={() => setPick('EG')} /><div><b>🇪🇬 {T('النظام المصري', 'Egyptian system')}</b><span>{T('التأمينات الاجتماعية · ضريبة الدخل · قانون العمل 14/2025 · الجنيه · إجازات مصر', 'Social insurance · income tax · labor law 14/2025 · Egyptian pound · Egypt holidays')}</span></div></label>
       </div>
       <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 10 }}>
-        <button type="button" className="btn bpl bsm" id="CN_APPLY" onClick={() => { if (pick === cur) say(T('النظام ده هو المفعّل حاليًا', 'Already active')); else setAsk(pick); }}><i className="ti ti-check" /> {T('تطبيق النظام المختار', 'Apply selected system')}</button>
+        <button type="button" className="btn bpl bsm" id="CN_APPLY" onClick={() => { if (pick === cur) say(T('هذا النظام هو المفعّل حاليًا', 'Already active')); else setAsk(pick); }}><i className="ti ti-check" /> {T('تطبيق النظام المختار', 'Apply selected system')}</button>
         <span id="CN_STAT" style={{ fontSize: 12, color: bad ? 'var(--rd)' : 'var(--gr)' }}>{msg}</span>
       </div>
-      <PromptModal open={!!ask} noInput title={T('تأكيد تبديل النظام', 'Confirm switch')} message={ask === 'EG' ? T('هتحوّل البرنامج للنظام المصري (تأمينات + ضريبة + قانون عمل مصري + جنيه). المتابعة؟', 'Switch to the Egyptian system?') : T('هترجّع البرنامج للنظام السعودي. المتابعة؟', 'Switch back to the Saudi system?')} confirmText={T('تأكيد', 'Confirm')} onConfirm={apply} onClose={() => setAsk(null)} />
+      <PromptModal open={!!ask} noInput title={T('تأكيد تبديل النظام', 'Confirm switch')} message={ask === 'EG' ? T('سيتحوّل البرنامج إلى النظام المصري (تأمينات + ضريبة + قانون عمل مصري + جنيه). المتابعة؟', 'Switch to the Egyptian system?') : T('سيعود البرنامج إلى النظام السعودي. المتابعة؟', 'Switch back to the Saudi system?')} confirmText={T('تأكيد', 'Confirm')} onConfirm={apply} onClose={() => setAsk(null)} />
       {cur === 'EG' && (<>
         <hr style={{ border: 0, borderTop: '1px solid var(--bd)', margin: '14px 0' }} />
         <div className="ct" style={{ fontSize: 13, marginBottom: 6 }}>{T('قواعد النظام المصري (قابلة للتعديل لو القوانين اتغيّرت)', 'Egyptian rules (editable if the laws change)')}</div>
@@ -98,7 +98,7 @@ export default function CountryCard() {
               {R.resignTiers.map((t, i) => <tr key={i}><td><input type="number" style={tinp} placeholder={T('أكثر', 'more')} value={t[0] ?? ''} onChange={(e) => setR((s) => { const x = s.resignTiers.map((r) => r.slice()); x[i][0] = e.target.value; return { ...s, resignTiers: x }; })} /></td>
                 <td><input type="number" step="any" style={tinp} value={Math.round(num(t[1]) * 10000) / 10000} onChange={(e) => setR((s) => { const x = s.resignTiers.map((r) => r.slice()); x[i][1] = e.target.value; return { ...s, resignTiers: x }; })} /></td></tr>)}
             </tbody></table>
-            <div className="cn-note">{T('المكافأة الكاملة = نصف شهر عن كل سنة من أول 5 سنوات + شهر عن كل سنة بعدها. النسب دي افتراضية — عدّلها حسب عقد الشركة ولائحتها.', 'Full award = half a month per year for the first 5 years + one month per year after. These ratios are defaults — adjust them to your contract and policy.')}</div>
+            <div className="cn-note">{T('المكافأة الكاملة = نصف شهر عن كل سنة من أول 5 سنوات + شهر عن كل سنة بعدها. هذه النسب افتراضية — عدّلها حسب عقد الشركة ولائحتها.', 'Full award = half a month per year for the first 5 years + one month per year after. These ratios are defaults — adjust them to your contract and policy.')}</div>
           </div>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 12 }}>

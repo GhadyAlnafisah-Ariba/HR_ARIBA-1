@@ -13,7 +13,7 @@ export default function PurgeBox() {
   if (err) return <div id="AP_BOX" style={{ marginTop: 12, paddingTop: 10, borderTop: '1px solid var(--bd)', color: 'var(--rd)', fontSize: 12 }}>{err}</div>;
   if (!info) return null;
   const fin = !!info.is_finance, ms = info.months || [], rq = info.requests || [];
-  async function req() { if (!month) return; try { const x = await rpc('ariba_audit_purge_request', { p_month: month }); toast(T('تم إرسال الطلب للمالية', 'Request sent to Finance') + (x && x.notified === 0 ? ' — ' + T('(مفيش حساب مالية نشط حاليًا)', '(no active Finance account)') : '')); } catch (e) { toast(String((e && e.message) || e), 'ter'); } load(); }
+  async function req() { if (!month) return; try { const x = await rpc('ariba_audit_purge_request', { p_month: month }); toast(T('تم إرسال الطلب للمالية', 'Request sent to Finance') + (x && x.notified === 0 ? ' — ' + T('(لا يوجد حساب مالية نشط حاليًا)', '(no active Finance account)') : '')); } catch (e) { toast(String((e && e.message) || e), 'ter'); } load(); }
   async function decide(id, ap) { try { await rpc('ariba_audit_purge_decide', { p_request: id, p_approve: ap }); toast(ap ? T('تمت الموافقة', 'Approved') : T('تم الرفض', 'Rejected')); } catch (e) { toast(String((e && e.message) || e), 'ter'); } load(); }
   return (
     <div id="AP_BOX" style={{ marginTop: 12, paddingTop: 10, borderTop: '1px solid var(--bd)' }}>

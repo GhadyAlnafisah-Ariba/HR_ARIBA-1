@@ -17,7 +17,7 @@ export default function WorkflowCard() {
       const list = emails.split(/[,;\s]+/).map((x) => x.trim()).filter(Boolean);
       if (list.some((x) => !/^\S+@\S+\.\S+$/.test(x))) throw new Error(T('إيميل غير صحيح في القائمة', 'Invalid email in list'));
       const r = await setWfConfig({ manager_wait_days: Number(c.manager_wait_days) || 0, ceo_wait_days: Number(c.ceo_wait_days) || 0, advance_max_percent: Number(c.advance_max_percent) || 100, extra_hr_emails: list });
-      setC(r.config); toast('✓ ' + T('اتحفظت إعدادات سير الطلبات', 'Workflow settings saved'), 'tin');
+      setC(r.config); toast('✓ ' + T('تم الحفظ إعدادات سير الطلبات', 'Workflow settings saved'), 'tin');
     } catch (e) { toast(e.message || T('تعذر الحفظ', 'Could not save'), 'ter'); } finally { setBusy(false); }
   }
   async function runNow() {

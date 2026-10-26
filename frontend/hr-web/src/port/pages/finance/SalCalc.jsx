@@ -67,7 +67,7 @@ export default function SalCalc() {
   const offer = () => { if (noRes()) return; offerDraft.data = { ...c, otherLabel: f.ON.trim() }; nav('/forms'); };
   const nfo = !sau ? T('غير سعودي: لا استقطاع على الموظف', 'Non-Saudi: no employee deduction')
     : T('سقف الأجر الخاضع: ', 'Wage cap: ') + money(rr.cap) + ' — ' + (manual ? T('النسبة يدوية', 'manual rate') : (rr.src === 'auto' ? (f.sys === 'new' ? (rr.n >= 0 ? T('الجديد: ', 'New: ') + r2(rr.rate * 100 * 100) / 100 + '% ' + T('سارية من ', 'effective from ') + rr.from : T('قبل 1/7/2025: 9.75%', 'before 1/7/2025: 9.75%')) : T('القديم: ثابتة 9.75%', 'Old: flat 9.75%')) : T('من إعدادات البرنامج', 'from program settings')));
-  const sched = sau ? (f.sys === 'new' ? [0, 1, 2, 3].map((i) => { const A = autoRate(new Date(2025 + i, 6, 1), 'new'); return '1/7/' + (2025 + i) + ' → ' + A.emp + '% / ' + A.er + '%'; }).join('  •  ') + T('  (بيزيد 0.5% كل 1 يوليو لحد 11.75% للموظف)', '  (+0.5% each 1 July up to 11.75% for the employee)') : T('النظام القديم: 9.75% موظف / 11.75% شركة ثابتة', 'Old system: 9.75% employee / 11.75% employer, flat')) : '';
+  const sched = sau ? (f.sys === 'new' ? [0, 1, 2, 3].map((i) => { const A = autoRate(new Date(2025 + i, 6, 1), 'new'); return '1/7/' + (2025 + i) + ' → ' + A.emp + '% / ' + A.er + '%'; }).join('  •  ') + T('  (يزيد 0.5% كل 1 يوليو حتى 11.75% للموظف)', '  (+0.5% each 1 July up to 11.75% for the employee)') : T('النظام القديم: 9.75% موظف / 11.75% شركة ثابتة', 'Old system: 9.75% employee / 11.75% employer, flat')) : '';
   const num_ = (k, extra) => <input type="number" step="0.01" value={f[k]} onChange={(e) => set(k, e.target.value)} style={{ ...INP, ...extra }} />;
   return (
     <div className="pg on" style={{ padding: '12px 16px' }}>
@@ -92,7 +92,7 @@ export default function SalCalc() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(170px,1fr))', gap: 10, marginTop: 10, alignItems: 'end' }}>
           <div><Lb t={T('تاريخ الحساب (يحدد نسب التأمينات)', 'Calculation date (selects the insurance rates)')} /><input type="date" value={f.date} onChange={(e) => set('date', e.target.value)} style={INP} /></div>
           <div><Lb t={T('مصدر النسبة', 'Rate source')} /><select value={f.src} onChange={(e) => set('src', e.target.value)} style={INP}><option value="auto">{T('تلقائي — الجدول النظامي من 1/7/2025', 'Automatic — statutory schedule from 1/7/2025')}</option><option value="settings">{T('من إعدادات البرنامج', 'From the program settings')}</option></select></div>
-          <div><Lb t={T('نسبة خصم الموظف % (تعدّلها يدوي لو عايز)', 'Employee deduction % (editable)')} /><input type="number" step="0.01" value={rateShown} onChange={(e) => set('rate', e.target.value)} style={INP} /></div>
+          <div><Lb t={T('نسبة خصم الموظف % (يمكن تعديلها يدويًا)', 'Employee deduction % (editable)')} /><input type="number" step="0.01" value={rateShown} onChange={(e) => set('rate', e.target.value)} style={INP} /></div>
           <div style={{ fontSize: 11, color: 'var(--mu)', paddingBottom: 8 }}>{nfo}</div>
         </div>
         {sched && <div style={{ fontSize: 11, color: 'var(--mu)', marginTop: 6, lineHeight: 1.7 }}><b>{f.sys === 'new' ? T('جدول النظام الجديد (موظف / شركة): ', 'New-system schedule (employee / employer): ') : ''}</b>{sched}</div>}

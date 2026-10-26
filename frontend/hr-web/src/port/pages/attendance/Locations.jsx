@@ -65,7 +65,7 @@ export default function Locations() {
         <div className="tw"><table><thead><tr><th>{T('الموقع', 'Location')}</th><th>{T('النوع', 'Type')}</th><th>{T('عدد الموظفين', 'Employees')}</th><th>{T('الأسماء', 'Names')}</th></tr></thead><tbody>
           {summary.phys.map((l) => { const a = summary.by[l.id] || []; return <tr key={l.id}><td style={{ fontWeight: 700 }}>{en && l.nameEn ? l.nameEn : l.name}</td><td>{l.type === 'hq' ? T('مقر رئيسي', 'HQ') : T('مشروع', 'Project')}</td><td style={{ textAlign: 'center' }}>{a.length}</td><td style={{ fontSize: 11, color: 'var(--mu)' }}>{a.length ? a.map(nm).join('، ') : '—'}</td></tr>; })}
         </tbody></table></div>
-        <div style={{ fontSize: 11, color: 'var(--mu)', marginTop: 6 }}>{T('غير محدد لهم موقع (' + summary.none.length + ' موظف): بيبصموا في مواقع جهة عملهم.', 'No location assigned (' + summary.none.length + ' employees): they punch at their employer\'s locations.')}</div>
+        <div style={{ fontSize: 11, color: 'var(--mu)', marginTop: 6 }}>{T('غير محدد لهم موقع (' + summary.none.length + ' موظف): يبصمون في مواقع جهة عملهم.', 'No location assigned (' + summary.none.length + ' employees): they punch at their employer\'s locations.')}</div>
       </div>
       {f && <Modal open onClose={() => setF(null)} title={f.id ? T('تعديل الموقع', 'Edit location') : T('إضافة موقع بصمة', 'Add GPS location')} width={760}
         footer={<div className="mf"><button className="btn" onClick={() => setF(null)}>{T('إلغاء', 'Cancel')}</button><button className="btn bpl" id="LOC_SAVE" onClick={save}>{T('حفظ', 'Save')}</button></div>}>

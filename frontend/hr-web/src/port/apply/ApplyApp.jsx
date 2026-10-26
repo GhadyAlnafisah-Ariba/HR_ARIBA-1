@@ -47,7 +47,7 @@ export default function ApplyApp() {
       setDone(r.data);
     } catch (er) { setErr(er.message || 'تعذر الإرسال'); } finally { setBusy(false); }
   }
-  const MSG = { used: 'الرابط ده اتستخدم قبل كده — كل رابط بيتقدّم منه مرة واحدة بس. لو محتاج تعدّل طلبك تواصل مع الموارد البشرية.', expired: 'انتهت صلاحية الرابط ده — اطلب رابط جديد من الموارد البشرية.', revoked: 'الرابط ده اتلغى — اطلب رابط جديد من الموارد البشرية.', invalid: 'الرابط غير صحيح — اطلب رابط التقديم من الموارد البشرية.', neterr: 'تعذر الاتصال — تأكد من الإنترنت وأعد فتح الرابط.' };
+  const MSG = { used: 'هذا الرابط استُخدم من قبل — كل رابط يُقدَّم منه طلب واحد فقط. إذا احتجت إلى تعديل طلبك فتواصل مع الموارد البشرية.', expired: 'انتهت صلاحية هذا الرابط — اطلب رابطًا جديدًا من الموارد البشرية.', revoked: 'أُلغي هذا الرابط — اطلب رابطًا جديدًا من الموارد البشرية.', invalid: 'الرابط غير صحيح — اطلب رابط التقديم من الموارد البشرية.', neterr: 'تعذر الاتصال — تأكد من الإنترنت وأعد فتح الرابط.' };
   if (!done && inv && inviteSt === 'loading') return <div className="w"><style>{css}</style><div className="c" style={{ textAlign: 'center', color: '#4a6660' }}>جاري التحقق من الرابط…</div></div>;
   if (!done && inv && MSG[inviteSt]) return <div className="w"><style>{css}</style><div className="c"><div className="e" id="INV_MSG">{MSG[inviteSt]}</div></div></div>;
   if (!key && !inv) return <div className="w"><style>{css}</style><div className="c"><div className="e">الرابط غير صحيح — اطلب رابط التقديم من الموارد البشرية.</div></div></div>;

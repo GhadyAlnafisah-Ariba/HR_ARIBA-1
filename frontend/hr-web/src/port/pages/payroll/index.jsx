@@ -107,7 +107,7 @@ export default function Payroll() {
           PKEYS.forEach((k) => { if (pl[k] === undefined || pl[k] === null) delete next[i][k]; else next[i][k] = pl[k]; });
           next[i].edited = true; recalc(next[i], empMap.get(id) || {}, m); pushed.current[id] = rowSig(next[i]); changed++;
         });
-        if (changed) { setRows(next); toast('🔄 اتحدّث ' + changed + ' صف في المسير من مستخدم تاني', 'tin'); }
+        if (changed) { setRows(next); toast('🔄 تم التحديث ' + changed + ' صف في المسير من مستخدم آخر', 'tin'); }
         const s = await payrollStatus(y, mo).catch(() => null); if (s) setStatus(s);
       } catch { /* ignore */ }
     }, 6000);
@@ -136,25 +136,25 @@ export default function Payroll() {
   }
   async function prepare(note) {
     setDlg(null); setBusy(true);
-    try { await flush(true); await payrollSync(y, mo, false, null, rowsRef.current); rowsRef.current.forEach((r) => { pushed.current[String(r.id)] = rowSig(r); }); await payrollPrepare(y, mo, note); toast('✓ اتبعت للمالية للاعتماد'); setStatus(await payrollStatus(y, mo)); }
-    catch (e) { const mm = String(e.message || e); toast('تعذر التجهيز: ' + (mm === 'PAYROLL_NOT_SAVED' ? 'المسير لسه ما اتحفظش' : mm === 'PAYROLL_ALREADY_APPROVED' ? 'المسير معتمد بالفعل' : mm), 'ter'); } finally { setBusy(false); }
+    try { await flush(true); await payrollSync(y, mo, false, null, rowsRef.current); rowsRef.current.forEach((r) => { pushed.current[String(r.id)] = rowSig(r); }); await payrollPrepare(y, mo, note); toast('✓ أُرسل للمالية للاعتماد'); setStatus(await payrollStatus(y, mo)); }
+    catch (e) { const mm = String(e.message || e); toast('تعذر التجهيز: ' + (mm === 'PAYROLL_NOT_SAVED' ? 'لم يتم حفظ المسير بعد' : mm === 'PAYROLL_ALREADY_APPROVED' ? 'المسير معتمد بالفعل' : mm), 'ter'); } finally { setBusy(false); }
   }
   async function approve() {
     setDlg(null); setBusy(true);
     try {
       const s = await payrollStatus(y, mo); setStatus(s);
-      if (s.role === 'finance' && s.status !== 'prepared' && s.status !== 'approved') { toast('لازم الموارد البشرية تجهّز المسير الأول', 'ter'); return; }
+      if (s.role === 'finance' && s.status !== 'prepared' && s.status !== 'approved') { toast('يجب أن تجهّز الموارد البشرية المسير أولًا', 'ter'); return; }
       const at = new Date().toLocaleDateString('ar-SA-u-ca-gregory-nu-latn');
       await payrollSync(y, mo, true, new Date().toISOString(), rowsRef.current);
       setApproved(true); setApprovedAt(at); toast('✓ تم اعتماد مسير الرواتب'); setStatus(await payrollStatus(y, mo));
     } catch (e) {
       const mm = String(e.message || e), code = (mm.match(/APPROVAL_REQUIRES_FINANCE|PAYROLL_NOT_PREPARED|PAYROLL_APPROVED_LOCKED/) || [])[0];
-      toast('السيرفر رفض الاعتماد: ' + ({ APPROVAL_REQUIRES_FINANCE: 'الاعتماد للمالية', PAYROLL_NOT_PREPARED: 'المسير لسه ما اتجهّزش', PAYROLL_APPROVED_LOCKED: 'المسير معتمد ومقفول' }[code] || mm), 'ter');
+      toast('السيرفر رفض الاعتماد: ' + ({ APPROVAL_REQUIRES_FINANCE: 'الاعتماد للمالية', PAYROLL_NOT_PREPARED: 'لم يتم تجهيز المسير بعد', PAYROLL_APPROVED_LOCKED: 'المسير معتمد ومقفول' }[code] || mm), 'ter');
     } finally { setBusy(false); }
   }
   async function reopen(reason) {
     setDlg(null); setBusy(true);
-    try { await payrollReopen(y, mo, reason); setApproved(false); setApprovedAt(null); toast('✓ اتفتح المسير'); loadedKey.current = ''; await load(); setStatus(await payrollStatus(y, mo)); }
+    try { await payrollReopen(y, mo, reason); setApproved(false); setApprovedAt(null); toast('✓ تم فتح المسير'); loadedKey.current = ''; await load(); setStatus(await payrollStatus(y, mo)); }
     catch (e) { const mm = String(e.message || e); toast('تعذر فتح المسير: ' + (mm === 'REASON_REQUIRED' ? 'السبب مطلوب' : mm === 'NOT_AUTHORIZED' ? 'الصلاحية للمالية فقط' : mm), 'ter'); } finally { setBusy(false); }
   }
   function exportXlsx() { if (!list.length) return toast('لا توجد بيانات', 'ter'); const { blob, name } = payrollXlsx(list, cols, SUMCOL, y, mo); download(name, blob); }
@@ -185,7 +185,7 @@ export default function Payroll() {
   const gS = { background: 'rgba(1,77,61,.18)', padding: '5px 7px', textAlign: 'center', fontSize: 10.5, fontWeight: 800, whiteSpace: 'nowrap', borderLeft: '2px solid var(--bd)' };
   const years = []; for (let i = 2011; i <= 2086; i += 1) years.push(i);
   const isHR = role === 'hr' || role === 'admin', isFin = role === 'finance' || role === 'admin' || role === 'ceo';
-  const chip = st === 'approved' ? ['rgba(41,179,94,.15)', 'var(--gr)', '🔒 معتمد'] : st === 'prepared' ? ['rgba(59,130,246,.15)', 'var(--bl)', '✅ جاهز للمالية للاعتماد'] : st === 'reopened' ? ['rgba(245,158,11,.15)', 'var(--am)', '🔓 اتفتح بعد الاعتماد'] : ['rgba(148,163,184,.18)', 'var(--mu)', '📝 مسودة'];
+  const chip = st === 'approved' ? ['rgba(41,179,94,.15)', 'var(--gr)', '🔒 معتمد'] : st === 'prepared' ? ['rgba(59,130,246,.15)', 'var(--bl)', '✅ جاهز للمالية للاعتماد'] : st === 'reopened' ? ['rgba(245,158,11,.15)', 'var(--am)', '🔓 تم فتحه بعد الاعتماد'] : ['rgba(148,163,184,.18)', 'var(--mu)', '📝 مسودة'];
   const sub = !status ? '' : st === 'approved' ? 'اعتمده ' + (status.approved_by || '') + (status.approved_at ? ' — ' + dtime(status.approved_at) : '')
     : st === 'prepared' ? 'جهّزه ' + (status.prepared_by || '') + (status.prepared_at ? ' — ' + dtime(status.prepared_at) : '') + (status.prepare_note ? ' — ' + status.prepare_note : '')
       : st === 'reopened' ? 'فتحه ' + (status.reopened_by || '') + (status.reopened_at ? ' — ' + dtime(status.reopened_at) : '') + ' — السبب: ' + (status.reopen_reason || '')
@@ -214,7 +214,7 @@ export default function Payroll() {
           <button type="button" className="btn bsm" style={{ fontSize: 11, padding: '3px 9px' }} title="ترجع أيام التأمينات لأيام الشهر لكل الموظفين" onClick={() => bulk((r) => { if (r.manualEdits) delete r.manualEdits.insDays; r.insDays = defaultInsDays(r, empMap.get(String(r.id)) || {}, m); })}>↺ أيام التأمينات تلقائي</button>
         </>}
         <div style={{ marginInlineStart: 'auto', display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-          {role !== 'hr' && perm.edit('payroll_approve') && <button className="btn bgr bsm" disabled={approveDisabled} title={role === 'finance' && st !== 'prepared' ? 'الاعتماد بعد ما الموارد البشرية تجهّز المسير' : ''} onClick={() => setDlg({ kind: 'approve' })}><i className="ti ti-check" /> اعتماد</button>}
+          {role !== 'hr' && perm.edit('payroll_approve') && <button className="btn bgr bsm" disabled={approveDisabled} title={role === 'finance' && st !== 'prepared' ? 'الاعتماد بعد أن تجهّز الموارد البشرية المسير' : ''} onClick={() => setDlg({ kind: 'approve' })}><i className="ti ti-check" /> اعتماد</button>}
           {!locked && canEdit && <button className="btn bsm" id="PAY_ADDROW" style={{ background: 'var(--cy)', color: '#fff', borderColor: 'var(--cy)' }} onClick={addRow}><i className="ti ti-plus" /> إضافة صف</button>}
           {!locked && canEdit && <button className="btn bsm" style={{ background: 'var(--am)', color: '#fff' }} onClick={() => setDlg({ kind: 'rebuild' })}><i className="ti ti-refresh" /> إعادة بناء</button>}
           <button className="btn bsm" style={{ background: 'var(--pu)', color: '#fff' }} onClick={exportXlsx}><i className="ti ti-file-spreadsheet" /> Excel</button>

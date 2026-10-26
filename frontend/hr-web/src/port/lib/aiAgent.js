@@ -9,7 +9,7 @@ export const TOOLS = [{
   input_schema: { type: 'object', properties: { page: { type: 'string', enum: PAGE_WORDS.map((x) => x[1]), description: 'dash لوحة التحكم، pay المسير، slip كشف راتب، emps الموظفون، cand المرشحون، goals الأهداف، eval التقييم، att الحضور، loc المواقع، lv الإجازات، team الفريق، insc التأمينات، salcalc حاسبة الراتب، taxcalc الضريبة، wps تحويل الرواتب، prov المخصصات، assets الأصول، eos نهاية الخدمة، eoscalc المخالصة، docs الوثائق، rpt التقارير، set الإعدادات، audit السجل، forms النماذج' } }, required: ['page'] },
 }];
 
-const WHY = { UNAUTHENTICATED: 'انتهت الجلسة — سجّل الدخول من جديد', NOT_AUTHORIZED: 'المساعد الذكي لفريق الإدارة فقط', AI_NOT_CONFIGURED: 'لسه ما اتفعّلش: لازم يتضاف مفتاح ANTHROPIC_API_KEY في أسرار Supabase (راجع الدليل في الباتش)' };
+const WHY = { UNAUTHENTICATED: 'انتهت الجلسة — سجّل الدخول من جديد', NOT_AUTHORIZED: 'المساعد الذكي لفريق الإدارة فقط', AI_NOT_CONFIGURED: 'لم يُفعَّل بعد: يجب إضافة مفتاح ANTHROPIC_API_KEY في أسرار Supabase (راجع الدليل في الباتش)' };
 
 /** history: رسائل سابقة (نصوص فقط). بيرجّع {text, history} أو يرمي Error برسالة واضحة. h.nav لفتح صفحة */
 export async function askAgent(userText, history, h) {
@@ -17,7 +17,7 @@ export async function askAgent(userText, history, h) {
   for (let step = 0; step < 4; step++) {
     const r = await functionCall('ariba-ai', { messages: msgs, tools: TOOLS });
     const j = (r && r.data) || {};
-    if (!j.ok) { if (r && r.status === 404) throw new Error('دالة ariba-ai غير منشورة على Supabase لسه — راجع الدليل'); throw new Error(WHY[j.error] || j.message || ('HTTP ' + (r && r.status))); }
+    if (!j.ok) { if (r && r.status === 404) throw new Error('دالة ariba-ai غير منشورة على Supabase بعد — راجع الدليل'); throw new Error(WHY[j.error] || j.message || ('HTTP ' + (r && r.status))); }
     (j.extra || []).forEach((m) => msgs.push(m));
     msgs.push({ role: 'assistant', content: j.content });
     const uses = (j.content || []).filter((b) => b.type === 'tool_use');
@@ -34,5 +34,5 @@ export async function askAgent(userText, history, h) {
     });
     msgs.push({ role: 'user', content: results });
   }
-  throw new Error('الطلب محتاج خطوات كتير — جرّب تبسّطه');
+  throw new Error('الطلب يحتاج إلى خطوات كثيرة — جرّب تبسيطه');
 }

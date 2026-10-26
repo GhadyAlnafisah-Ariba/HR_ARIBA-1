@@ -21,11 +21,11 @@ export default function PermsCard() {
     catch (e) { setErr(e.message || String(e)); }
   }, []);
   useEffect(() => { load(); }, [load]);
-  const setLevel = async (r, m, v) => { try { await rpc('ariba_perms_set', { p_role: r, p_module: m, p_level: v }); toast('✓ ' + T('اتحفظت الصلاحية', 'Permission saved'), 'tin'); } catch (e) { toast(T('تعذر الحفظ: ', 'Could not save: ') + (e.message || e), 'ter'); } load(); };
+  const setLevel = async (r, m, v) => { try { await rpc('ariba_perms_set', { p_role: r, p_module: m, p_level: v }); toast('✓ ' + T('تم الحفظ الصلاحية', 'Permission saved'), 'tin'); } catch (e) { toast(T('تعذر الحفظ: ', 'Could not save: ') + (e.message || e), 'ter'); } load(); };
   const setRole = async () => { const a = ask; setAsk(null); try { await rpc('ariba_hr_set_role', { p_employee_id: a.employee_id, p_role: a.role }); toast('✓ ' + T('اتغيّر الدور', 'Role updated'), 'tin'); } catch (e) { toast(T('تعذر التغيير: ', 'Could not change: ') + (e.message || e), 'ter'); } load(); };
   return (
     <Card icon="shield-lock" title={T('الصلاحيات والأشخاص', 'Permissions & people')} max={1000} id="PM_CARD">
-      <Note style={{ marginBottom: 10 }}>{T('اختار لكل دور يشوف ويعدّل إيه. الحماية بتتفرض على السيرفر (مش بس إخفاء أزرار). Admin ورئيس المجلس صلاحياتهم كاملة دايماً. أي تغيير بيتسجّل في سجل التعديلات.', 'Choose what each role can see and edit. Enforced on the server. Admin and Chairman always have full access. Changes are logged.')}</Note>
+      <Note style={{ marginBottom: 10 }}>{T('اختر لكل دور ما يمكنه عرضه وتعديله. الحماية تُفرض على الخادم (وليس بإخفاء الأزرار فقط). صلاحيات Admin ورئيس المجلس كاملة دائمًا. أي تغيير بيتسجّل في سجل التعديلات.', 'Choose what each role can see and edit. Enforced on the server. Admin and Chairman always have full access. Changes are logged.')}</Note>
       {err && <div style={{ color: 'var(--rd)', fontSize: 12 }}>{err}</div>}
       {!MT && !err && <div style={{ color: 'var(--mu)' }}>…</div>}
       {MT && (<>

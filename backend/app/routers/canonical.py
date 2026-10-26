@@ -1688,7 +1688,7 @@ def delete_my_request(request_id: uuid.UUID, request: Request, actor: dict[str, 
         name = _row(db, "SELECT coalesce(name_ar,employee_id) AS n FROM public.employee_directory WHERE employee_id=:e", e=item["employee_id"])
         title = f"{(name or {}).get('n') or item['employee_id']} حذف طلباً معلقاً: {(item.get('payload') or {}).get('title') or item['request_type']}"
         for h in _role_employees(db, "hr"):
-            _insert_notification(db, h, None, title, "اتحذف من طرف الموظف ومتسجّل في أرشيف المحذوفات.", "hr", "request")
+            _insert_notification(db, h, None, title, "حذفه الموظف وهو مسجّل في أرشيف المحذوفات.", "hr", "request")
     _write_audit(db, actor, request, "workflow", "delete", "workflow_request", request_id)
     db.commit()
 
@@ -2109,7 +2109,7 @@ def prepare_payroll(key: str, request: Request, body: dict[str, Any] | None = No
     if approved:
         raise ApiError(409, "PAYROLL_ALREADY_APPROVED", "المسير معتمد بالفعل")
     if not rows:
-        raise ApiError(409, "PAYROLL_NOT_SAVED", "المسير لسه ما اتحفظش")
+        raise ApiError(409, "PAYROLL_NOT_SAVED", "لم يتم حفظ المسير بعد")
     note = str((body or {}).get("note") or "").strip()[:500] or None
     db.execute(text("""INSERT INTO public.payroll_periods(pay_year,pay_month,approved,prepared_at,prepared_by,prepare_note) VALUES(:y,:m,false,now(),:by,:n)
         ON CONFLICT(pay_year,pay_month) DO UPDATE SET prepared_at=now(),prepared_by=:by,prepare_note=:n"""),
@@ -2134,7 +2134,7 @@ def approve_sheet(key: str, request: Request, actor: dict[str, Any] = Depends(cu
     if approved:
         raise ApiError(409, "PAYROLL_APPROVED_LOCKED", "المسير معتمد ومقفول")
     if actor.get("role") not in pc.FULL_ROLES and _pay_status(db, year, month)["status"] != "prepared":
-        raise ApiError(409, "PAYROLL_NOT_PREPARED", "المسير لسه ما اتجهّزش")
+        raise ApiError(409, "PAYROLL_NOT_PREPARED", "لم يتم تجهيز المسير بعد")
     payload = json.dumps(rows, ensure_ascii=False)
     by = actor.get("name_ar") or actor.get("username")
     db.execute(text("""INSERT INTO public.payroll_periods(pay_year,pay_month,approved,approved_at,approved_by) VALUES(:y,:m,true,now(),:by)

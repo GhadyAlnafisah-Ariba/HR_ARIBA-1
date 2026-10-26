@@ -22,7 +22,7 @@ export default function ScheduleCard() {
   const [c, setC] = useState(() => normSchedule(settings && settings.schedule));
   useEffect(() => { setC(normSchedule(settings && settings.schedule)); }, [settings && settings.schedule]); // eslint-disable-line
   const today = new Date().toISOString().slice(0, 10), now = scheduleFor(today, c), ram = isRamadan(today, c);
-  const go = () => save('schedule', 'attendance_schedule', { ...c, official: { ...c.official, hours: +c.official.hours, grace: +c.official.grace }, ramadan: { ...c.ramadan, hours: +c.ramadan.hours, grace: +c.ramadan.grace } }, T('اتحفظ جدول الدوام', 'Working schedule saved'));
+  const go = () => save('schedule', 'attendance_schedule', { ...c, official: { ...c.official, hours: +c.official.hours, grace: +c.official.grace }, ramadan: { ...c.ramadan, hours: +c.ramadan.hours, grace: +c.ramadan.grace } }, T('تم حفظ جدول الدوام', 'Working schedule saved'));
   return (
     <Card icon="calendar-time" title={T('جدول الدوام (رسمي + رمضان)', 'Working schedule (official + Ramadan)')} id="SCHED_CARD">
       <Note style={{ marginBottom: 10 }}>{T('الحضور يتحسب على الجدول المُطبَّق: الدوام الرسمي في الأيام العادية، ودوام رمضان تلقائياً مع دخول رمضان (حسب التقويم الهجري) بدون أي تدخل. ساعات اليوم = مجموع كل فترات الدخول والخروج (مثال: 8→12 ثم 13→16).', 'Attendance is calculated on the applied schedule: official hours normally and Ramadan hours automatically when Ramadan starts (Hijri calendar). Daily hours = sum of all in/out periods (e.g. 8→12 then 13→16).')}</Note>

@@ -1,7 +1,7 @@
 // تحويل مستند HTML (نموذج/مخالصة) إلى PDF بصفحات A4 — للتحميل المباشر
 const PXW = 794; // عرض A4 بالبكسل عند 96dpi
 
-export async function htmlToPdfBlob(html, { onePage = false } = {}) {
+export async function htmlToPdfBlob(html, { onePage = true } = {}) {
   const [{ default: html2canvas }, { jsPDF }] = await Promise.all([import('html2canvas'), import('jspdf')]);
   const doc = /<html/i.test(html) ? html : '<!doctype html><html dir="rtl"><head><meta charset="utf-8"></head><body>' + html + '</body></html>';
   const fr = document.createElement('iframe');

@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import Modal from './Modal.jsx';
 import { toast } from './Toast.jsx';
 import { useApp } from '../store/AppStore.jsx';
-import { FORMATS, makeFile, saveBlob, emailReport } from '../lib/exporter.js';
+import { FORMATS, makeFile, saveBlob, emailReport, canShareFile, shareFile, teamsChatUrl } from '../lib/exporter.js';
 
 const ROLE_CHIPS = [
   ['الرئيس التنفيذي', /الرئيس التنفيذي|CEO|chief executive/i], ['رئيس مجلس الإدارة', /رئيس مجلس|chairman/i], ['المدير الإداري', /المدير الإداري|admin(istrative)? manager/i],
@@ -12,7 +12,7 @@ const ROLE_CHIPS = [
 export default function ExportDialog({ open, onClose, spec, forEmps = [] }) {
   const { employees } = useApp();
   const [fmt, setFmt] = useState('pdf'), [busy, setBusy] = useState(''), [picked, setPicked] = useState({}), [extra, setExtra] = useState(''), [q, setQ] = useState('');
-  const [subject, setSubject] = useState(''), [msg, setMsg] = useState('');
+  const [subject, setSubject] = useState(''), [msg, setMsg] = useState(''), [ready, setReady] = useState(null);
   const withMail = useMemo(() => employees.filter((e) => !e.isTerminated && String(e.email || '').includes('@')), [employees]);
   if (!spec) return null;
   const toggle = (e) => setPicked((p) => ({ ...p, [e.id]: !p[e.id] }));
@@ -20,6 +20,21 @@ export default function ExportDialog({ open, onClose, spec, forEmps = [] }) {
   const mgrChip = () => { const ids = new Set(forEmps.map((e) => String(e.managerId || '')).filter(Boolean)); const hit = withMail.filter((e) => ids.has(String(e.id))); if (!hit.length) return toast('لا مدير مباشر بإيميل للموظفين المختارين', 'ter'); setPicked((p) => { const n = { ...p }; hit.forEach((e) => { n[e.id] = true; }); return n; }); };
   const recips = () => [...withMail.filter((e) => picked[e.id]).map((e) => e.email), ...extra.split(/[,;\s]+/).filter(Boolean)];
   async function dl() { setBusy('dl'); try { saveBlob(await makeFile(fmt, spec)); } catch (e) { toast(e.message || 'تعذر إنشاء الملف', 'ter'); } finally { setBusy(''); } }
+  // مشاركة / Teams: يحاول فتح نافذة المشاركة مباشرة؛ لو رفضها المتصفح (النقرة انتهت أثناء إنشاء الملف) يظهر زر مشاركة جاهز بنقرة جديدة
+  async function share() {
+    setBusy('share');
+    try {
+      const f = await makeFile(fmt, spec);
+      const r = await shareFile(f, subject || spec.title);
+      if (r === 'shared' || r === 'cancelled') return;
+      if (r === 'denied' && canShareFile(f)) { setReady(f); toast('الملف جاهز — اضغط «مشاركة الملف الجاهز»', 'tin'); return; }
+      saveBlob(f);
+      const emails = recips();
+      window.open(teamsChatUrl(emails, (subject || spec.title) + ' — ' + f.name), '_blank', 'noopener');
+      toast('نُزّل الملف وفُتحت محادثة Teams — أرفق الملف فيها', 'tin');
+    } catch (e) { toast(e.message || 'تعذر إنشاء الملف', 'ter'); } finally { setBusy(''); }
+  }
+  async function shareReady() { const r = await shareFile(ready, subject || spec.title); if (r === 'shared') setReady(null); else if (r === 'denied') { saveBlob(ready); toast('تعذرت المشاركة من هذا المتصفح، نُزّل الملف', 'ter'); } }
   async function mail() {
     const to = recips(); if (!to.length) return toast('اختر مستلماً واحداً على الأقل أو اكتب إيميلاً', 'ter');
     if (!window.confirm('سيُرسل التقرير تلقائياً إلى ' + to.length + ' مستلم. متأكد؟')) return;
@@ -33,6 +48,8 @@ export default function ExportDialog({ open, onClose, spec, forEmps = [] }) {
       <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
         {Object.entries(FORMATS).map(([k, v]) => <label key={k} style={{ display: 'flex', gap: 5, alignItems: 'center', border: '1px solid ' + (fmt === k ? 'var(--bl)' : 'var(--bd)'), borderRadius: 8, padding: '6px 14px', cursor: 'pointer' }}><input type="radio" name="xfmt" checked={fmt === k} onChange={() => setFmt(k)} /> {v[0]}</label>)}
         <button className="btn bpl bsm" id="XD_DL" disabled={!!busy} onClick={dl} style={{ marginInlineStart: 'auto' }}><i className="ti ti-download" /> {busy === 'dl' ? '…' : 'تنزيل'}</button>
+        <button className="btn bsm" id="XD_SHARE" disabled={!!busy} onClick={share} title="مشاركة الملف مع Teams أو أي تطبيق"><i className="ti ti-share" /> {busy === 'share' ? '…' : 'مشاركة / Teams'}</button>
+        {ready && <button className="btn bpl bsm" id="XD_SHARE2" onClick={shareReady}><i className="ti ti-share" /> مشاركة الملف الجاهز</button>}
       </div>
       <div className="fsec">إرسال بالإيميل تلقائياً (بدون فتح برنامج بريد)</div>
       <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', margin: '6px 0' }}>

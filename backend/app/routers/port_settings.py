@@ -170,7 +170,7 @@ def password_recovery(body: dict[str, Any], db: Session = Depends(get_db)):
     """By username or iqama number: a temporary password goes to the e-mail on the employee record. The current password
     keeps working until the temporary one is used (so nobody can lock another person out), and one request per 10 minutes."""
     username, iqama = str(body.get("username") or "").strip().lower(), re.sub(r"\D", "", str(body.get("iqama") or ""))
-    generic = {"ok": True, "message": "لو البيانات صحيحة ومسجّل لها بريد، هيوصلك بريد بكلمة مرور مؤقتة."}
+    generic = {"ok": True, "message": "إذا كانت البيانات صحيحة ولها بريد مسجّل، فسيصلك بريد بكلمة مرور مؤقتة."}
     if not username and not iqama:
         raise ApiError(422, "validation_error", "اكتب القيمة المطلوبة")
     acc = c._row(db, """SELECT a.id,a.username,d.data FROM public.ariba_auth_accounts a JOIN public.employee_directory d ON d.employee_id=a.employee_id
@@ -186,7 +186,7 @@ def password_recovery(body: dict[str, Any], db: Session = Depends(get_db)):
     db.execute(text("INSERT INTO public.ariba_password_resets(account_id,token_hash,expires_at) VALUES(:a,:h,now()+interval '24 hours')"),
                {"a": acc["id"], "h": "temp:" + hashlib.sha256(temp.encode()).hexdigest()})
     inner = (f"<p>اسم المستخدم: <b dir='ltr'>{mailer.esc(acc['username'])}</b></p><p>كلمة المرور المؤقتة: <b dir='ltr'>{temp}</b></p>"
-             "<p>صالحة 24 ساعة، وهيُطلب منك تغييرها أول ما تدخل.</p>")
+             "<p>صالحة 24 ساعة، وسيُطلب منك تغييرها عند أول دخول.</p>")
     r = mailer.send(mailer.pick_account(db, None), mailer.Mail([email], "استرجاع بيانات الدخول", mailer.wrap("استرجاع بيانات الدخول", inner)))
     mailer.log_send(db, "password_recovery", [email], "password recovery", r, None)
     db.commit()
@@ -258,7 +258,7 @@ def brand_extract(body: dict[str, Any], actor: dict[str, Any] = Depends(current_
         url = "https://" + url
     key = str(actor.get("account_id"))
     if time.monotonic() - _LAST.get(key, 0) < 3:
-        raise ApiError(429, "TOO_MANY", "استنى ثواني وحاول تاني")
+        raise ApiError(429, "TOO_MANY", "انتظر ثوانيَ وحاول مرة أخرى")
     _LAST[key] = time.monotonic()
     try:
         html = _fetch(url)

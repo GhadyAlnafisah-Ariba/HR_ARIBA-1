@@ -469,7 +469,7 @@ def sync_payroll(year: int, month: int, body: dict[str, Any], request: Request, 
         if not pc.can(db, actor, "payroll_approve", "edit"):
             raise ApiError(403, "APPROVAL_REQUIRES_FINANCE", "الاعتماد للمالية")
         if actor.get("role") not in pc.FULL_ROLES and status["status"] != "prepared":
-            raise ApiError(409, "PAYROLL_NOT_PREPARED", "المسير لسه ما اتجهّزش")
+            raise ApiError(409, "PAYROLL_NOT_PREPARED", "لم يتم تجهيز المسير بعد")
     elif not (pc.can(db, actor, "payroll", "edit") or pc.can(db, actor, "payroll_prepare", "edit")):
         raise ApiError(403, "NOT_AUTHORIZED", "ليست لديك صلاحية")
     old_rows = [dict(i["payload"] or {}) for i in c._rows(db, "SELECT payload FROM public.employee_payrolls WHERE pay_year=:y AND pay_month=:m", y=y, m=m)]

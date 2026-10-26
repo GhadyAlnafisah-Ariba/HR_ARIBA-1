@@ -8,7 +8,7 @@ import { T } from '../../lib/i18n.js';
 export function useSaveSetting() {
   const { patchSettings } = useApp();
   return async (storeKey, cloudKey, value, okMsg) => {
-    try { await setSetting(cloudKey, value); patchSettings(storeKey, value); toast('✓ ' + (okMsg || T('اتحفظ', 'Saved')), 'tin'); return true; }
+    try { await setSetting(cloudKey, value); patchSettings(storeKey, value); toast('✓ ' + (okMsg || T('تم الحفظ', 'Saved')), 'tin'); return true; }
     catch (e) { toast(T('تعذر الحفظ: ', 'Could not save: ') + (e.message || e), 'ter'); return false; }
   };
 }

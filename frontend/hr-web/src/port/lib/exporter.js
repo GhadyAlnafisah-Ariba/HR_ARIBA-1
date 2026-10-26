@@ -47,6 +47,17 @@ export function saveBlob(file) {
   const a = document.createElement('a'); a.href = URL.createObjectURL(file.blob); a.download = file.name; document.body.appendChild(a); a.click();
   setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 800);
 }
+/** مشاركة الملف عبر نافذة المشاركة في النظام (Teams وغيره) — تحتاج نقرة جديدة من المستخدم. تُرجع 'shared' أو 'unsupported' أو 'denied' أو 'cancelled' */
+export function canShareFile(file) {
+  try { const f = new File([file.blob], file.name, { type: file.mime }); return typeof navigator.share === 'function' && !!(navigator.canShare && navigator.canShare({ files: [f] })); } catch { return false; }
+}
+export async function shareFile(file, text) {
+  if (!canShareFile(file)) return 'unsupported';
+  try { await navigator.share({ files: [new File([file.blob], file.name, { type: file.mime })], title: file.name, text: text || '' }); return 'shared'; }
+  catch (e) { return e && e.name === 'AbortError' ? 'cancelled' : 'denied'; }
+}
+/** رابط محادثة Teams جاهزة (المستلمون بإيميلاتهم + نص الرسالة). الملف نفسه يُرفق يدويًا لأن Teams لا يقبل مرفقًا من رابط */
+export const teamsChatUrl = (emails, message) => 'https://teams.microsoft.com/l/chat/0/0?users=' + encodeURIComponent((emails || []).join(',')) + '&message=' + encodeURIComponent(message || '');
 export const blobToBase64 = (blob) => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1] || ''); r.onerror = rej; r.readAsDataURL(blob); });
 
 /** إرسال تقرير بالإيميل تلقائياً عبر الدالة ariba-send-report */

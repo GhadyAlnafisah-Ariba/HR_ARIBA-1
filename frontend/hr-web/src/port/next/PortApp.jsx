@@ -16,7 +16,7 @@ function Guard({ children }) {
   const perm = usePerm();
   const id = fromNext(usePathname()).split('/')[1] || 'dash';
   const m = MODS[id];
-  if (m && !perm.can(m)) return <div className="pg on" style={{ padding: 30, color: 'var(--am)' }}>ما عندكش صلاحية الصفحة دي</div>;
+  if (m && !perm.can(m)) return <div className="pg on" style={{ padding: 30, color: 'var(--am)' }}>ليست لديك صلاحية على هذه الصفحة</div>;
   return children;
 }
 

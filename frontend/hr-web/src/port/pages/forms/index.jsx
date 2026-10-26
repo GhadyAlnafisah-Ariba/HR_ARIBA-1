@@ -10,6 +10,7 @@ import { FORMS, wrap, CRIT, LAWS, offerHtml, SENDABLE } from './docs.js';
 import { buildEn } from './formsEn.js';
 import { loadTr } from '../../lib/tr.js';
 import { mailDoc } from '../../lib/mailDoc.js';
+import { shareDoc } from '../../lib/shareDoc.js';
 import { BulkCard, SalaryCertCard } from './extraCards.jsx';
 
 const STY = { padding: 6, border: '1px solid var(--bd)', borderRadius: 6, background: 'var(--c2)', color: 'var(--tx)', fontSize: 12, width: '100%', boxSizing: 'border-box' };
@@ -29,6 +30,7 @@ function CardX({ k, icon, children, pbtn, title, id }) {
       <button className="btn bgr bsm" style={{ marginTop: 8 }} data-print={k} onClick={() => print(k)}><i className="ti ti-printer" /> {pbtn}</button>
       {canSend && SENDABLE.includes(k) && <button className="btn bsm" data-send={k} disabled={busy === k} style={{ background: '#0a5c9e', color: '#fff', marginTop: 6, width: '100%' }} onClick={() => send(k)}><i className="ti ti-send" /> {busy === k ? T('جاري الإرسال...', 'Sending...') : T('إرسال للموظف للتوقيع', 'Send to employee to sign')}</button>}
       {canSend && SENDABLE.includes(k) && <button type="button" className="btn bsm" data-mail={k} disabled={busy === 'm' + k} style={{ background: '#7a3e00', color: '#fff', marginTop: 6, width: '100%' }} onClick={() => email(k)}><i className="ti ti-mail" /> {T('إرسال إيميل للموظف', 'Send email to employee')}</button>}
+      {SENDABLE.includes(k) && <button type="button" className="btn bsm" data-share={k} disabled={busy === 's' + k} style={{ background: '#464EB8', color: '#fff', marginTop: 6, width: '100%' }} onClick={() => share(k)}><i className="ti ti-share" /> {T('مشاركة PDF (Teams وغيره)', 'Share PDF (Teams, etc.)')}</button>}
     </div>
   );
 }
@@ -53,11 +55,12 @@ export default function Forms() {
   const withEn = async (k, emp, stk, html) => { try { const tr = await loadTr(); const r = buildEn(k, emp, stk || {}, { settings, employees, tr }); return r && r.html ? html + '<!--ARIBA_EN-->' + r.html : html; } catch { return html; } };
   async function send(k) {
     const r = make(k); if (!r) return;
-    if (!window.confirm('هيتبعت "' + r.title + '" لـ ' + (e.nameAr || '') + ' في تطبيقه عشان يوافق أو يعترض. متأكد؟')) return;
+    if (!window.confirm('سيُرسل "' + r.title + '" لـ ' + (e.nameAr || '') + ' في تطبيقه ليوافق أو يعترض. هل أنت متأكد؟')) return;
     setBusy(k);
-    try { const html = await withEn(k, e, st[k], r.html); await rpc('ariba_hr_send_template', { p_employee_id: String(e.id), p_emp_no: String(e.empNo || e.id), p_template_type: k, p_title: r.title, p_file_name: k + '_' + e.id + '.html', p_mime_type: 'text/html', p_base64: b64(officialDocs(settings, html)) }); toast('✅ ' + T('اتبعت للموظف وبيقدر يوافق أو يعترض من تطبيقه', 'Sent to the employee for approval'), 'tin'); refresh(); }
+    try { const html = await withEn(k, e, st[k], r.html); await rpc('ariba_hr_send_template', { p_employee_id: String(e.id), p_emp_no: String(e.empNo || e.id), p_template_type: k, p_title: r.title, p_file_name: k + '_' + e.id + '.html', p_mime_type: 'text/html', p_base64: b64(officialDocs(settings, html)) }); toast('✅ ' + T('أُرسل للموظف ويمكنه الموافقة أو الاعتراض من تطبيقه', 'Sent to the employee for approval'), 'tin'); refresh(); }
     catch (err) { toast('⚠️ ' + (err.message || 'تعذر الإرسال'), 'ter'); } finally { setBusy(''); }
   }
+  async function share(k) { const r = make(k); if (!r) return; setBusy('s' + k); try { await shareDoc(r.title + ' — ' + (e.nameAr || ''), officialHtml(settings, r.html), { emails: e.email ? [e.email] : [] }); } finally { setBusy(''); } }
   async function email(k) { const r = make(k); if (!r) return; setBusy('m' + k); try { await mailDoc(k, e, { title: r.title + ' — ' + (e.nameAr || ''), html: officialHtml(settings, r.html) }); } finally { setBusy(''); } }
   async function refresh() { try { const l = await rpc('ariba_hr_template_status', {}); setStatus(Array.isArray(l) ? l : (l && l.rows) || []); } catch (err) { setStatus({ err: String(err.message || err) }); } }
   const empName = (id) => { const f = employees.find((x) => String(x.id) === String(id)); return f ? (f.nameAr || f.nameEn || id) : id; };
@@ -70,7 +73,7 @@ export default function Forms() {
   const [aiAuto, setAiAuto] = useState(null);
   useEffect(() => { const q = aiBridge.pending; if (q && q.kind === 'form') { aiBridge.pending = null; setEid(String(q.empId)); const df = { extension: 'end', termination: 'last', clearance: 'last' }[q.form]; if (q.date && df) upd(q.form, { [df]: q.date }); if (q.print) setAiAuto(q.form); } }, []); // eslint-disable-line
   useEffect(() => { if (aiAuto && e) { const k = aiAuto; setAiAuto(null); print(k); } }, [aiAuto, e, st]); // eslint-disable-line
-  function fromCalc() { const f = offerDraft.last; if (!f) { toast(T('احسب في حاسبة الراتب الأول', 'Calculate in the salary calculator first'), 'ter'); return; } const rr = (n) => (Math.round((Number(n) || 0) * 100) / 100) || ''; setOf((o) => ({ ...o, basic: rr(f.basic), hou: rr(f.housing), tra: rr(f.transport), prj: rr(f.project), oth: rr(f.other), othn: f.otherLabel || '' })); }
+  function fromCalc() { const f = offerDraft.last; if (!f) { toast(T('احسب في حاسبة الراتب أولًا', 'Calculate in the salary calculator first'), 'ter'); return; } const rr = (n) => (Math.round((Number(n) || 0) * 100) / 100) || ''; setOf((o) => ({ ...o, basic: rr(f.basic), hou: rr(f.housing), tra: rr(f.transport), prj: rr(f.project), oth: rr(f.other), othn: f.otherLabel || '' })); }
   function printOffer() { if (!of.name.trim()) { toast(T('اكتب اسم المرشح', 'Enter the candidate name'), 'ter'); return; } const r = offerHtml(of, settings, employees); printOfficial(settings, r.title, r.html, { dir: of.lang === 'en' ? 'ltr' : 'rtl', lang: of.lang }); }
   return (
     <FormsCtx.Provider value={fctx}>
@@ -134,7 +137,7 @@ export default function Forms() {
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}><button className="btn bgr bsm" id="OF_PRINT" onClick={printOffer}><i className="ti ti-printer" /> {T('طباعة العرض الوظيفي', 'Print the job offer')}</button><button className="btn bsm" id="OF_FROMCALC" onClick={fromCalc}>{T('جلب من حاسبة الراتب', 'Fetch from the salary calculator')}</button></div>
         </div>
         <Card k="contract_end" id="TF_CE_CARD" icon="ti-file-off" pbtn="طباعة إشعار انتهاء العقد" title={T('إشعار انتهاء عقد العمل', 'Employment contract termination notice')}>
-          {D('contract_end', 'join', 'تاريخ بداية العقد (لو فاضي ياخده من ملف الموظف)')}{D('contract_end', 'last', 'تاريخ آخر يوم عمل')}
+          {D('contract_end', 'join', 'تاريخ بداية العقد (إن كان فارغًا فيؤخذ من ملف الموظف)')}{D('contract_end', 'last', 'تاريخ آخر يوم عمل')}
           <Fld l="السند النظامي (من مواد نظام العمل)"><select id="TF_CE_LAW" style={STY} value={st.contract_end.law || ''} onChange={(x) => upd('contract_end', { law: x.target.value })}><option value="">— اختر —</option>{Object.entries(LAWS).map(([k, v]) => <option key={k} value={k}>م.{v[0]} — {v[1]}</option>)}<option value="other">أخرى (اكتب المادة)</option></select></Fld>
           <div id="TF_CE_OTHERBOX" style={{ display: st.contract_end.law === 'other' ? 'block' : 'none' }}><Fld l="المادة / السند (نص حر)"><input id="TF_CE_OTHER" style={STY} value={st.contract_end.other || ''} onChange={(x) => upd('contract_end', { other: x.target.value })} /></Fld></div>
           {D('contract_end', 'ref', 'تاريخ الاستقالة / الاتفاق (اختياري)')}

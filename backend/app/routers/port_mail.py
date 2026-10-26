@@ -34,7 +34,7 @@ def _owner(actor: dict[str, Any], scope: str) -> str:
 
 def _staff(actor: dict[str, Any]) -> None:
     if actor.get("role") not in STAFF_ROLES:
-        raise ApiError(403, "NOT_AUTHORIZED", "مفيش صلاحية إرسال")
+        raise ApiError(403, "NOT_AUTHORIZED", "لا توجد صلاحية إرسال")
 
 
 @router.get("/mail/{scope}")
@@ -101,10 +101,10 @@ def mail_test(body: dict[str, Any], actor: dict[str, Any] = Depends(c.current_ac
     _staff(actor)
     account = mailer.pick_account(db, None if body.get("scope") == "company" else actor.get("employee_id"))
     if not account:
-        return {"ok": False, "error": "EMAIL_NOT_CONFIGURED", "message": "مفيش بريد إرسال محفوظ"}
+        return {"ok": False, "error": "EMAIL_NOT_CONFIGURED", "message": "لا يوجد بريد إرسال محفوظ"}
     to = str(body.get("to") or "").strip() if mailer.is_email(body.get("to")) else account.from_email
     r = mailer.send(account, mailer.Mail([to], "رسالة تجربة — نظام الموارد البشرية",
-                                         mailer.wrap("رسالة تجربة", "لو وصلتك الرسالة دي يبقى إعدادات البريد سليمة والإرسال التلقائي شغال ✓")))
+                                         mailer.wrap("رسالة تجربة", "لو وصلتك هذه الرسالة يبقى إعدادات البريد سليمة والإرسال التلقائي شغال ✓")))
     mailer.log_send(db, "test", [to], "test", r, actor.get("username"))
     db.commit()
     return {**r, "to": to} if r.get("ok") else r
@@ -137,7 +137,7 @@ def send_document(body: dict[str, Any], request: Request, actor: dict[str, Any] 
         raise ApiError(404, "not_found", "الموظف غير موجود")
     to = mailer.employee_email(emp["data"] or {})
     if not to:
-        return {"ok": False, "error": "NO_EMAIL", "message": "مفيش إيميل مسجل للموظف ده"}
+        return {"ok": False, "error": "NO_EMAIL", "message": "لا يوجد إيميل مسجل لهذا الموظف"}
     r = mailer.send(mailer.pick_account(db, actor.get("employee_id")), mailer.Mail(
         [to], title, mailer.wrap(title, f"عزيزي/عزيزتي {mailer.esc(emp['name_ar'])}،<br>مرفق <b>{mailer.esc(title)}</b> بصيغة PDF على الورق الرسمي للشركة.<br><br>مع التحية،<br>الموارد البشرية"),
         [{"filename": name, "content": b64, "contentType": "application/pdf"}]))

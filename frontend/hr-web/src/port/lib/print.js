@@ -2,7 +2,8 @@
 export const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 /** ضبط الصفحة الواحدة (V109/V110): لو المستند زاد عن A4 بنسبة بسيطة بنصغّره (zoom) لحد ما يكفي صفحة، ولو طويل فعلًا بيفضل متعدد الصفحات */
 export function fitOnePage(doc) {
-  const t = doc && doc.querySelector('table.lh-t'); if (!t) return;
+  const t = doc && doc.querySelector('table.lh-t');
+  if (!t) { fitBodyOnePage(doc); return; }
   const MM = 96 / 25.4, cell = t.querySelector('tbody td'); if (!cell) return;
   const head = t.querySelector('thead'), foot = t.querySelector('tfoot');
   const hh = head ? head.getBoundingClientRect().height : 0, fh = foot ? foot.getBoundingClientRect().height : 0;
@@ -13,6 +14,17 @@ export function fitOnePage(doc) {
   if (limit / h() < 0.78) return; // مستند طويل فعلًا
   let z = 1; while (h() > limit && z > 0.78) { z = Math.round((z - 0.02) * 100) / 100; wrap.style.zoom = z; }
   if (h() > limit) wrap.style.zoom = '';
+}
+/** مستند بدون ورق رسمي: لو زاد عن صفحة A4 بنسبة بسيطة يُصغَّر ليكفي صفحة واحدة بدل صفحة ثانية فيها سطر أو اثنين */
+function fitBodyOnePage(doc) {
+  if (!doc || !doc.body) return;
+  const MM = 96 / 25.4, css = Array.from(doc.querySelectorAll('style')).map((x) => x.textContent).join(' ');
+  const m = /@page\s*\{[^}]*margin:\s*([\d.]+)mm/i.exec(css), margin = m ? Number(m[1]) : 10;
+  const cs = doc.defaultView.getComputedStyle(doc.body), pad = (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0);
+  const limit = (297 - 2 * margin) * MM - pad - 2 * MM;
+  const h = () => doc.body.getBoundingClientRect().height - pad;
+  if (h() <= limit || limit / h() < 0.74) return; // يكفي صفحة، أو طويل فعلًا فيبقى متعدد الصفحات
+  let z = 1; while (h() > limit && z > 0.74) { z = Math.round((z - 0.02) * 100) / 100; doc.body.style.zoom = z; }
 }
 export function printHtml(title, bodyHtml, { dir = 'rtl', lang = 'ar' } = {}) {
   const f = document.createElement('iframe');

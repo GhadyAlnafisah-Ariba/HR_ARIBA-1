@@ -9,6 +9,7 @@ import { FORMS } from './docs.js';
 import { scHtml, missing, dataFromEmp, num, money, nextRef, consumeRef, placeOf, savePlace, salaryOf, acctFromIban } from './salaryCert.js';
 import { todayInfo } from '../../lib/hrSig.js';
 import { mailDoc } from '../../lib/mailDoc.js';
+import { shareDoc } from '../../lib/shareDoc.js';
 
 const b64 = (s) => { try { return btoa(unescape(encodeURIComponent(s))); } catch { return btoa(s); } };
 const BULK_FORMS = { onboarding: ['مباشرة عمل', 'Onboarding notice'], custody: ['استلام عهدة تقنية', 'IT custody receipt'], extension: ['إشعار تمديد فترة التجربة', 'Probation extension'], termination: ['إشعار إنهاء فترة التجربة', 'Probation termination'], clearance: ['إخلاء طرف', 'Final clearance'], experience: ['شهادة خبرة', 'Experience certificate'], contract_end: ['إشعار انتهاء عقد العمل', 'Contract termination notice'], salary_cert: ['تعريف بالراتب', 'Salary certificate'] };
@@ -31,7 +32,7 @@ export function BulkCard({ ctx, mkFor, st, withEn, refresh }) {
     const ids = Object.keys(sel).filter((k) => sel[k]);
     if (!ids.length) { toast(T('اختر موظفًا واحدًا على الأقل', 'Select at least one employee'), 'ter'); return; }
     const F = BULK_FORMS[form];
-    if (!window.confirm(en ? 'Send "' + F[1] + '" to ' + ids.length + ' employees at once?' : 'هيتبعت "' + F[0] + '" لـ ' + ids.length + ' موظف دفعة واحدة. متأكد؟')) return;
+    if (!window.confirm(en ? 'Send "' + F[1] + '" to ' + ids.length + ' employees at once?' : 'سيُرسل "' + F[0] + '" لـ ' + ids.length + ' موظف دفعة واحدة. متأكد؟')) return;
     setBusy(true); let ok = 0; const fail = []; const tr = await loadTr();
     const scEl = (id) => { const el = document.getElementById(id); return el ? el.value : ''; };
     for (let i = 0; i < ids.length; i++) {
@@ -59,7 +60,7 @@ export function BulkCard({ ctx, mkFor, st, withEn, refresh }) {
   return (
     <div className="card" id="A117Bulk" style={{ padding: 12, marginBottom: 12 }}>
       <div className="ct" style={{ marginBottom: 8 }}><i className="ti ti-users-group" /> {T('إرسال نموذج لعدة موظفين دفعة واحدة', 'Send a form to several employees at once')}</div>
-      <div style={{ fontSize: 11, color: 'var(--mu)', marginBottom: 8 }}>{T('املأ بيانات النموذج المطلوب في كارته بالأسفل (التواريخ مثلًا)، ثم اختر الموظفين هنا. بيانات كل موظف (الاسم، الراتب، تاريخ المباشرة…) بتتاخد من ملفه تلقائيًا.', "Fill the form fields in its card below (e.g. dates), then pick employees here. Each employee's own data (name, salary, join date…) is taken from his record.")}</div>
+      <div style={{ fontSize: 11, color: 'var(--mu)', marginBottom: 8 }}>{T('املأ بيانات النموذج المطلوب في بطاقته بالأسفل (التواريخ مثلًا)، ثم اختر الموظفين هنا. بيانات كل موظف (الاسم، الراتب، تاريخ المباشرة…) تُؤخذ من ملفه تلقائيًا.', "Fill the form fields in its card below (e.g. dates), then pick employees here. Each employee's own data (name, salary, join date…) is taken from his record.")}</div>
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 6 }}>
         <select id="A117BForm" style={{ minWidth: 220 }} value={form} onChange={(x) => setForm(x.target.value)}>{Object.keys(BULK_FORMS).map((k) => <option key={k} value={k}>{BULK_FORMS[k][en ? 1 : 0]}</option>)}</select>
         <input id="A117BQ" placeholder={T('بحث', 'Search')} value={q} onChange={(x) => setQ(x.target.value)} />
@@ -121,13 +122,13 @@ export function SalaryCertCard({ ctx, eid }) {
     const { d, m, tr } = await mk('ar'); setFlag(true);
     if (m.length) { toast('بيانات ناقصة: ' + m.map((x) => x.label).join('، '), 'ter'); return; }
     const r = scHtml('ar', d, { settings, employees, tr });
-    if (!window.confirm(T('هيتبعت "' + r.title + '" (رقم ' + r.ref + ') لـ ' + (e.nameAr || '') + ' في تطبيقه. متأكد؟', 'Send "' + r.title + '" (ref ' + r.ref + ') to ' + (e.nameEn || e.nameAr || '') + '?'))) return;
+    if (!window.confirm(T('سيُرسل "' + r.title + '" (رقم ' + r.ref + ') لـ ' + (e.nameAr || '') + ' في تطبيقه. متأكد؟', 'Send "' + r.title + '" (ref ' + r.ref + ') to ' + (e.nameEn || e.nameAr || '') + '?'))) return;
     setBusy(true);
     try {
       let html = r.html; const m2 = missing('en', d);
-      if (!m2.length) html += '<!--ARIBA_EN-->' + scHtml('en', d, { settings, employees, tr }).html; else toast(T('النسخة الإنجليزية ما اتبعتتش لأن بيانات إنجليزية ناقصة (افتح "النسخة الإنجليزية" واملأها)', 'English copy not attached: English data is incomplete'), 'ter');
+      if (!m2.length) html += '<!--ARIBA_EN-->' + scHtml('en', d, { settings, employees, tr }).html; else toast(T('النسخة الإنجليزية لم تُرسل لأن بيانات إنجليزية ناقصة (افتح "النسخة الإنجليزية" واملأها)', 'English copy not attached: English data is incomplete'), 'ter');
       await rpc('ariba_hr_send_template', { p_employee_id: String(e.id), p_emp_no: String(e.empNo || e.id), p_template_type: 'salary_cert', p_title: r.title, p_file_name: 'salary_cert_' + e.id + '.html', p_mime_type: 'text/html', p_base64: b64(officialDocs(settings, html)) });
-      consumeRef(); setF((o) => ({ ...o, ref: nextRef() })); toast('✅ ' + T('اتبعت للموظف', 'Sent to the employee'), 'tin');
+      consumeRef(); setF((o) => ({ ...o, ref: nextRef() })); toast('✅ ' + T('أُرسل للموظف', 'Sent to the employee'), 'tin');
     } catch (err) { toast('⚠️ ' + (err.message || err), 'ter'); } finally { setBusy(false); }
   }
   async function emailSalary() {
@@ -137,6 +138,13 @@ export function SalaryCertCard({ ctx, eid }) {
     const r = scHtml(lang, d, { settings, employees, tr });
     const sent = await mailDoc('salary_cert', e, { title: r.title + ' — ' + (e.nameAr || e.nameEn || ''), html: officialHtml(settings, r.html) });
     if (sent) { consumeRef(); setF((o) => ({ ...o, ref: nextRef() })); }
+  }
+  async function shareSalary() {
+    if (!e) { toast(T('اختر الموظف أولاً', 'Select the employee first'), 'ter'); return; }
+    const { d, m, tr } = await mk(lang); setFlag(true);
+    if (m.length) { toast((lang === 'en' ? 'Missing / incomplete: ' : 'بيانات ناقصة: ') + m.map((x) => x.label).join('، '), 'ter'); setTick(tick + 1); return; }
+    const r = scHtml(lang, d, { settings, employees, tr });
+    await shareDoc(r.title + ' — ' + (e.nameAr || e.nameEn || ''), officialHtml(settings, r.html), { emails: e.email ? [e.email] : [] });
   }
   const t = todayInfo();
   const inp = (id, key, extra, type = 'text') => <input id={id} type={type} style={{ ...STY, ...extra, ...bs(id) }} value={f[key]} onChange={set(key)} />;
@@ -152,7 +160,7 @@ export function SalaryCertCard({ ctx, eid }) {
         <Fl l={T('رقم الصادر (تلقائي بتاريخ اليوم)', 'Reference no. (auto, today)')}>{inp('SC_REF', 'ref', { direction: 'ltr' })}</Fl>
         <Fl l={T('لغة الخطاب', 'Letter language')}><select id="SC_LANG" style={STY} value={f.lang} onChange={set('lang')}><option value="auto">{T('حسب لغة البرنامج', 'Same as program language')}</option><option value="ar">العربية</option><option value="en">English</option></select></Fl>
       </div>
-      <div style={hd}>{T('بيانات الموظف (بتتعبّى من ملفه — الناقص بيتلوّن أحمر وتكتبه)', 'Employee data (auto-filled — missing items turn red)')}</div>
+      <div style={hd}>{T('بيانات الموظف (تُعبَّأ من ملفه — الناقص يظهر باللون الأحمر لتكتبه)', 'Employee data (auto-filled — missing items turn red)')}</div>
       <div style={g2}>
         <Fl l={T('الاسم', 'Name')} star>{inp('SC_NAME', 'name')}</Fl><Fl l={T('الرقم الوظيفي', 'Employee no.')} star>{inp('SC_EMPNO', 'empNo')}</Fl>
         <Fl l={T('تاريخ التعيين', 'Hire date')} star>{inp('SC_JOIN', 'join', null, 'date')}</Fl><Fl l={T('الجنسية', 'Nationality')} star>{inp('SC_NAT', 'nat')}</Fl>
@@ -178,6 +186,7 @@ export function SalaryCertCard({ ctx, eid }) {
       <button className="btn bgr bsm" id="SC_PRINT" onClick={print}><i className="ti ti-printer" /> {T('طباعة خطاب تعريف الراتب', 'Print salary certificate')}</button>
       <button className="btn bsm" id="TF_SC_SEND" disabled={busy} style={{ background: '#0a5c9e', color: '#fff', marginTop: 6, width: '100%' }} onClick={send}><i className="ti ti-send" /> {T('إرسال للموظف', 'Send to employee')}</button>
       <button type="button" className="btn bsm" id="TF_SC_EMAIL" disabled={busy || !e} style={{ background: '#014D3D', color: '#fff', marginTop: 6, width: '100%' }} onClick={emailSalary}><i className="ti ti-mail" /> {T('إرسال تعريف الراتب بالبريد الإلكتروني (PDF)', 'Email salary certificate (PDF)')}</button>
+      <button type="button" className="btn bsm" id="TF_SC_SHARE" disabled={busy || !e} style={{ background: '#464EB8', color: '#fff', marginTop: 6, width: '100%' }} onClick={shareSalary}><i className="ti ti-share" /> {T('مشاركة PDF (Teams وغيره)', 'Share PDF (Teams, etc.)')}</button>
     </div>
   );
 }

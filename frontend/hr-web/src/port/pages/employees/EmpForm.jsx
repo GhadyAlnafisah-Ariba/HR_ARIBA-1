@@ -97,7 +97,7 @@ export default function EmpForm() {
   const onCurrency = (ev) => setF((p) => ({ ...p, currency: ev.target.value, exchRate: defaultExchangeRate(ev.target.value) }));
   async function onPhoto(ev) {
     const file = ev.target.files && ev.target.files[0]; if (!file) return;
-    if (!file.type.startsWith('image/')) return toast('الملف لازم يكون صورة', 'ter');
+    if (!file.type.startsWith('image/')) return toast('يجب أن يكون الملف صورة', 'ter');
     try { const d = await resizePhoto(file); setF((p) => ({ ...p, photoData: d })); } catch { toast('تعذر قراءة الصورة', 'ter'); }
   }
   async function submit(ev) {
@@ -166,13 +166,13 @@ export default function EmpForm() {
             <Fs required value={f.em} onChange={set('em')} label="جهة العمل *" opts={[<option key="" value="">اختر...</option>, ...employerList.map((x) => <option key={x}>{x}</option>)]} />
             <div id="WL_BOX" style={{ gridColumn: '1/-1', background: 'var(--c2)', border: '1px solid var(--bd)', borderRadius: 10, padding: '10px 12px' }}>
               <div style={{ fontSize: 12, fontWeight: 800, marginBottom: 3 }}><i className="ti ti-map-pin" /> مواقع العمل (مربوطة بمواقع البصمة)</div>
-              <div style={{ fontSize: 10.5, color: 'var(--mu)', lineHeight: 1.7, marginBottom: 6 }}>اختار موقع أو أكتر — الموظف هيبصم في المواقع دي بس. لو سيبتها فاضية، هيبصم في مواقع جهة عمله زي الأول.</div>
+              <div style={{ fontSize: 10.5, color: 'var(--mu)', lineHeight: 1.7, marginBottom: 6 }}>اختر موقعًا أو أكثر — سيبصم الموظف في هذه المواقع فقط. وإن تركتها فارغة فسيبصم في مواقع جهة عمله كما كان.</div>
               <div id="WL_LIST" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(250px,1fr))', gap: '4px 12px' }}>
                 {physLocs.length ? physLocs.map((l) => <label key={l.id} style={{ display: 'flex', gap: 6, alignItems: 'center', fontSize: 12, cursor: 'pointer', margin: 0, fontWeight: 500, color: 'var(--tx)' }}>
                   <input type="checkbox" style={{ width: 'auto', margin: 0 }} value={l.id} checked={wl.includes(String(l.id))} onChange={(ev) => setWl((a) => (ev.target.checked ? [...a, String(l.id)] : a.filter((x) => x !== String(l.id))))} />
                   <span>{l.name}</span><span style={{ fontSize: 9.5, background: 'rgba(41,179,94,.15)', color: '#1f9a4f', borderRadius: 8, padding: '0 6px' }}>{l.type === 'hq' ? 'مقر رئيسي' : 'مشروع'}</span>
                   {l.employer && l.employer !== 'all' && <span style={{ fontSize: 9.5, color: 'var(--mu)' }}>{l.employer}</span>}</label>)
-                  : <div style={{ fontSize: 11, color: 'var(--mu)' }}>مفيش مواقع بصمة — أضف من "مواقع البصمة".</div>}
+                  : <div style={{ fontSize: 11, color: 'var(--mu)' }}>لا توجد مواقع بصمة — أضف من "مواقع البصمة".</div>}
               </div>
             </div>
             <Fs value={f.nat} onChange={set('nat')} label="الجنسية" opts={[...new Set([...NATS, f.nat].filter(Boolean))].map((x) => <option key={x}>{x}</option>)} />

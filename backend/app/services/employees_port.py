@@ -75,7 +75,7 @@ def build_employee(f: dict[str, Any], existing: dict[str, Any] | None, all_emps:
         return {"error": "يوجد موظف مسجل بنفس الرقم الوظيفي أو البريد الإلكتروني أو رقم الهوية/الإقامة."}
     username = existing.get("username") if existing else "EMP" + emp_no.zfill(3)
     if not existing and any(str(x.get("username") or "").upper() == username.upper() or str(x.get("id")) == eid for x in all_emps):
-        return {"error": f"اسم المستخدم {username} مستخدم لموظف تاني — غيّر الرقم الوظيفي"}
+        return {"error": f"اسم المستخدم {username} مستخدم لموظف آخر — غيّر الرقم الوظيفي"}
     cur = f.get("currency") or "ريال سعودي"
     exch = num(f.get("exchRate")) if num(f.get("exchRate")) > 0 else (3.755 if cur == "دولار" else 1)
     today = today_riyadh()

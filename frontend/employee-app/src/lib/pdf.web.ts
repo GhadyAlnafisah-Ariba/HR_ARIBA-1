@@ -1,6 +1,7 @@
 // Web (PWA): HTML → a real A4 PDF file inside the app, so the employee never leaves it (window.open sent the installed app to a
 // browser tab that could only be left by quitting the app). The libraries load only when a PDF is asked for.
 import { stripEmojiHtml } from "./clean";
+const ONE_PAGE_UP_TO = 1.35;   // up to this many pages tall still goes on a single page (the text shrinks at most to ~74%)
 const A4_W = 794;   // A4 at 96 dpi, in CSS pixels
 
 export async function htmlToPdfBlob(html: string): Promise<Blob> {
@@ -20,9 +21,14 @@ export async function htmlToPdfBlob(html: string): Promise<Blob> {
     const pdf = new jsPDF({ unit: "pt", format: "a4", compress: true });
     const pw = pdf.internal.pageSize.getWidth(), ph = pdf.internal.pageSize.getHeight();
     const imgH = (canvas.height * pw) / canvas.width, data = canvas.toDataURL("image/jpeg", 0.92);
-    for (let y = 0, page = 0; y < imgH - 1; y += ph, page++) {   // a long slip continues on the next page
-      if (page) pdf.addPage();
-      pdf.addImage(data, "JPEG", 0, -y, pw, imgH);
+    if (imgH <= ph * ONE_PAGE_UP_TO) {   // a page and a little: shrink to one full page instead of a second page with a sliver
+      const k = Math.min(1, ph / imgH), w = pw * k;
+      pdf.addImage(data, "JPEG", (pw - w) / 2, 0, w, imgH * k);
+    } else {
+      for (let y = 0, page = 0; y < imgH - 1; y += ph, page++) {   // a really long document continues on the next page
+        if (page) pdf.addPage();
+        pdf.addImage(data, "JPEG", 0, -y, pw, imgH);
+      }
     }
     return pdf.output("blob");
   } finally {

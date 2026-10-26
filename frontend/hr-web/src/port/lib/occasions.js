@@ -52,7 +52,7 @@ export function pickRecipients(employees, audience, employer, ids) {
 async function ensureRegistered(list) {
   const ids = list.map((e) => String(e.id)); if (!ids.length) return [];
   let miss = [];
-  try { const r = await rpc('ariba_ann_missing', { p_ids: ids }); miss = (r && r.missing) || []; } catch { return []; } /* sql/22 لسه ما اتشغلش: نكمّل زي الأول */
+  try { const r = await rpc('ariba_ann_missing', { p_ids: ids }); miss = (r && r.missing) || []; } catch { return []; } /* sql/22 لم يُشغَّل بعد: نكمل كما كان */
   const bad = [];
   for (const id of miss) {
     const e = list.find((x) => String(x.id) === String(id)); if (!e) continue;

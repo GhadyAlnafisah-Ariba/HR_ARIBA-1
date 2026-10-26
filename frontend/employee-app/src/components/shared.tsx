@@ -32,7 +32,7 @@ export function ForgotPunchSheet({ visible, onClose }: { visible: boolean; onClo
     if (!t1) return setErr("اختر الوقت");
     if (kind === "both") {
       if (!t2) return setErr("اختر وقت الخروج");
-      if (t2 <= t1) return setErr("وقت الخروج لازم يكون بعد وقت الدخول");
+      if (t2 <= t1) return setErr("يجب أن يكون وقت الخروج بعد وقت الدخول");
     }
     if (!notes.trim()) return setErr("اكتب السبب");
     setBusy(true);
@@ -57,7 +57,7 @@ export function ForgotPunchSheet({ visible, onClose }: { visible: boolean; onClo
         <T size={17} weight={700} color="#111">نسيان بصمة</T>
       </View>
       <T size={12.5} color="#555" style={{ lineHeight: 21, marginBottom: 10 }}>
-        اختر نوع البصمة اللي نسيتها والتاريخ والوقت واكتب السبب. الطلب بيروح للموارد البشرية مباشرة، ولما يوافقوا بيتسجل الحضور/الانصراف في سجلك.
+        اختر نوع البصمة التي نسيتها والتاريخ والوقت واكتب السبب. يذهب الطلب إلى الموارد البشرية مباشرة، وعند موافقتهم يُسجَّل الحضور/الانصراف في سجلك.
       </T>
       <View style={{ flexDirection: "row", gap: 6, marginBottom: 4 }}>
         {kinds.map(([k, label]) => {

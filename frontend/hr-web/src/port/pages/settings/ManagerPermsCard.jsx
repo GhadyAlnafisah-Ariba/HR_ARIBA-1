@@ -14,7 +14,7 @@ export default function ManagerPermsCard() {
   const val = (r, k) => (k in r.perms ? !!r.perms[k] : k === 'approve_requests');
   async function save(r) {
     setBusy(r.manager_id);
-    try { const full = {}; MGR_PERM_KEYS.forEach(([k]) => { full[k] = val(r, k); }); await setManagerPerms(r.manager_id, full); toast('✓ ' + T('اتحفظت صلاحيات ', 'Saved permissions for ') + r.name, 'tin'); await load(); }
+    try { const full = {}; MGR_PERM_KEYS.forEach(([k]) => { full[k] = val(r, k); }); await setManagerPerms(r.manager_id, full); toast('✓ ' + T('تم الحفظ صلاحيات ', 'Saved permissions for ') + r.name, 'tin'); await load(); }
     catch (e) { toast(e.message, 'ter'); } finally { setBusy(''); }
   }
   return (

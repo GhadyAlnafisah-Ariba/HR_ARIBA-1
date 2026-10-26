@@ -58,6 +58,6 @@ export async function biometricUnlock() {
     return { ok: true, rt: session, username: rec.u };
   } catch (e) {
     if (e && e.status === 401) { rec.rt = null; rec.cred = null; setRec(rec); return { ok: false, msg: T('البيانات المحفوظة غير صالحة، اكتب كلمة المرور.', 'Saved data is invalid, please type your password.') }; }
-    return { ok: false, msg: T('تم إلغاء التحقق بالبصمة أو فشل. تقدر تدخل بكلمة المرور.', 'Biometric check failed or cancelled. You can sign in with your password.') };
+    return { ok: false, msg: T('تم إلغاء التحقق بالبصمة أو فشل. يمكنك الدخول بكلمة المرور.', 'Biometric check failed or cancelled. You can sign in with your password.') };
   }
 }

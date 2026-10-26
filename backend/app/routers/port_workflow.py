@@ -122,7 +122,7 @@ def create_request(db: Session, actor: dict[str, Any], eid: str, emp: dict[str, 
         if not t1:
             raise _bad("اختر الوقت")
         if kind == "both" and (not t2 or str(t2)[:5] <= str(t1)[:5]):
-            raise _bad("وقت الخروج لازم يكون بعد وقت الدخول")
+            raise _bad("يجب أن يكون وقت الخروج بعد وقت الدخول")
         if not notes:
             raise _bad("اكتب سبب نسيان البصمة")
         if c._row(db, "SELECT id FROM public.workflow_requests WHERE employee_id=:e AND request_type='forgot_punch' AND status='pending' AND payload->>'date'=:d AND payload->>'kind'=:k", e=eid, d=d.isoformat(), k=kind):
@@ -214,7 +214,7 @@ def _notify_new(db: Session, row: dict[str, Any], emp: dict[str, Any], stage: st
         for h in c._require_stage_approver(db, "hr"):
             if h not in {eid, manager}:
                 pc.notify(db, h, rid, f"طلب جديد من {emp.get('name_ar') or eid}",
-                          "الطلب بانتظار المدير المباشر — تقدر تعتمده بالنيابة عنه من طلبات الموظفين", "hr", "request")
+                          "الطلب بانتظار المدير المباشر — يمكنك اعتماده نيابةً عنه من طلبات الموظفين", "hr", "request")
     if on_behalf:
         label = TYPE_AR.get(t, t)
         pc.notify(db, eid, rid, "قُدّم طلب بالنيابة عنك", f"قدّم {on_behalf['name_ar']} طلب {label} بالنيابة عنك", "employee", "workflow")

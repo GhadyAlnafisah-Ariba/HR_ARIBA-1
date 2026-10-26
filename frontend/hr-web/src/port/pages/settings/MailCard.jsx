@@ -16,7 +16,7 @@ const provOf = (host) => (/gmail|gmil|gmial/i.test(host || '') ? 'gmail' : /offi
 export function normalizeMail(f) {
   const n = { ...f, host: String(f.host || '').trim().toLowerCase(), port: Number(f.port) || 0 }; const notes = [];
   if (/^smtp\.(gmil|gmial|gmai|gamil|gmal)\.com$/.test(n.host) || n.host === 'gmail.com' || n.host === 'smtp.gmail') { notes.push('اتصحح الخادم من ' + n.host + ' لـ smtp.gmail.com'); n.host = 'smtp.gmail.com'; }
-  if (n.host === 'smtp.gmail.com' && n.port !== 465) { notes.push('اتغير المنفذ لـ 465 (SSL) لأن سيرفر الإرسال يمنع المنفذ ' + (n.port || 587)); n.port = 465; n.secure = true; }
+  if (n.host === 'smtp.gmail.com' && n.port !== 465) { notes.push('تم تغيير المنفذ إلى 465 (SSL) لأن خادم الإرسال يمنع المنفذ ' + (n.port || 587)); n.port = 465; n.secure = true; }
   if (n.port === 465) n.secure = true;
   return { f: n, notes };
 }
@@ -37,7 +37,7 @@ function MailForm({ scope }) {
     if (!f.host || !f.username || !f.from_email) return toast(T('اكتب الخادم واسم المستخدم وعنوان المرسل', 'Enter host, username and sender address'), 'ter');
     const nm = normalizeMail(f); const g = nm.f; if (nm.notes.length) { setF((x) => ({ ...x, host: g.host, port: g.port, secure: g.secure })); toast('ℹ️ ' + nm.notes.join(' — '), 'tin'); }
     setBusy(true);
-    try { await rpc('ariba_mail_set', { p_scope: scope, p_host: g.host, p_port: +g.port || 465, p_secure: !!g.secure, p_username: f.username, p_password: (prov === 'o365' ? (f.password || 'GRAPH_OAUTH') : f.password), p_from_name: f.from_name, p_from_email: f.from_email }); toast(T('✓ اتحفظ بريد الإرسال', '✓ Sending mailbox saved'), 'tin'); setF((x) => ({ ...x, password: '' })); load(); }
+    try { await rpc('ariba_mail_set', { p_scope: scope, p_host: g.host, p_port: +g.port || 465, p_secure: !!g.secure, p_username: f.username, p_password: (prov === 'o365' ? (f.password || 'GRAPH_OAUTH') : f.password), p_from_name: f.from_name, p_from_email: f.from_email }); toast(T('✓ تم حفظ بريد الإرسال', '✓ Sending mailbox saved'), 'tin'); setF((x) => ({ ...x, password: '' })); load(); }
     catch (e) { toast('⚠️ ' + (/PASSWORD_REQUIRED/.test(e.message) ? T('اكتب كلمة المرور', 'Enter the password') : (e.message || T('تعذر الحفظ', 'Could not save'))), 'ter'); }
     setBusy(false);
   };
@@ -45,10 +45,10 @@ function MailForm({ scope }) {
     setBusy(true);
     try {
       const r = await functionCall('ariba-send-email', { test: true, scope }); const j = (r && r.data) || {};
-      if (j.ok) toast('✅ اتبعتت رسالة تجربة على ' + j.to + ' — شيك على البريد الوارد (أو Spam)', 'tin');
-      else if (r && r.status === 404) toast('⚠️ خدمة الإرسال مش منشورة على Supabase لسه (ariba-send-email)', 'ter');
+      if (j.ok) toast('✅ أُرسلت رسالة تجربة إلى ' + j.to + ' — شيك على البريد الوارد (أو Spam)', 'tin');
+      else if (r && r.status === 404) toast('⚠️ خدمة الإرسال غير منشورة على Supabase بعد (ariba-send-email)', 'ter');
       else toast('⚠️ ' + (j.message || j.error || ('HTTP ' + (r && r.status))) + (/Invalid login|535|Username and Password/i.test(j.message || '') ? ' — لـ Gmail لازم كلمة مرور تطبيق (App Password)' : ''), 'ter');
-    } catch { toast('⚠️ خدمة الإرسال مش منشورة على Supabase لسه (ariba-send-email) — اتبع خطوات النشر', 'ter'); }
+    } catch { toast('⚠️ خدمة الإرسال غير منشورة على Supabase بعد (ariba-send-email) — اتبع خطوات النشر', 'ter'); }
     setBusy(false);
   };
   const del = async () => { if (!window.confirm(T('حذف بيانات البريد المحفوظة؟', 'Delete the saved mailbox?'))) return; try { await rpc('ariba_mail_delete', { p_scope: scope }); setF({ ...f, username: '', password: '', from_name: '', from_email: '' }); load(); } catch (e) { toast('⚠️ ' + e.message, 'ter'); } };
@@ -61,7 +61,7 @@ function MailForm({ scope }) {
         <div><label style={lb}>{T('المنفذ', 'Port')}</label><input style={INP} type="number" value={f.port} onChange={set('port')} /></div>
         <div style={{ display: 'flex', alignItems: 'flex-end' }}><label style={{ fontSize: 12, display: 'flex', gap: 6, alignItems: 'center' }}><input type="checkbox" checked={f.secure} onChange={set('secure')} /> SSL ({T('منفذ 465', 'port 465')})</label></div>
         <div><label style={lb}>{T('اسم المستخدم (إيميلك)', 'Username (your email)')}</label><input style={INP} id={'ML_USER_' + scope} value={f.username} onChange={(e) => setF({ ...f, username: e.target.value, from_email: f.from_email || e.target.value })} autoComplete="off" /></div>
-        <div><label style={lb}>{T(prov === 'o365' ? 'كلمة المرور (غير مستخدمة مع Microsoft 365 Graph)' : 'كلمة المرور / كلمة مرور التطبيق', prov === 'o365' ? 'Password (not used by Microsoft 365 Graph)' : 'Password / app password')}</label><input style={INP} id={'ML_PASS_' + scope} type="password" value={f.password} onChange={set('password')} placeholder={prov === 'o365' ? T('اتركها فارغة — الإرسال عبر Microsoft Graph بعد إعداد الخادم', 'Leave blank — Microsoft Graph is configured server-side') : (st === 'on' ? T('محفوظة — اتركها فاضية للإبقاء', 'saved — leave empty to keep') : '')} autoComplete="new-password" /></div>
+        <div><label style={lb}>{T(prov === 'o365' ? 'كلمة المرور (غير مستخدمة مع Microsoft 365 Graph)' : 'كلمة المرور / كلمة مرور التطبيق', prov === 'o365' ? 'Password (not used by Microsoft 365 Graph)' : 'Password / app password')}</label><input style={INP} id={'ML_PASS_' + scope} type="password" value={f.password} onChange={set('password')} placeholder={prov === 'o365' ? T('اتركها فارغة — الإرسال عبر Microsoft Graph بعد إعداد الخادم', 'Leave blank — Microsoft Graph is configured server-side') : (st === 'on' ? T('محفوظة — اتركها فارغة للإبقاء', 'saved — leave empty to keep') : '')} autoComplete="new-password" /></div>
         <div><label style={lb}>{T('اسم المرسل الظاهر', 'Sender name')}</label><input style={INP} value={f.from_name} onChange={set('from_name')} placeholder={T('الموارد البشرية', 'HR')} /></div>
         <div><label style={lb}>{T('عنوان المرسل', 'Sender address')}</label><input style={INP} id={'ML_FROM_' + scope} value={f.from_email} onChange={set('from_email')} /></div>
       </div>

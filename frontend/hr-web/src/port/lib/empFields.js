@@ -101,8 +101,8 @@ export function answerEmployee(text, e, all) {
   const nm = '<b>' + esc(e.nameAr) + '</b>' + (e.empNo ? ' <span class="ai-mini">(رقم ' + esc(e.empNo) + ')</span>' : '');
   if (keys.length && !wantAll) {
     const r = rowsFor(e, keys, all);
-    return nm + (r.length ? '<div class="ai-mini" style="line-height:2;margin-top:4px">' + r.join('<br>') + '</div>' : '<div class="ai-mini">البيانات دي مش مسجلة في ملف الموظف.</div>');
+    return nm + (r.length ? '<div class="ai-mini" style="line-height:2;margin-top:4px">' + r.join('<br>') + '</div>' : '<div class="ai-mini">هذه البيانات غير مسجلة في ملف الموظف.</div>');
   }
   const blocks = GROUPS.map((g) => { const r = rowsFor(e, g[1], all); return r.length ? '<div style="margin-top:6px"><b>' + g[0] + '</b><div class="ai-mini" style="line-height:1.9">' + r.join('<br>') + '</div></div>' : ''; }).join('');
-  return nm + (blocks || '<div class="ai-mini">مفيش بيانات مسجلة.</div>');
+  return nm + (blocks || '<div class="ai-mini">لا توجد بيانات مسجلة.</div>');
 }

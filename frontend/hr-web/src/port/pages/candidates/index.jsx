@@ -26,7 +26,7 @@ export default function Candidates() {
   const [auto, setAuto] = useState(null);
   useEffect(() => { getAutoCfg().then(setAuto); }, []);
   const L0 = getLists(employees);
-  const saveAuto = async (n) => { setAuto(n); try { await setAutoCfg(n); toast(n.on ? '✓ التسجيل التلقائي شغّال' : 'اتوقف التسجيل التلقائي', 'tin'); } catch (e) { toast(e.message, 'ter'); } };
+  const saveAuto = async (n) => { setAuto(n); try { await setAutoCfg(n); toast(n.on ? '✓ التسجيل التلقائي شغّال' : 'تم إيقاف التسجيل التلقائي', 'tin'); } catch (e) { toast(e.message, 'ter'); } };
   // عنوان صفحة التقديم على الإنترنت (إعداد سحابي مشترك). لو البرنامج نفسه مرفوع على https نستخدم مكانه تلقائياً،
   // لكن لو مفتوح كملف من الجهاز (file://) الرابط ده مش هيفتح عند المرشح، فلازم عنوان عام.
   const [pub, setPub] = useState(''), [pubIn, setPubIn] = useState(''), [pubEdit, setPubEdit] = useState(false);
@@ -37,7 +37,7 @@ export default function Candidates() {
   async function savePub() {
     let u = pubIn.trim().replace(/[#].*$/, '').replace(/[?&]k=[^&]*/, '').replace(/\?$/, '');
     if (u && !/^https:\/\/[^\s/]+\.[^\s]+/i.test(u)) return toast('اكتب عنوان يبدأ بـ https:// (عنوان صفحة التقديم بعد رفعها على الإنترنت)', 'ter');
-    try { await setSetting('apply_public_url', { url: u }); setPub(u); setPubIn(u); setPubEdit(false); toast(u ? '✓ اتحفظ عنوان صفحة التقديم' : 'اتمسح العنوان', 'tin'); } catch (e) { toast(e.message, 'ter'); }
+    try { await setSetting('apply_public_url', { url: u }); setPub(u); setPubIn(u); setPubEdit(false); toast(u ? '✓ تم حفظ عنوان صفحة التقديم' : 'تم مسح العنوان', 'tin'); } catch (e) { toast(e.message, 'ter'); }
   }
   const shown = useMemo(() => (list || []).filter((c) => !flt || c.status === flt), [list, flt]);
   async function pull() {
@@ -65,7 +65,7 @@ export default function Candidates() {
           <div><label>رابط نموذج التقديم (أرسله للمرشحين)</label>
             {link
               ? <div style={{ display: 'flex', gap: 6 }}><input readOnly dir="ltr" value={link} style={{ flex: 1 }} id="CAND_LINK" onFocus={(e) => e.target.select()} /><button className="btn bsm" onClick={() => copy(link, '✓ نُسخ الرابط')}>نسخ</button>{can && <button className="btn bsm" onClick={rotate}>تغيير الرابط</button>}{can && <button className="btn bsm" title="عنوان صفحة التقديم" onClick={() => setPubEdit((x) => !x)}><i className="ti ti-world" /></button>}</div>
-              : <div className="al alb" id="CAND_NOPUB" style={{ fontSize: 12, lineHeight: 1.8 }}><i className="ti ti-alert-triangle" /><span>البرنامج مفتوح كملف من جهازك، فأي رابط منه هيفتح على جهازك بس ومش هيشتغل عند المرشح. ارفع ملف صفحة التقديم (apply) على الإنترنت مرة واحدة، واكتب عنوانه هنا، والرابط هيطلع صح لكل المرشحين.</span></div>}
+              : <div className="al alb" id="CAND_NOPUB" style={{ fontSize: 12, lineHeight: 1.8 }}><i className="ti ti-alert-triangle" /><span>البرنامج مفتوح كملف من جهازك، فأي رابط منه سيفتح على جهازك فقط ولن يعمل لدى المرشح. ارفع ملف صفحة التقديم (apply) على الإنترنت مرة واحدة، واكتب عنوانه هنا، وسيظهر الرابط صحيحًا لكل المرشحين.</span></div>}
             {can && (pubEdit || !baseUrl) && <div style={{ display: 'flex', gap: 6, marginTop: 6 }}><input dir="ltr" id="CAND_PUB" value={pubIn} onChange={(e) => setPubIn(e.target.value)} placeholder="https://ariba-apply.netlify.app" style={{ flex: 1 }} /><button className="btn bpl bsm" id="CAND_PUB_SAVE" onClick={savePub}><i className="ti ti-device-floppy" /> حفظ العنوان</button></div>}
           </div>
           <div><label>استيراد مرشح بالرابط: الصق رابط المرشح (أو رمز المرجع) لسحب بياناته وملفاته</label>

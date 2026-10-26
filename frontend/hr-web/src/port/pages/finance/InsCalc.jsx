@@ -79,7 +79,7 @@ export default function InsCalc() {
       <div className="card" style={{ padding: 14 }}>
         <div className="ct" style={{ marginBottom: 10 }}><i className="ti ti-shield-check" /> {T('حاسبة التأمينات الاجتماعية الشهرية', 'Monthly social insurance calculator')}</div>
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end' }}>
-          <div>{L(T('التاريخ (الشهر اللي هيتحسب)', 'Date (month to calculate)'))}<input type="date" value={date} onChange={(e) => setDate(e.target.value)} style={INP} /></div>
+          <div>{L(T('التاريخ (الشهر المراد احتسابه)', 'Date (month to calculate)'))}<input type="date" value={date} onChange={(e) => setDate(e.target.value)} style={INP} /></div>
           <div style={{ display: 'flex', gap: 6 }}><button className="btn bsm" onClick={() => shift(-1)}>‹</button><button className="btn bsm" onClick={() => setDate(iso(new Date()))}>{T('الشهر الحالي', 'This month')}</button><button className="btn bsm" onClick={() => shift(1)}>{T('الشهر القادم', 'Next month')}</button></div>
           <div>{L(T('الموظف', 'Employee'))}<select value={selEmp} onChange={(e) => setSelEmp(e.target.value)} style={{ ...INP, minWidth: 200 }}><option value="">{T('كل الموظفين', 'All employees')}</option>{emps.map((e) => <option key={e.id} value={e.id}>{shortNm(e, en)}</option>)}</select></div>
           <div>{L(T('جهة العمل', 'Employer'))}<select value={selEr} onChange={(e) => setSelEr(e.target.value)} style={INP}><option value="">{T('كل الجهات', 'All employers')}</option>{ers.map((x) => <option key={x} value={x}>{x}</option>)}</select></div>

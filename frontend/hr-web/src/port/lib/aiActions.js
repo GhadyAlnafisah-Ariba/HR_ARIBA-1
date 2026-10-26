@@ -75,7 +75,7 @@ export function planField(e, a, all) {
     if (a.key === 'total') {
       const others = g('hou') + g('tra') + g('prj') + g('oth') + g('extra'), cur = others + g('sal');
       let target = a.op === 'set' ? a.value : a.op === 'add' ? (a.pct ? cur * (1 + a.value / 100) : cur + a.value) : (a.pct ? cur * (1 - a.value / 100) : cur - a.value);
-      if (target < others) return { err: 'الإجمالي المطلوب أقل من مجموع البدلات (' + money(others) + ') — الأساسي مش هيبقى سالب' };
+      if (target < others) return { err: 'الإجمالي المطلوب أقل من مجموع البدلات (' + money(others) + ') — لن يصبح الأساسي سالبًا' };
       f.sal = r2(target - others); before = money(cur); after = money(target);
     } else {
       const k = FORM_KEYS[a.key], cur = g(k);
@@ -94,7 +94,7 @@ export async function applyField(plan) { await syncEmployee(plan.emp); }
 
 /** رصيد الإجازة الحالي → قيمة جديدة (بنفس آلية "تعديل الأرصدة": تجاوز رصيد السنة الحالية + سجل للتراجع) */
 export function planBalance(e, a) {
-  if (L.leaveExempt(e)) return { err: 'الموظف ده (تمهير/تدريب/استشاري) لا يستحق رصيد إجازة' };
+  if (L.leaveExempt(e)) return { err: 'هذا الموظف (تمهير/تدريب/استشاري) لا يستحق رصيد إجازة' };
   const cur = r2(L.leaveCurrentBalance(e)), nv = r2(a.op === 'set' ? a.value : a.op === 'add' ? cur + a.value : cur - a.value);
   if (nv < 0) return { err: 'الرصيد الناتج سالب' };
   return { cur, nv };

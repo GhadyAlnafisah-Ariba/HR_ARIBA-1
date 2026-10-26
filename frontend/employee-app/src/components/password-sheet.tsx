@@ -34,7 +34,7 @@ export function PasswordSheet({ visible, forced, onClose, onDone }: { visible: b
     if (!oldPw) return setErr("اكتب كلمة المرور الحالية");
     if (pw.length < 8 || !/[A-Za-z؀-ۿ]/.test(pw) || !/\d/.test(pw)) return setErr("كلمة المرور لازم تكون 8 أحرف على الأقل وفيها حروف وأرقام");
     if (pw !== pw2) return setErr("كلمتا المرور غير متطابقتين");
-    if (pw === oldPw) return setErr("كلمة المرور الجديدة لازم تختلف عن الحالية");
+    if (pw === oldPw) return setErr("يجب أن تختلف كلمة المرور الجديدة عن الحالية");
     setBusy(true);
     try {
       await changePassword(oldPw, pw);

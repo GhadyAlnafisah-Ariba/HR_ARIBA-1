@@ -75,7 +75,7 @@ export function buildEmployee(f, existing, all) {
   const email = norm(f.ml), iq = norm(f.iq);
   if (others.some((x) => norm(x.empNo || x.id) === norm(empNo) || (email && norm(x.email) === email) || (iq && norm(x.iqamaNo) === iq))) return { error: 'يوجد موظف مسجل بنفس الرقم الوظيفي أو البريد الإلكتروني أو رقم الهوية/الإقامة.' };
   const username = existing ? existing.username : 'EMP' + String(empNo).padStart(3, '0');
-  if (!existing && all.some((x) => String(x.username || '').toUpperCase() === username.toUpperCase() || String(x.id) === id)) return { error: 'اسم المستخدم ' + username + ' مستخدم لموظف تاني — غيّر الرقم الوظيفي' };
+  if (!existing && all.some((x) => String(x.username || '').toUpperCase() === username.toUpperCase() || String(x.id) === id)) return { error: 'اسم المستخدم ' + username + ' مستخدم لموظف آخر — غيّر الرقم الوظيفي' };
   const exch = parseFloat(f.exchRate) > 0 ? parseFloat(f.exchRate) : defaultExchangeRate(f.currency || 'ريال سعودي');
   const base = existing || { isTerminated: false, payMethod: 'مدد', leaveBalance: 21, yearsOfService: 0, empType: 'دوام كامل', eosLaborLaw: 0, gender: '', createdAt: new Date().toISOString() };
   const emp = {

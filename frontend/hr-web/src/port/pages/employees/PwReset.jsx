@@ -13,7 +13,7 @@ export default function PwReset({ open, onClose, preselect }) {
   const emp = activeEmps.find((e) => String(e.id) === id);
   async function reset() {
     if (!emp) return toast(T('اختر الموظف', 'Select an employee'), 'ter');
-    if (!window.confirm(T('هتطلع كلمة مرور مؤقتة جديدة لـ ' + emp.nameAr + '، والقديمة هتبطل. متأكد؟', 'Generate a new temporary password for ' + emp.nameAr + '? The old one will stop working.'))) return;
+    if (!window.confirm(T('ستظهر كلمة مرور مؤقتة جديدة لـ ' + emp.nameAr + '، وتتوقف القديمة عن العمل. هل أنت متأكد؟', 'Generate a new temporary password for ' + emp.nameAr + '? The old one will stop working.'))) return;
     setBusy(true);
     try { const r = await rpc('ariba_hr_reset_password', { p_employee_id: String(emp.id) }); setRes({ name: emp.nameAr, ...r }); }
     catch (e) { toast('❌ ' + (e.message || e), 'ter'); } finally { setBusy(false); }
@@ -27,7 +27,7 @@ export default function PwReset({ open, onClose, preselect }) {
         <input placeholder={T('بحث بالاسم / الرقم…', 'Search name / no…')} value={q} onChange={(x) => setQ(x.target.value)} style={{ width: '100%', marginBottom: 8 }} id="PW_Q" />
         <select id="PW_SEL" value={id} onChange={(x) => setId(x.target.value)} style={{ width: '100%', marginBottom: 10 }}><option value="">{T('— اختر الموظف —', '— Select employee —')}</option>{list.map((e) => <option key={e.id} value={e.id}>{e.nameAr}{e.empNo ? ' — ' + e.empNo : ''}</option>)}</select>
         <div style={{ display: 'flex', gap: 8 }}><button className="btn bpl" id="PW_GO" disabled={busy || !id} onClick={reset}>{busy ? T('جاري الإنشاء…', 'Generating…') : T('إنشاء كلمة مؤقتة', 'Generate temporary password')}</button><button className="btn" onClick={pwList}>{T('الحسابات بكلمة افتراضية', 'Accounts on default password')}</button></div>
-        {dl && <div style={{ marginTop: 10, fontSize: 12, lineHeight: 1.8 }}>{!dl.length ? T('✅ كل الحسابات النشطة غيّرت كلمة المرور الافتراضية.', '✅ All active accounts changed the default password.') : <><b>{dl.length}</b> {T('حساب لسه على كلمة المرور الافتراضية أو المؤقتة:', 'accounts still on a default/temporary password:')}{dl.map((x, i) => <div key={i}>{x.name} — <span dir="ltr">{x.username}</span>{x.role !== 'employee' && <b> ({x.role})</b>}</div>)}</>}</div>}
+        {dl && <div style={{ marginTop: 10, fontSize: 12, lineHeight: 1.8 }}>{!dl.length ? T('✅ كل الحسابات النشطة غيّرت كلمة المرور الافتراضية.', '✅ All active accounts changed the default password.') : <><b>{dl.length}</b> {T('حساب ما زال على كلمة المرور الافتراضية أو المؤقتة:', 'accounts still on a default/temporary password:')}{dl.map((x, i) => <div key={i}>{x.name} — <span dir="ltr">{x.username}</span>{x.role !== 'employee' && <b> ({x.role})</b>}</div>)}</>}</div>}
       </div> : <div>
         <div>🔑 {T('كلمة مرور مؤقتة لـ ', 'Temporary password for ')}<b>{res.name}</b></div>
         <div style={{ margin: '10px 0', fontSize: 15 }}>{T('اسم المستخدم: ', 'Username: ')}<b dir="ltr">{res.username}</b><br />{T('كلمة المرور المؤقتة: ', 'Temporary password: ')}<b dir="ltr" id="PW_TMP" style={{ fontSize: 17 }}>{res.temporary_password}</b></div>

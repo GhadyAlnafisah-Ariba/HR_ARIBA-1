@@ -95,7 +95,7 @@ export const FILTERS = {
   all: { ar: 'كل الموظفين', en: 'All employees', f: () => true },
   late: { ar: 'المتأخرون فقط', en: 'Late only', f: (s, n) => s.late >= n },
   absent: { ar: 'الغائبون فقط', en: 'Absent only', f: (s, n) => s.absent >= n },
-  early: { ar: 'عندهم خروج مبكر', en: 'Early exit', f: (s, n) => s.earlyDays >= n },
+  early: { ar: 'لديهم خروج مبكر', en: 'Early exit', f: (s, n) => s.earlyDays >= n },
   noout: { ar: 'بدون بصمة انصراف', en: 'Missing check-out', f: (s, n) => s.noOut >= n },
   remote: { ar: 'عن بعد', en: 'Remote', f: (s, n) => s.remote >= n },
   leave: { ar: 'في إجازة', en: 'On leave', f: (s, n) => s.leave >= n },

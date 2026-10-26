@@ -285,7 +285,7 @@ def send(acc0: Account | None, m: Mail) -> dict[str, Any]:
     if r:
         errs.append(r["message"])
     if not acc and not r and not errs:
-        return {"ok": False, "error": "EMAIL_NOT_CONFIGURED", "message": "مفيش بريد إرسال مضبوط (الإعدادات ← البريد والإشعارات)"}
+        return {"ok": False, "error": "EMAIL_NOT_CONFIGURED", "message": "لا يوجد بريد إرسال مضبوط (الإعدادات ← البريد والإشعارات)"}
     return {"ok": False, "error": "SEND_FAILED", "message": " | ".join(errs)}
 
 

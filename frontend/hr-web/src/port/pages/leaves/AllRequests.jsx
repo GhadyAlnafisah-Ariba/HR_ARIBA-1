@@ -9,7 +9,7 @@ import { LVL, lvl, recordLeave, deleteLeave, fetchRequests, getDocFile, saveFile
 import { listLeaveFiles, getLeaveFile, deleteLeaveFiles, migrateLocalAtts } from '../../lib/leaveFiles.js';
 import DocPreview, { fmtSize } from '../../components/DocPreview.jsx';
 import { leaveRequestDays, annualLeaveNetDays } from '../../engines/leave.js';
-const refundNote = (l) => { if (l.type !== 'annual' || l.status !== 'approved') return null; let r = null; try { r = annualLeaveNetDays(l); } catch { return null; } if (!r || !r.refunded) return null; return <div style={{ fontSize: 10.5, color: '#0a7a3f', fontWeight: 700 }} title="أيام اتشالت من السنوية لأنها مغطاة بإجازة أخرى معتمدة">⤺ {r.days} فعلي — رُدّ {r.refunded} ({Object.entries(r.byType).map(([k, n]) => (LVL[k] ? LVL[k].ar : k) + ' ' + n).join('، ')})</div>; };
+const refundNote = (l) => { if (l.type !== 'annual' || l.status !== 'approved') return null; let r = null; try { r = annualLeaveNetDays(l); } catch { return null; } if (!r || !r.refunded) return null; return <div style={{ fontSize: 10.5, color: '#0a7a3f', fontWeight: 700 }} title="أيام استُبعدت من السنوية لأنها مغطاة بإجازة أخرى معتمدة">⤺ {r.days} فعلي — رُدّ {r.refunded} ({Object.entries(r.byType).map(([k, n]) => (LVL[k] ? LVL[k].ar : k) + ' ' + n).join('، ')})</div>; };
 
 export default function AllRequests() {
   const h = useLang() === 'en';

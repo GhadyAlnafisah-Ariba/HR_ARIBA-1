@@ -50,9 +50,9 @@ def _read_state(token: str, kind: str) -> dict[str, Any]:
     try:
         st = jwt.decode(token, s.jwt_secret, algorithms=["HS256"], audience=s.jwt_audience)
     except jwt.PyJWTError as exc:
-        raise ApiError(400, "WEBAUTHN_EXPIRED", "انتهت المهلة، حاول تاني") from exc
+        raise ApiError(400, "WEBAUTHN_EXPIRED", "انتهت المهلة، حاول مرة أخرى") from exc
     if st.get("typ") != "webauthn-" + kind:
-        raise ApiError(400, "WEBAUTHN_EXPIRED", "انتهت المهلة، حاول تاني")
+        raise ApiError(400, "WEBAUTHN_EXPIRED", "انتهت المهلة، حاول مرة أخرى")
     return st
 
 
@@ -74,7 +74,7 @@ def register_options(actor: dict[str, Any] = Depends(c.current_actor), db: Sessi
 def register(body: dict[str, Any], request: Request, actor: dict[str, Any] = Depends(c.current_actor), db: Session = Depends(get_db)):
     st = _read_state(str(body.get("state") or ""), "register")
     if st.get("sub") != str(actor["account_id"]):
-        raise ApiError(400, "WEBAUTHN_EXPIRED", "انتهت المهلة، حاول تاني")
+        raise ApiError(400, "WEBAUTHN_EXPIRED", "انتهت المهلة، حاول مرة أخرى")
     rp_id, origins = _rp()
     try:
         v = verify_registration_response(credential=body.get("credential"), expected_challenge=base64url_to_bytes(st["ch"]),

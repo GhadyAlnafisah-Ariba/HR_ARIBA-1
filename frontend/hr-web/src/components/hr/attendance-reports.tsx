@@ -25,7 +25,7 @@ const FILTERS: Record<string, { ar: string; f: (s: Sum, n: number) => boolean }>
   all: { ar: "كل الموظفين", f: () => true },
   late: { ar: "المتأخرون فقط", f: (s, n) => s.late >= n },
   absent: { ar: "الغائبون فقط", f: (s, n) => s.absent >= n },
-  early: { ar: "عندهم خروج مبكر", f: (s, n) => s.earlyDays >= n },
+  early: { ar: "لديهم خروج مبكر", f: (s, n) => s.earlyDays >= n },
   noout: { ar: "بدون بصمة انصراف", f: (s, n) => s.noOut >= n },
   remote: { ar: "عن بعد", f: (s, n) => s.remote >= n },
   leave: { ar: "في إجازة", f: (s, n) => s.leave >= n },
@@ -40,7 +40,7 @@ function detRow(d: Day) {
   const r = d.rec;
   let note = "";
   if (r) {
-    note = r.auto ? "الجلسة الأخيرة اتقفلت تلقائيًا (بدون بصمة انصراف)" : r.noOut ? "بدون بصمة انصراف" : "";
+    note = r.auto ? "أُغلقت الجلسة الأخيرة تلقائيًا (بدون بصمة انصراف)" : r.noOut ? "بدون بصمة انصراف" : "";
     if (r.sessions > 1) note = (note ? note + " — " : "") + r.sessions + " جلسات، الانصراف = آخر جلسة";
   }
   return [dispD(d.date), d.dow, ST_AR[d.cls], r ? hm(r.in) : "", r ? hm(r.out) : "", r && d.cls === "late" ? r.late : "", r && r.early > 0 ? r.early : "", r ? r.hours : "", note];
@@ -105,7 +105,7 @@ export function AttendanceReports({ emps }: { emps: EmployeeListItem[] }) {
   async function doPrint() {
     const r = await run();
     if (!r) return;
-    if (!r.length) return toast("مفيش بيانات للطباعة", "err");
+    if (!r.length) return toast("لا توجد بيانات للطباعة", "err");
     const esc = (v: unknown) => String(v ?? "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]!);
     const table = (h: string[], rows: unknown[][]) => `<table style="width:100%;border-collapse:collapse;font-size:9px"><tr>${h.map((x) => `<th style="background:#014D3D;color:#fff;padding:4px">${x}</th>`).join("")}</tr>${rows.map((rw) => `<tr>${rw.map((x) => `<td style="padding:3px;border-bottom:1px solid #e5ece9;text-align:center">${esc(x)}</td>`).join("")}</tr>`).join("")}</table>`;
     const kp = `<div style="display:flex;gap:5px;margin-bottom:4mm">${[[r.length, "موظف"], [k.present, "حاضر"], [k.late, "متأخر"], [k.absent, "غائب"], [k.leave, "إجازة"], [k.remote, "عن بعد"], [k.lateMin, "دقائق التأخير"]].map(([v, l]) => `<div style="flex:1;background:#eef5f2;border:1px solid #d8e2de;border-radius:7px;padding:5px;text-align:center"><b style="display:block;font-size:14px;color:#014D3D">${v}</b><span style="font-size:8.5px;color:#666">${l}</span></div>`).join("")}</div>`;

@@ -56,7 +56,7 @@ export async function login(username, password) {
   try { d = await request('/auth/login', { method: 'POST', body: { username: u, password: String(password || '') }, anonymous: true }); }
   catch (e) {
     if (e && e.status === 0) return { ok: false, error: T('تعذر الاتصال بالخادم. تأكد من الإنترنت.', 'Could not reach the server. Check your connection.') };
-    return { ok: false, error: e && e.status === 429 ? T('محاولات كتير. حاول بعد شوية.', 'Too many attempts. Try again shortly.') : T('بيانات الدخول غير صحيحة', 'Invalid login details') };
+    return { ok: false, error: e && e.status === 429 ? T('محاولات كثيرة. حاول بعد قليل.', 'Too many attempts. Try again shortly.') : T('بيانات الدخول غير صحيحة', 'Invalid login details') };
   }
   setSession(d, false);
   // a temporary password (HR reset / first sign-in): the server only lets the change-password call through, so ask for the new

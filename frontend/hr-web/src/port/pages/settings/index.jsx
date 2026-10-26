@@ -58,7 +58,7 @@ export default function Settings() {
     setCounts((prev) => (JSON.stringify(prev) === JSON.stringify(c) ? prev : c));
     if (s && Object.keys(op).some((k) => !open[k])) setOpen((o) => ({ ...o, ...op }));
   });
-  if (!perm.can('settings')) return <div className="card" style={{ margin: 16 }}>{T('مفيش صلاحية لصفحة الإعدادات', 'No access to Settings')}</div>;
+  if (!perm.can('settings')) return <div className="card" style={{ margin: 16 }}>{T('لا توجد صلاحية على صفحة الإعدادات', 'No access to Settings')}</div>;
   const canPerm = perm.can('permissions');
   const S = {
     company: [<CountryCard key="cn" />, <CompanyCard key="co" />, <LogoCard key="lg" />, <BrandCard key="br" />],
@@ -73,7 +73,7 @@ export default function Settings() {
   };
   return (
     <div id="pg-set">
-      {ro && <div style={{ margin: '6px 0', fontSize: 11.5, color: 'var(--am)' }}>👁 {T('اطلاع فقط — مفيش تعديل في الصفحة دي', 'View only — no editing on this page')}</div>}
+      {ro && <div style={{ margin: '6px 0', fontSize: 11.5, color: 'var(--am)' }}>👁 {T('اطلاع فقط — لا يمكن التعديل في هذه الصفحة', 'View only — no editing on this page')}</div>}
       <fieldset disabled={ro} style={{ border: 0, margin: 0, padding: 0, minWidth: 0 }}>
         <div id="SET_ORG" ref={org} data-l={en ? 'en' : 'ar'}>
           <div className="so-bar">
@@ -86,7 +86,7 @@ export default function Settings() {
               <div className="so-body">{S[s[0]]}</div>
             </section>
           ))}
-          <div className="so-empty" id="SO_EMPTY">{T('مفيش نتائج مطابقة', 'No matching settings')}</div>
+          <div className="so-empty" id="SO_EMPTY">{T('لا توجد نتائج مطابقة', 'No matching settings')}</div>
         </div>
       </fieldset>
     </div>

@@ -49,7 +49,7 @@ export default function Login() {
       await signIn(username.trim(), password);
       await remember(rm ? username.trim().toLowerCase() : null);
     } catch (e) {
-      setError(e instanceof ApiError && e.status === 429 ? "محاولات كتير. حاول بعد شوية." : e instanceof ApiError && e.status === 0 ? "تعذر الاتصال بالخادم. تأكد من الإنترنت." : "بيانات الدخول غير صحيحة");
+      setError(e instanceof ApiError && e.status === 429 ? "محاولات كثيرة. حاول بعد قليل." : e instanceof ApiError && e.status === 0 ? "تعذر الاتصال بالخادم. تأكد من الإنترنت." : "بيانات الدخول غير صحيحة");
     } finally {
       setBusy(false);
     }
@@ -59,7 +59,7 @@ export default function Login() {
     if (!bio) return setMsg({ t: "سجّل الدخول أولًا ثم فعّل البصمة لهذا الجهاز.", good: false });
     setBusy(true);
     try {
-      if (!(await signInBiometric())) setMsg({ t: "تم إلغاء التحقق بالبصمة أو فشل. تقدر تدخل بكلمة المرور.", good: false });
+      if (!(await signInBiometric())) setMsg({ t: "تم إلغاء التحقق بالبصمة أو فشل. يمكنك الدخول بكلمة المرور.", good: false });
     } catch {
       setMsg({ t: "انتهت صلاحية الدخول المحفوظ، اكتب كلمة المرور.", good: false });
     } finally {
@@ -136,7 +136,7 @@ function ForgotSheet({ onClose }: { onClose: () => void }) {
       setMsg({ t: r.message + (r.sent_to ? ` (${r.sent_to})` : ""), ok: true });
       setDone(true);
     } catch {
-      setMsg({ t: "تعذر الاتصال بالخادم. تأكد من الإنترنت وحاول تاني.", ok: false });
+      setMsg({ t: "تعذر الاتصال بالخادم. تأكد من الإنترنت وحاول مرة أخرى.", ok: false });
     } finally {
       setBusy(false);
     }

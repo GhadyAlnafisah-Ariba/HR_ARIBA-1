@@ -25,19 +25,19 @@ export default function FlexCard() {
     const h = parseFloat(hours) || 8;
     try {
       await rpc('ariba_hr_set_flexible_hours', { p_enabled: enabled, p_shift_hours: h, p_window_start: (from || '08:00') + ':00', p_window_end: (to || '17:00') + ':00' });
-      toast(enabled ? T('✓ اتفعّلت الساعة المرنة (' + from + ' - ' + to + '، ' + h + ' ساعات)', '✓ Flexible hours enabled (' + from + ' - ' + to + ', ' + h + ' hours)') : T('✓ اتلغت الساعة المرنة، رجعنا لوقت الحضور الثابت', '✓ Flexible hours cancelled — back to fixed check-in time'), 'tin');
+      toast(enabled ? T('✓ اتفعّلت الساعة المرنة (' + from + ' - ' + to + '، ' + h + ' ساعات)', '✓ Flexible hours enabled (' + from + ' - ' + to + ', ' + h + ' hours)') : T('✓ أُلغيت الساعة المرنة، وعدنا إلى وقت الحضور الثابت', '✓ Flexible hours cancelled — back to fixed check-in time'), 'tin');
       refresh();
     } catch (e) { toast('⚠️ ' + (e.message || T('تعذر الحفظ', 'Could not save')), 'ter'); }
   };
   const saveRm = async (enabled) => {
     try {
       await rpc('ariba_hr_set_ramadan_flex', { p_enabled: enabled, p_shift_hours: parseFloat(rm.hours) || 6, p_window_start: (rm.from || '09:00') + ':00', p_window_end: (rm.to || '15:00') + ':00', p_from: rm.d1 || null, p_to: rm.d2 || null });
-      toast(enabled ? T('✓ اتفعّلت الساعة المرنة في رمضان', '✓ Ramadan flexible hours enabled') : T('✓ اتلغت الساعة المرنة في رمضان', '✓ Ramadan flexible hours cancelled'), 'tin'); refresh();
+      toast(enabled ? T('✓ اتفعّلت الساعة المرنة في رمضان', '✓ Ramadan flexible hours enabled') : T('✓ أُلغيت الساعة المرنة في رمضان', '✓ Ramadan flexible hours cancelled'), 'tin'); refresh();
     } catch (e) { toast('⚠️ ' + (e.message || T('تعذر الحفظ', 'Could not save')), 'ter'); }
   };
   return (
     <Card icon="clock-hour-4" title={T('الساعة المرنة', 'Flexible hours')} id="V86_FLEX_CARD">
-      <div style={{ fontSize: 11.5, color: 'var(--mu)', marginBottom: 10 }}>{T('لما تتفعّل، الموظف يدخل أي وقت داخل نطاق الدوام المحدد تحت، ووقت انصرافه المفروض = وقت دخوله + عدد الساعات (مثال: نطاق 8 إلى 5، دوام 8 ساعات → دخل 8 يمشي 4، دخل 9 يمشي 5). لو الدخول هيخلي الانصراف يعدي نهاية النطاق، البصمة بترفض.', 'When enabled, employees can check in at any time inside the window below and their expected check-out = check-in + the shift hours (example: window 8 to 5, 8-hour shift → in at 8 leaves at 4, in at 9 leaves at 5). If a check-in would push the check-out past the end of the window, the punch is rejected.')}</div>
+      <div style={{ fontSize: 11.5, color: 'var(--mu)', marginBottom: 10 }}>{T('لما تتفعّل، الموظف يدخل أي وقت داخل نطاق الدوام المحدد تحت، ووقت انصرافه المفروض = وقت دخوله + عدد الساعات (مثال: نطاق 8 إلى 5، دوام 8 ساعات → دخول 8 وانصراف 4، دخول 9 وانصراف 5). وإذا كان الدخول سيجعل الانصراف يتجاوز نهاية النطاق فسيُرفض البصم.', 'When enabled, employees can check in at any time inside the window below and their expected check-out = check-in + the shift hours (example: window 8 to 5, 8-hour shift → in at 8 leaves at 4, in at 9 leaves at 5). If a check-in would push the check-out past the end of the window, the punch is rejected.')}</div>
       <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap' }}>
         <div><label style={lb}>{T('من الساعة', 'From')}</label><input type="time" id="V86_FROM" value={from} onChange={(e) => setFrom(e.target.value)} style={{ width: 110 }} /></div>
         <div><label style={lb}>{T('إلى الساعة', 'To')}</label><input type="time" id="V86_TO" value={to} onChange={(e) => setTo(e.target.value)} style={{ width: 110 }} /></div>

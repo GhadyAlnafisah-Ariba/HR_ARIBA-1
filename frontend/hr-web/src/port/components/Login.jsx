@@ -110,7 +110,7 @@ export function ForgotDialog({ onClose }) {
       if (r.data && r.data.ok) { setMsg({ t: (r.data.message || '') + (r.data.sent_to ? ' (' + r.data.sent_to + ')' : ''), ok: true }); setDone(true); }
       else if (r.status === 404 || !r.data) setMsg({ t: T('الخدمة غير متاحة حاليًا. كلّم الموارد البشرية.', 'The service is unavailable right now. Contact HR.'), ok: false });
       else setMsg({ t: (r.data && r.data.message) || T('تعذر تنفيذ الطلب', 'Request failed'), ok: false });
-    } catch { setMsg({ t: T('تعذر الاتصال بالخادم. تأكد من الإنترنت وحاول تاني.', 'Could not reach the server. Check your connection.'), ok: false }); }
+    } catch { setMsg({ t: T('تعذر الاتصال بالخادم. تأكد من الإنترنت وحاول مرة أخرى.', 'Could not reach the server. Check your connection.'), ok: false }); }
     setBusy(false);
   }
   return (
@@ -121,7 +121,7 @@ export function ForgotDialog({ onClose }) {
         <div style={{ fontSize: 13, color: '#555', marginBottom: 10 }}>{mode === 'user' ? T('اكتب اسم المستخدم وهنبعتلك كلمة مرور مؤقتة على الإيميل المسجّل.', 'Enter your username and we will email you a temporary password.') : T('اكتب رقم الإقامة وهنبعتلك اسم المستخدم وكلمة مرور مؤقتة على الإيميل المسجّل.', 'Enter your Iqama number and we will email you your username and a temporary password.')}</div>
         <label style={{ fontSize: 12, color: '#444', fontWeight: 700 }}>{mode === 'user' ? T('اسم المستخدم', 'Username') : T('رقم الإقامة', 'Iqama number')}</label>
         <input id="ax-f-in" autoComplete="off" inputMode={mode === 'iq' ? 'numeric' : undefined} value={v} onChange={(e) => setV(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && go()} style={{ width: '100%', boxSizing: 'border-box', padding: '11px 12px', border: '1px solid #ccc', borderRadius: 10, fontSize: 14, direction: 'ltr', marginTop: 6, background: '#fff', color: '#111' }} autoFocus />
-        <a href="#" onClick={(e) => { e.preventDefault(); setMode(mode === 'user' ? 'iq' : 'user'); setMsg({ t: '', ok: false }); }} style={{ display: 'block', margin: '10px 0', fontSize: 12, color: 'var(--ariba-bright,#29B35E)', textDecoration: 'none' }}>{mode === 'user' ? T('نسيت اسم المستخدم؟ استخدم رقم الإقامة', 'Forgot your username? Use your Iqama number') : T('عندي اسم المستخدم', 'I know my username')}</a>
+        <a href="#" onClick={(e) => { e.preventDefault(); setMode(mode === 'user' ? 'iq' : 'user'); setMsg({ t: '', ok: false }); }} style={{ display: 'block', margin: '10px 0', fontSize: 12, color: 'var(--ariba-bright,#29B35E)', textDecoration: 'none' }}>{mode === 'user' ? T('نسيت اسم المستخدم؟ استخدم رقم الإقامة', 'Forgot your username? Use your Iqama number') : T('أعرف اسم المستخدم', 'I know my username')}</a>
         <div style={{ fontSize: 12, minHeight: 16, marginBottom: 10, color: msg.ok ? '#15803d' : '#b45309' }}>{msg.t}</div>
         <div style={{ display: 'flex', gap: 8 }}><button style={bs(0)} onClick={onClose}>{T('إغلاق', 'Close')}</button>{!done && <button style={bs(1)} disabled={busy} onClick={go}>{busy ? T('جاري الإرسال…', 'Sending…') : T('إرسال', 'Send')}</button>}</div>
       </div>

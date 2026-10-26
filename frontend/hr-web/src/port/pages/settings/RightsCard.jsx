@@ -11,7 +11,7 @@ export default function RightsCard({ pre = 'RT' }) {
   const toggle = (k, w, v) => {
     const next = {}; KINDS.forEach(([kk]) => { next[kk] = { leave: on(kk, 'leave'), eos: on(kk, 'eos') }; });
     next[k][w] = v;
-    save('rights', 'special_rights', next, T('اتحفظت استحقاقات الأنواع الخاصة', 'Special-type entitlements saved'));
+    save('rights', 'special_rights', next, T('تم الحفظ استحقاقات الأنواع الخاصة', 'Special-type entitlements saved'));
   };
   const CB = ({ k, w }) => <label style={{ display: 'inline-flex', gap: 6, alignItems: 'center', cursor: 'pointer', fontSize: 12.5 }}><input type="checkbox" id={pre + '_' + k + '_' + w} checked={on(k, w)} onChange={(e) => toggle(k, w, e.target.checked)} />{w === 'leave' ? T('استحقاق إجازة', 'Leave entitlement') : T('استحقاق مكافأة نهاية خدمة', 'End-of-service award')}</label>;
   return (
