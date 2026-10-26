@@ -97,6 +97,19 @@ Commits of the PWA and the 26 Oct work: `0bef2b9`, `eac774c`, `f6ddbcf`, `eafb7c
 
 Not done, needs the company's Microsoft 365 admin: posting a file straight into a **Teams channel**. A file cannot be attached to a channel from a link; it needs a Graph app (Files.ReadWrite + ChannelMessage.Send) or a Power Automate flow. Sharing from the share sheet and the prefilled chat cover the daily need meanwhile.
 
+## 10. Second round of management notes (26 Oct, night)
+
+| # | Note | What was found | What was done |
+|---|---|---|---|
+| 1 | Night mode: the logo does not match the background (HR site) | The logo file has an opaque white square | Added `ariba-logo-dark.png` (transparent, deep greens lifted) used in night mode; an uploaded logo goes on a soft light tile |
+| 2 | Sign-out icon turns white in day mode (HR site) | A rule paints everything in the top bar white, but the account pill is a light surface | The pill's icons are now the brand green in day mode (cream at night) |
+| 3 | Hide the greeting automatically after a day (app) | The server kept greetings 3 days | Greetings are kept 24 hours at most, on the server (`interval '1 day'`) and again in the app for a screen left open overnight |
+| 5 | A clear fingerprint icon while punching (app) | The dial showed «...» while verifying, and an exit icon for check-out | A large fingerprint (check-in and check-out) and, while verifying, the fingerprint with a scanning line and «جارٍ التحقق…» |
+| 6 | A light glow around the punch circle during work hours (app) | None | A soft breathing glow from check-in until check-out; it stops after the check-out. The pulsing ring now only invites the first check-in |
+| 7 | English for the app | No language layer | `src/i18n`: Arabic/English switch (Profile, and on the sign-in screen), saved on the device. All texts go through one translator (about 610 texts, patterns for texts with values, piece-by-piece fallback); layout direction follows the language; dates in English format. Not translated on purpose: official letters and the payslip PDF, and names/messages from the server. On a phone the layout direction applies at the next start (`forcesRTL` was switched off in `app.json` so the app decides) |
+| 8 | Icons for the three boxes under the punch (app) | Plain numbers | Pictograms in the same line style: annual-leave balance, year-end balance (new, drawn in the same style) and remote days (the remote-work pictogram) |
+| 10 | Separate colours for the HR site and the app, with sync | One shared setting (`brand_colors`) fed both | New setting `app_brand` (colours, hero card colour, app logo, punch watermark) with its own cards in Settings → Employee app; the website colours card is now «ألوان الموقع». The app reads it at start, on return to the app and every 90 s. Until the first change nothing moves: the app's current look is saved as its own identity before the website colours are first changed. The punch watermark is now shown behind the punch circle and the app logo on its sign-in screen. Tests: 131 passed (2 new for the separation) |
+
 ---
 
 # العربية
@@ -190,3 +203,16 @@ commits الـPWA وعمل 26 أكتوبر: `0bef2b9` و`eac774c` و`f6ddbcf` و
 | طباعة PDF تخرج صفحة وقليلاً | بانى PDF كان يقص صفحة ثانية لأي زيادة، ومسار الطباعة في HR كان يضبط الصفحة الواحدة للمستندات ذات الورق الرسمي فقط | ما يصل إلى 1.35 صفحة يُصغَّر على **صفحة واحدة كاملة**، والمستند الأطول يبقى بصفحات عادية (جُرّب: 1.04 و1.23 صفحة ← صفحة واحدة، و1.52 ← صفحتان، و2.24 ← ثلاث). نفس القاعدة في بانى PDF بموقع HR وفي الطباعة للمستندات بدون ورق رسمي |
 
 لم يُنفَّذ ويحتاج مسؤول Microsoft 365 في الشركة: نشر ملف مباشرة داخل **قناة في Teams**. لا يمكن إرفاق ملف بقناة من رابط؛ يلزم تطبيق Graph (صلاحيتا Files.ReadWrite وChannelMessage.Send) أو تدفق Power Automate. المشاركة من نافذة المشاركة والمحادثة الجاهزة تغطيان الاستخدام اليومي في الأثناء.
+
+## 10. الجولة الثانية من ملاحظات الإدارة (26 أكتوبر، ليلًا)
+
+| # | الملاحظة | ما وُجد | ما نُفّذ |
+|---|---|---|---|
+| 1 | الوضع الليلي: لون الشعار لا يتوافق مع الخلفية (موقع HR) | ملف الشعار فيه مربع أبيض غير شفاف | أضفت `ariba-logo-dark.png` (شفاف مع رفع الأخضر الغامق) يُستخدم في الوضع الليلي؛ وأي شعار مرفوع يوضع على بلاطة فاتحة ناعمة |
+| 2 | أيقونة الخروج تصير بيضاء في الوضع النهاري (موقع HR) | قاعدة تلوّن كل ما في الشريط العلوي بالأبيض بينما حساب المستخدم على سطح فاتح | أيقونات حساب المستخدم أخضر الهوية في النهاري (وبيج في الليلي) |
+| 3 | إخفاء المباركة من الرئيسية تلقائيًا خلال يوم (التطبيق) | الخادم كان يُبقي المباركة 3 أيام | تبقى المباركة 24 ساعة كحد أقصى، في الخادم (`interval '1 day'`) وفي التطبيق أيضًا لشاشة تُركت مفتوحة طوال الليل |
+| 5 | أيقونة إصبع واضحة أثناء البصمة (التطبيق) | الدائرة تعرض «...» أثناء التحقق وأيقونة خروج عند الانصراف | بصمة كبيرة في الحضور والانصراف، وأثناء التحقق تظهر البصمة مع خط مسح وعبارة «جارٍ التحقق…» |
+| 6 | توهج خفيف حول دائرة البصمة طوال الدوام (التطبيق) | لا يوجد | توهج ناعم يتنفس من الحضور حتى الانصراف ويتوقف بعده. والحلقة النابضة صارت لدعوة الحضور الأول فقط |
+| 7 | اللغة الإنجليزية للتطبيق | لا توجد طبقة لغة | `src/i18n`: تبديل عربي/إنجليزي (في ملفي وفي شاشة الدخول) ويُحفظ على الجهاز. كل النصوص تمرّ عبر مترجم واحد (نحو 610 نصًا، وأنماط للنصوص ذات القيم، وترجمة جزئية احتياطية)، واتجاه الشاشة يتبع اللغة، والتواريخ بالصيغة الإنجليزية. لم يُترجم عمدًا: الخطابات الرسمية وPDF قسيمة الراتب وأسماء ورسائل الخادم. على الجوال يُطبَّق اتجاه الشاشة عند التشغيل التالي (أُوقف `forcesRTL` في `app.json` ليقرر التطبيق) |
+| 8 | أيقونات الخانات الثلاث تحت البصمة (التطبيق) | أرقام فقط | أيقونات بنفس أسلوب الخطوط: رصيد الإجازة السنوية، رصيد نهاية العام (جديدة ومرسومة بنفس الأسلوب)، وأيام العمل عن بعد (أيقونة العمل عن بعد) |
+| 10 | فصل ألوان موقع HR عن التطبيق مع مزامنة | إعداد واحد مشترك (`brand_colors`) يغذي الاثنين | إعداد جديد `app_brand` (الألوان ولون البطاقة الخضراء وشعار التطبيق وشعار البصمة) له بطاقاته في الإعدادات ← تطبيق الموظف، وبطاقة ألوان الموقع صارت «ألوان الموقع». يقرؤه التطبيق عند التشغيل وعند العودة إليه وكل 90 ثانية. وإلى أن يتغير شيء لا يتحرك شيء: يُحفظ شكل التطبيق الحالي كهوية خاصة به قبل أول تغيير في ألوان الموقع. شعار البصمة صار يظهر خلف الدائرة وشعار التطبيق في شاشة دخوله. الاختبارات: 131 ناجحة (اثنان جديدان للفصل) |

@@ -113,7 +113,7 @@ def ann_missing(body: dict[str, Any], actor: dict[str, Any] = Depends(c.current_
 
 @router.get("/me/announcements")
 def my_announcements(actor: dict[str, Any] = Depends(c.current_actor), db: Session = Depends(get_db)):
-    """ariba_my_announcements: running announcements (pinned, or the last 14 days) and greetings of the last 3 days for me."""
+    """ariba_my_announcements: running announcements (pinned, or the last 14 days) and greetings of the last day for me (a greeting disappears from the home screen after 24 hours at most)."""
     me = actor.get("employee_id")
     today = today_riyadh()
     emp = db.execute(text("SELECT er.name FROM public.employee_directory d LEFT JOIN public.employers er ON er.id=d.employer_id WHERE d.employee_id=:e"), {"e": me}).first()
@@ -121,7 +121,7 @@ def my_announcements(actor: dict[str, Any] = Depends(c.current_actor), db: Sessi
     rows = c._rows(db, """SELECT a.id,a.kind,a.occasion,a.title,a.body,a.pinned,a.created_at FROM public.ariba_announcements a
         WHERE NOT a.hidden AND (a.expires_on IS NULL OR a.expires_on >= :today)
           AND ((a.kind='announcement' AND (a.pinned OR a.created_at > now() - interval '14 days'))
-            OR (a.kind='greeting' AND a.created_at > now() - interval '3 days'))
+            OR (a.kind='greeting' AND a.created_at > now() - interval '1 day'))
           AND (a.audience='all' OR (a.audience='employer' AND a.employer=:emp) OR (a.audience='employees' AND :me = ANY(a.employee_ids)))
         ORDER BY a.pinned DESC, a.created_at DESC LIMIT 10""", today=today, emp=employer, me=me)
     return {"ok": True, "items": [{**r, "id": str(r["id"])} for r in rows]}

@@ -19,7 +19,7 @@ export default function LogoCard() {
   const reset = async () => { const ok = await save('logo', 'company_logo', { data: '', updated: Date.now() }, T('تمت إزالة الشعار', 'Logo removed')); setStat(T('تمت إزالة الشعار', 'Logo removed') + ' — ' + (ok ? T('تم الحفظ على الخادم ✓', 'Saved to the server ✓') : T('لم يُحفظ على الخادم', 'Not saved to the server'))); setTimeout(() => setStat(''), 6000); };
   const lbl = { fontSize: 11, color: 'var(--mu)', fontWeight: 600, display: 'block', marginBottom: 4 };
   return (
-    <Card icon="photo" title={T('شعار الشركة', 'Company logo')} id="LG_CARD">
+    <Card icon="photo" title={T('شعار الشركة (الموقع والمستندات)', 'Company logo (website & documents)')} id="LG_CARD">
       <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
         <div id="LG_PREV" style={{ width: 190, height: 110, background: '#fff', border: '1px dashed var(--bd)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 8, boxSizing: 'border-box' }}>
           {src ? <img src={src} alt="" style={{ maxHeight: 90, maxWidth: '100%', objectFit: 'contain' }} /> : <span style={{ color: 'var(--mu)', fontSize: 12 }}>{T('لا يوجد شعار', 'No logo')}</span>}

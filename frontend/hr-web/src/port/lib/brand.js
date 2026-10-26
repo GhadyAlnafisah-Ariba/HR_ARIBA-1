@@ -51,3 +51,13 @@ export function brandValue(brand, punchData) {
   const d = typeof punchData === 'string' ? punchData : '';
   return { ...b, updated: Date.now(), ...(d ? { punch: d } : {}) };
 }
+
+/** الهوية الحالية لتطبيق الموظف: app_brand لو اتحفظت، وإلا القيمة القديمة المشتركة (لحد أول تعديل) */
+export const appBase = (settings) => { const a = settings && settings.appBrand, l = settings && settings.brand; return (a && typeof a === 'object' ? a : (l && typeof l === 'object' ? l : {})); };
+/** قيمة app_brand: هوية تطبيق الموظف وحدها (ألوان + لون البطاقة الخضراء + شعار التطبيق + شعار البصمة) — منفصلة تمامًا عن ألوان الموقع */
+export function appBrandValue(brand, prev) {
+  const old = prev && typeof prev === 'object' ? prev : {};
+  const on = brand && brand.p && !brand.reset;
+  return { ...(on ? { p: brand.p, s: brand.s, a: brand.a || '' } : { reset: true }), ...(on && validHex(brand.hero) ? { hero: brand.hero } : {}),
+    ...(old.logo ? { logo: old.logo } : {}), ...(old.punch ? { punch: old.punch } : {}), updated: Date.now() };
+}

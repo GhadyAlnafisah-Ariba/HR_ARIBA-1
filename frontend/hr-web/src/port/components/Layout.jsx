@@ -72,7 +72,7 @@ export default function Layout() {
     <>
       <div className="app">
         <aside className="sb" id="SB" aria-hidden={closed}>
-          <div className="lbx"><div className="lic" style={{ background: 'transparent', padding: 0, width: 44, height: 44 }}><CompanyLogo /></div><div className="lt"><h1 id="coN">{coName}</h1><p>اريبا للاستشارات</p></div></div>
+          <div className="lbx"><div className="lic" style={{ background: 'transparent', padding: 0, width: 44, height: 44 }}><CompanyLogo dark={theme === 'dark'} /></div><div className="lt"><h1 id="coN">{coName}</h1><p>اريبا للاستشارات</p></div></div>
           <div id="NV">
             {visible.map((n, i) => n.sec
               ? <div className="ns" key={'s' + i}>{n.sec}</div>
@@ -97,11 +97,11 @@ export default function Layout() {
               <PageExport title={en ? info.en : info.ar} />
               <button className="ib" onClick={() => window.print()} title="طباعة"><i className="ti ti-printer" /></button>
               <button className="btn bpl bsm" onClick={sync} title="تحديث البيانات وحفظها" disabled={spin}><i className="ti ti-refresh" /> تحديث البيانات</button>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 10px', background: 'var(--c2)', border: '1px solid var(--bd)', borderRadius: 8, fontSize: 11 }}>
+              <div className="hr-pill" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 10px', background: 'var(--c2)', border: '1px solid var(--bd)', borderRadius: 8, fontSize: 11 }}>
                 <div className="av" style={{ width: 26, height: 26, background: 'linear-gradient(135deg,var(--ariba-bright,#29B35E),var(--ariba-dark,#014D3D))', color: '#fff', fontSize: 10 }}>HR</div>
                 <span id="HRL" style={{ fontWeight: 700 }}>{roleLabel}</span>
-                <button id="aribaPwHdrBtn" type="button" className="ib" title={en ? 'Change my password' : 'تغيير كلمة مرور حسابي'} aria-label={en ? 'Change my password' : 'تغيير كلمة مرور حسابي'} style={{ fontSize: 12, color: theme === 'dark' ? '#E4E4BC' : undefined }} onClick={() => (auth.state.token ? setChgPw(true) : toast(en ? 'Please sign in first' : 'سجّل الدخول بحسابك أولًا', 'ter'))}><i className="ti ti-key" /></button>
-                <button className="ib" onClick={() => { auth.signOut(); nav('/'); }} title="تسجيل الخروج" style={{ color: theme === 'dark' ? '#E4E4BC' : 'var(--ariba-dark,#014D3D)', fontSize: 12, marginInlineStart: 5, paddingInline: 8 }} aria-label="تسجيل الخروج"><i className="ti ti-logout" /></button>
+                <button id="aribaPwHdrBtn" type="button" className="ib" title={en ? 'Change my password' : 'تغيير كلمة مرور حسابي'} aria-label={en ? 'Change my password' : 'تغيير كلمة مرور حسابي'} style={{ fontSize: 12 }} onClick={() => (auth.state.token ? setChgPw(true) : toast(en ? 'Please sign in first' : 'سجّل الدخول بحسابك أولًا', 'ter'))}><i className="ti ti-key" /></button>
+                <button className="ib" onClick={() => { auth.signOut(); nav('/'); }} title="تسجيل الخروج" style={{ fontSize: 12, marginInlineStart: 5, paddingInline: 8 }} aria-label="تسجيل الخروج"><i className="ti ti-logout" /></button>
               </div>
             </div>
           </div>
@@ -116,9 +116,12 @@ export default function Layout() {
   );
 }
 
-function CompanyLogo() {
+function CompanyLogo({ dark }) {
   const { settings } = useApp();
   const src = settings && settings.logo && settings.logo.data && /^data:image\/(png|jpe?g|gif|webp|svg\+xml);base64,/i.test(settings.logo.data) ? settings.logo.data : null;
   // Ours: the ARIBA logo when none is uploaded in settings.
-  return <img src={src || '/brand/ariba-logo.png'} style={{ width: 44, height: 44, objectFit: 'contain' }} alt="logo" />;
+  // Night mode: our logo without its white square and with its deep greens lifted, so it sits on the dark surface; an uploaded logo
+  // (unknown background) goes on a soft light tile instead of a hard white box.
+  if (dark && !src) return <img src="/brand/ariba-logo-dark.png" style={{ width: 44, height: 44, objectFit: 'contain' }} alt="logo" />;
+  return <img src={src || '/brand/ariba-logo.png'} style={{ width: 44, height: 44, objectFit: 'contain', ...(dark ? { background: '#F4F0E4', borderRadius: 10, padding: 3, boxSizing: 'border-box' } : null) }} alt="logo" />;
 }

@@ -1,6 +1,7 @@
 // المهام والاجتماعات / توفر الفريق — their TeamTasks (pages/team/index.jsx): team availability (consecutive leaves merged,
 // remote work is not an absence, "leave soon" = within 14 days), send a task or a meeting invitation to the selected
 // people, and the inbox / sent lists with done · accept · decline (with a reason) · cancel.
+import { dateLocale } from "@/i18n";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Pressable, View } from "react-native";
 import { Screen } from "@/components/screen";
@@ -69,7 +70,7 @@ export default function TasksScreen() {
       </View>
       <T size={12} color={t.mu} style={{ marginVertical: 3 }}>
         {(isIn ? "من: " + (x.from_name ?? "") : "إلى: " + (x.to_name ?? "")) + " • "
-          + (x.kind === "meeting" && x.start_at ? new Date(x.start_at).toLocaleString("ar-EG-u-nu-latn", { timeZone: "Asia/Riyadh", dateStyle: "medium", timeStyle: "short" }) : x.due_date ? "الموعد: " + fmt(x.due_date) : "")
+          + (x.kind === "meeting" && x.start_at ? new Date(x.start_at).toLocaleString(dateLocale(), { timeZone: "Asia/Riyadh", dateStyle: "medium", timeStyle: "short" }) : x.due_date ? "الموعد: " + fmt(x.due_date) : "")
           + (x.location ? " • " + x.location : "")}
       </T>
       {x.details ? <T size={12.5}>{x.details}</T> : null}

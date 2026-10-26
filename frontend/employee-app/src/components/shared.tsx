@@ -2,6 +2,7 @@
 // money / date formatting.
 import { useState } from "react";
 import { Pressable, TextInput, View } from "react-native";
+import { inputAlign, tr } from "@/i18n";
 import { Btn, Card, CardTitle, isoDate, PickerField, Sheet, T, useToast } from "./ui";
 import { Icon } from "./icons";
 import { ApiError, requests } from "@/lib/api";
@@ -73,8 +74,8 @@ export function ForgotPunchSheet({ visible, onClose }: { visible: boolean; onClo
       <PickerField label={kind === "out" ? "وقت الخروج" : "وقت الدخول"} value={t1} onChange={setT1} mode="time" />
       {kind === "both" ? <PickerField label="وقت الخروج" value={t2} onChange={setT2} mode="time" /> : null}
       <T size={12} color="#444" style={{ marginTop: 6, marginBottom: 3 }}>السبب (مطلوب)</T>
-      <TextInput value={notes} onChangeText={setNotes} multiline returnKeyType="done" submitBehavior="blurAndSubmit" placeholder="اكتب سبب نسيان البصمة" placeholderTextColor="#999"
-        style={{ borderWidth: 1, borderColor: "#ccc", borderRadius: 8, padding: 10, minHeight: 70, fontSize: 14, color: "#111", backgroundColor: "#fff", textAlign: "right", textAlignVertical: "top", fontFamily: fonts.medium }} />
+      <TextInput value={notes} onChangeText={setNotes} multiline returnKeyType="done" submitBehavior="blurAndSubmit" placeholder={tr("اكتب سبب نسيان البصمة")} placeholderTextColor="#999"
+        style={{ borderWidth: 1, borderColor: "#ccc", borderRadius: 8, padding: 10, minHeight: 70, fontSize: 14, color: "#111", backgroundColor: "#fff", textAlign: inputAlign(), textAlignVertical: "top", fontFamily: fonts.medium }} />
       {err ? <T size={12.5} color="#B54A4A" style={{ marginTop: 8 }}>{err}</T> : null}
       <View style={{ flexDirection: "row", gap: 8 }}>
         <Btn title="إرسال الطلب" kind="teal" onPress={send} busy={busy} style={{ flex: 1, borderRadius: 8 }} />

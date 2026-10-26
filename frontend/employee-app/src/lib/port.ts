@@ -115,7 +115,7 @@ export const push = {
   register: (token: string, platform: string) => post<{ ok: boolean }>("/me/push-token", { token, platform }),
   unregister: (token?: string) => api<{ ok: boolean }>("/me/push-token", { method: "DELETE", body: JSON.stringify(token ? { token } : {}) }),
 };
-export type Brand = { brand: { p?: string; s?: string; a?: string; reset?: boolean; punch?: string }; names: { coAr?: string; coEn?: string }; logo: string | null };
+export type Brand = { brand: { p?: string; s?: string; a?: string; hero?: string; reset?: boolean; punch?: string }; names: { coAr?: string; coEn?: string }; logo: string | null; appLogo?: string | null };
 export const brandInfo = () => api<Brand>("/public/brand");
 
 /** Calendar days (their calendarDays). */

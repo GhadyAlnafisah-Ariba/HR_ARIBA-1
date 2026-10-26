@@ -26,9 +26,11 @@ export const fonts = { light: "AribaTwoLight", medium: "AribaTwoMedium", bold: "
 const KEY = "ariba_employee_theme";
 const BRAND_KEY = "ariba_employee_brand";
 type Mode = "light" | "dark";
-type Brand = { p: string; a?: string; s?: string } | null;
+type Brand = { p: string; a?: string; s?: string; hero?: string } | null;
+/** What HR sets for the app apart from the colours: the picture behind the punch button and the app's own logo (kept in memory only; the keychain holds 2 KB). */
+export type AppAssets = { punch: string; logo: string };
 export type Choice = "auto" | "light" | "dark";
-const Ctx = createContext<{ mode: Mode; toggle: () => void; brand: Brand; choice: Choice; setChoice: (c: Choice) => void }>({ mode: "light", toggle: () => {}, brand: null, choice: "auto", setChoice: () => {} });
+const Ctx = createContext<{ mode: Mode; toggle: () => void; brand: Brand; assets: AppAssets; choice: Choice; setChoice: (c: Choice) => void }>({ mode: "light", toggle: () => {}, brand: null, assets: { punch: "", logo: "" }, choice: "auto", setChoice: () => {} });
 
 // The company colours HR sets (their employee brand.js): the ARIBA colours of the palette are swapped for the
 // company's primary (P, with shades), accent (A) and light background (S).
@@ -48,18 +50,22 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [mode, setMode] = useState<Mode>(() => (Appearance.getColorScheme() === "dark" ? "dark" : "light")); // follows the device until the user picks one
   const [explicit, setExplicit] = useState(false);
   const [brand, setBrand] = useState<Brand>(null);
+  const [assets, setAssets] = useState<AppAssets>({ punch: "", logo: "" });
   useEffect(() => {
     store.get(KEY).then((v) => { if (v === "dark" || v === "light") { setMode(v); setExplicit(true); } }).catch(() => {});
     store.get(BRAND_KEY).then((v) => { try { const b = v ? JSON.parse(v) : null; if (b && h2r(b.p)) setBrand(b); } catch { /* ignore */ } }).catch(() => {});
     const pull = () => brandInfo().then((r) => {
       const v = r.brand;
-      const nb: Brand = !v || v.reset || !v.p || !h2r(v.p) ? null : { p: v.p, a: v.a || "", s: v.s || "" };
-      setBrand(nb);
+      const nb: Brand = !v || v.reset || !v.p || !h2r(v.p) ? null : { p: v.p, a: v.a || "", s: v.s || "", ...(v.hero && h2r(v.hero) ? { hero: v.hero } : {}) };
+      setBrand((o) => (JSON.stringify(o) === JSON.stringify(nb) ? o : nb));
+      const na = { punch: v?.punch && /^data:image\//.test(v.punch) ? v.punch : "", logo: r.appLogo && /^data:image\//.test(r.appLogo) ? r.appLogo : "" };
+      setAssets((o) => (o.punch === na.punch && o.logo === na.logo ? o : na));
       (nb ? store.set(BRAND_KEY, JSON.stringify(nb)) : store.del(BRAND_KEY)).catch(() => {});
     }).catch(() => {});
     pull();
     const sub = AppState.addEventListener("change", (st) => st === "active" && pull());
-    return () => sub.remove();
+    const timer = setInterval(pull, 90_000);   // what HR changes in the website's settings reaches an open app within a minute or two
+    return () => { sub.remove(); clearInterval(timer); };
   }, []);
   useEffect(() => {
     if (explicit) return;
@@ -80,7 +86,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setExplicit(true); setMode(c); store.set(KEY, c).catch(() => {});
   }, []);
   const choice: Choice = explicit ? mode : "auto";
-  return <Ctx.Provider value={{ mode, toggle, brand, choice, setChoice }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ mode, toggle, brand, assets, choice, setChoice }}>{children}</Ctx.Provider>;
 }
 
 export const useThemeMode = () => useContext(Ctx);
@@ -93,4 +99,14 @@ export function useTheme(): Palette {
     const c = conv(brand);
     return { ...(Object.fromEntries(Object.entries(base).map(([k, v]) => [k, c(v)])) as { [K in keyof typeof base]: string }), dark: mode === "dark" };
   }, [mode, brand]);
+}
+
+/** The app's own identity as HR set it: hero colours (null = the original green), the punch picture and the app logo. */
+export function useAppBrand() {
+  const { brand, assets } = useContext(Ctx);
+  return useMemo(() => {
+    if (!brand) return { hero: null as null | { a: string; b: string; c: string; band1: string; band2: string }, punch: assets.punch, logo: assets.logo };
+    const P = h2r(brand.hero || brand.p)!, A = (brand.a && h2r(brand.a)) || lift(h2r(brand.p)!, 0.35), S = (brand.s && h2r(brand.s)) || [228, 228, 188];
+    return { hero: { a: r2h(shade(P, 0.25)), b: r2h(P), c: r2h(lift(P, 0.12)), band1: r2h(A), band2: r2h(S) }, punch: assets.punch, logo: assets.logo };
+  }, [brand, assets]);
 }

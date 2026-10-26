@@ -1,5 +1,6 @@
 // Line icons of the legacy employee app (V118 inline SVGs, tabler-style: 24×24, round caps).
 import Svg, { Circle, Path, Polygon, Rect } from "react-native-svg";
+import { getLang } from "@/i18n";
 
 type P = { size?: number; color: string; stroke?: number };
 
@@ -52,7 +53,9 @@ const paths: Record<string, string[]> = {
 
 export type IconName = keyof typeof paths;
 
-export function Icon({ name, size = 22, color, stroke = 1.9 }: P & { name: keyof typeof paths | "clockFace" }) {
+export function Icon({ name: given, size = 22, color, stroke = 1.9 }: P & { name: keyof typeof paths | "clockFace" }) {
+  // the chevrons point the way the reading direction goes: swapped in English
+  const name = getLang() === "en" && given === "chevronLeft" ? "chevronRight" : getLang() === "en" && given === "chevronRight" ? "chevronLeft" : given;
   const common = { stroke: color, strokeWidth: stroke, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, fill: "none" };
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24">

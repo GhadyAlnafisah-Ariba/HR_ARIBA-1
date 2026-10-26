@@ -10,6 +10,7 @@ import BrandCard from './BrandCard.jsx';
 import InsuranceCard from './InsuranceCard.jsx';
 import CarryCard, { AccrualCard } from './CarryCard.jsx';
 import PunchCard from './PunchCard.jsx';
+import AppLogoCard from './AppLogoCard.jsx';
 import PermsCard from './PermsCard.jsx';
 import FlexCard from './FlexCard.jsx';
 import ExcludeCard from './ExcludeCard.jsx';
@@ -65,7 +66,7 @@ export default function Settings() {
     print: [<LetterheadCard key="lh" />, <SignerCard key="hs" />],
     att: [<ScheduleCard key="sc" />, <FlexCard key="fx" />],
     leave: [<CarryCard key="lc" />, <AccrualCard key="acc" />, <RightsCard key="rt" />],
-    app: [<PunchCard key="pw" />, <WorkflowCard key="wf" />, <DocSignCard key="ds" />],
+    app: [<BrandCard key="abr" app />, <AppLogoCard key="alg" />, <PunchCard key="pw" />, <WorkflowCard key="wf" />, <DocSignCard key="ds" />],
     fin: [<InsuranceCard key="ins" />, <ExcludeCard key="ex" />, <RightsCard key="rt2" pre="RT2" />],
     mail: [<MyMailCard key="mm" />, <CompanyMailCard key="mc" />, <MailModeCard key="mo" />],
     lists: [<MasterListsCard key="ml" />],

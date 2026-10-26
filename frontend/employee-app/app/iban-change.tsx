@@ -1,5 +1,6 @@
 // طلب تغيير الآيبان — their IbanChange: the formal letter on the company letterhead, the new bank data, my signature
 // and the IBAN certificate; the manager and HR are notified and, once approved, my bank data updates by itself.
+import { dateLocale } from "@/i18n";
 import { useEffect, useState } from "react";
 import { View } from "react-native";
 import { router } from "expo-router";
@@ -18,7 +19,7 @@ const esc = (s: unknown) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "
 
 /** Their letterHtml (ProfileRequests.jsx), on a plain company letterhead (name + line). */
 export function letterHtml(e: Employee | null, company: string, bank: string, account: string, iban: string, sig: string): string {
-  const d = new Date().toLocaleDateString("ar-SA-u-ca-gregory-nu-latn");
+  const d = new Date().toLocaleDateString(dateLocale());
   const rows = [["اسم البنك", bank], ["رقم الحساب", account], ["رقم الآيبان (IBAN)", iban]]
     .map(([a, b]) => `<tr><td style="border:1px solid #888;padding:7px;background:#f3f6f5;width:35%">${a}</td><td style="border:1px solid #888;padding:7px" dir="ltr">${esc(b)}</td></tr>`).join("");
   return `<div dir="rtl" style="font-family:Tahoma,Arial,sans-serif;font-size:14px;line-height:2;padding:6mm 4mm;color:#111">`

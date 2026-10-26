@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useApp } from '../../store/AppStore.jsx';
 import { T } from '../../lib/i18n.js';
-import { DEFC, PRESETS, brandValue, applyBrand, validHex, palette, rgb2hex, hsl2rgb, rgb2hsl, hex2rgb } from '../../lib/brand.js';
+import { DEFC, PRESETS, brandValue, appBrandValue, appBase, applyBrand, validHex, palette, rgb2hex, hsl2rgb, rgb2hsl, hex2rgb } from '../../lib/brand.js';
 import { functionCall } from '../../lib/api.js';
 import { setSetting } from '../../lib/api.js';
 import { toast } from '../../components/Toast.jsx';
@@ -14,22 +14,24 @@ const autoAccent = (p) => { const h = rgb2hsl(hex2rgb(p)); return rgb2hex(hsl2rg
 const lbl = { fontSize: 11, color: 'var(--mu)', fontWeight: 600, display: 'block', marginBottom: 4 };
 const Sw = ({ c, onPick }) => <button type="button" data-keep-color="" data-c={c} title={c} onClick={() => onPick(c)} style={{ width: 26, height: 26, borderRadius: 6, border: '1px solid rgba(0,0,0,.18)', background: c, cursor: 'pointer', padding: 0 }} />;
 
-export default function BrandCard() {
+/** app=false: the website's colours (brand_colors). app=true: the employee app's own identity (app_brand) — a separate card, applied to the app only. */
+export default function BrandCard({ app = false }) {
   const { settings, patchSettings } = useApp();
-  const [B, setB] = useState({ p: DEFC.p, s: DEFC.s, a: '' }); const [stat, setStat] = useState(''); const [keep, setKeep] = useState(false);
+  const SK = app ? 'appBrand' : 'brand', CK = app ? 'app_brand' : 'brand_colors';
+  const [B, setB] = useState({ p: DEFC.p, s: DEFC.s, a: '', hero: '' }); const [stat, setStat] = useState(''); const [keep, setKeep] = useState(false);
   const [target, setTarget] = useState('p'); const [url, setUrl] = useState(''); const [found, setFound] = useState(null);
-  const timer = useRef(null); const savedBrand = settings.brand && settings.brand.p && !settings.brand.reset ? settings.brand : null;
-  useEffect(() => { setB(savedBrand ? { p: savedBrand.p, s: savedBrand.s, a: savedBrand.a || '' } : { p: DEFC.p, s: DEFC.s, a: '' }); }, [savedBrand && savedBrand.p, savedBrand && savedBrand.s, savedBrand && savedBrand.a]); // eslint-disable-line
+  const timer = useRef(null); const curBrand = app ? appBase(settings) : settings.brand; const savedBrand = curBrand && curBrand.p && !curBrand.reset ? curBrand : null;
+  useEffect(() => { setB(savedBrand ? { p: savedBrand.p, s: savedBrand.s, a: savedBrand.a || '', hero: savedBrand.hero || '' } : { p: DEFC.p, s: DEFC.s, a: '', hero: '' }); }, [savedBrand && savedBrand.p, savedBrand && savedBrand.s, savedBrand && savedBrand.a, savedBrand && savedBrand.hero]); // eslint-disable-line
   useEffect(() => () => clearTimeout(timer.current), []);
   const say = (m, ok) => { setKeep(true); setStat(m + ' — ' + (ok ? T('تم الحفظ على الخادم ✓ (يظهر لدى جميع المستخدمين)', 'Saved to the server ✓ (everyone sees it)') : T('تم الحفظ على هذا الجهاز فقط — ولم يُرسل إلى الخادم', 'Saved on this device only — not sent to the server'))); setTimeout(() => setKeep(false), ok ? 6000 : 60000); };
   const commit = async (n, msg) => { // n=null → رجوع للألوان الأصلية
     clearTimeout(timer.current);
-    const val = brandValue(n ? { p: n.p, s: n.s, a: n.a || '' } : null, settings.punch && settings.punch.data);
-    applyBrand(n && validHex(n.p) && validHex(n.s) ? n : null);
-    let ok = true; try { await setSetting('brand_colors', val); patchSettings('brand', val); } catch { ok = false; toast(T('تعذر الحفظ على السيرفر', 'Could not save to the server'), 'ter'); }
+    const val = app ? appBrandValue(n ? { p: n.p, s: n.s, a: n.a || '', hero: n.hero || '' } : null, appBase(settings)) : brandValue(n ? { p: n.p, s: n.s, a: n.a || '' } : null, '');
+    if (!app) applyBrand(n && validHex(n.p) && validHex(n.s) ? n : null);
+    let ok = true; try { await setSetting(CK, val); patchSettings(SK, val); } catch { ok = false; toast(T('تعذر الحفظ على السيرفر', 'Could not save to the server'), 'ter'); }
     say(msg, ok);
   };
-  const live = (n) => { setB(n); if (validHex(n.p) && validHex(n.s)) applyBrand(n); clearTimeout(timer.current); timer.current = setTimeout(() => { if (validHex(n.p) && validHex(n.s)) commit(n, T('تم الحفظ تلقائيًا', 'Auto-saved')); }, 1200); };
+  const live = (n) => { setB(n); if (!app && validHex(n.p) && validHex(n.s)) applyBrand(n); clearTimeout(timer.current); timer.current = setTimeout(() => { if (validHex(n.p) && validHex(n.s)) commit(n, T('تم الحفظ تلقائيًا', 'Auto-saved')); }, 1200); };
   const pick = (hex) => { const k = hex.toLowerCase(); const n = { ...B, [target]: k }; if (target === 'a') n.a = k; live(n); };
   const pal = validHex(B.p) && validHex(B.s) ? palette(B) : palette(DEFC);
   const cust = !!savedBrand; const swPv = { width: 34, height: 34, borderRadius: 8 };
@@ -47,7 +49,8 @@ export default function BrandCard() {
   };
   const radio = (id, l) => <label style={{ fontSize: 12, display: 'inline-flex', gap: 4, alignItems: 'center', marginInlineEnd: 12 }}><input type="radio" name="BR_T" value={id} checked={target === id} onChange={() => setTarget(id)} /> {l}</label>;
   return (
-    <Card icon="palette" title={T('ألوان البرنامج', 'Program colors')} id="BR_CARD">
+    <Card icon="palette" title={app ? T('ألوان تطبيق الموظف', 'Employee app colors') : T('ألوان الموقع', 'Website colors')} id={app ? 'AB_CARD' : 'BR_CARD'}>
+      {app && <div style={{ fontSize: 11.5, color: 'var(--mu)', marginBottom: 10, lineHeight: 1.7 }}>{T('هذه الألوان لتطبيق الموظف فقط ولا تغيّر ألوان الموقع. تظهر في التطبيق خلال دقيقة إلى دقيقتين من الحفظ. الافتراضي هو ألوان التطبيق الحالية.', 'These colors are for the employee app only and do not change the website colors. They reach the app within a minute or two of saving. The default is the app’s current colors.')}</div>}
       <div style={{ display: 'flex', gap: 22, flexWrap: 'wrap', alignItems: 'flex-end' }}>
         <div><label style={lbl}>{T('اللون الأساسي (الأخضر)', 'Primary color (green)')}</label><div style={{ display: 'flex', gap: 6, alignItems: 'center' }}><input type="color" id="BR_P" style={inp} value={validHex(B.p) ? B.p : DEFC.p} onChange={(e) => live({ ...B, p: e.target.value })} /><input type="text" dir="ltr" maxLength={7} id="BR_PX" value={B.p} placeholder="#014D3D" onChange={(e) => { let v = e.target.value.trim(); if (v && v[0] !== '#') v = '#' + v; setB({ ...B, p: v }); if (validHex(v)) live({ ...B, p: v }); }} style={{ width: 84, fontFamily: 'monospace', fontSize: 12, background: 'var(--c2)', border: '1px solid var(--bd)', borderRadius: 8, color: 'var(--tx)', padding: '6px 8px' }} /></div></div>
         <div><label style={lbl}>{T('لون الخلفية الفاتحة (البيج)', 'Light background (beige)')}</label><div style={{ display: 'flex', gap: 6, alignItems: 'center' }}><input type="color" id="BR_S" style={inp} value={validHex(B.s) ? B.s : DEFC.s} onChange={(e) => live({ ...B, s: e.target.value })} /><input type="text" dir="ltr" maxLength={7} id="BR_SX" value={B.s} placeholder="#014D3D" onChange={(e) => { let v = e.target.value.trim(); if (v && v[0] !== '#') v = '#' + v; setB({ ...B, s: v }); if (validHex(v)) live({ ...B, s: v }); }} style={{ width: 84, fontFamily: 'monospace', fontSize: 12, background: 'var(--c2)', border: '1px solid var(--bd)', borderRadius: 8, color: 'var(--tx)', padding: '6px 8px' }} /></div></div>
@@ -56,6 +59,13 @@ export default function BrandCard() {
             <input type="color" id="BR_A" style={inp} value={validHex(B.a) ? B.a : autoAccent(validHex(B.p) ? B.p : DEFC.p)} onChange={(e) => live({ ...B, a: e.target.value })} /><input type="text" dir="ltr" maxLength={7} id="BR_AX" value={B.a} placeholder="#014D3D" onChange={(e) => { let v = e.target.value.trim(); if (v && v[0] !== '#') v = '#' + v; setB({ ...B, a: v }); if (validHex(v)) live({ ...B, a: v }); }} style={{ width: 84, fontFamily: 'monospace', fontSize: 12, background: 'var(--c2)', border: '1px solid var(--bd)', borderRadius: 8, color: 'var(--tx)', padding: '6px 8px' }} />
             <label style={{ fontSize: 11.5 }}><input type="checkbox" id="BR_AUTO" checked={!B.a} onChange={(e) => live({ ...B, a: e.target.checked ? '' : autoAccent(B.p) })} /> {T('تلقائي من اللون الأساسي', 'Auto from the primary')}</label>
           </div></div>
+        {app && <div><label style={lbl}>{T('لون البطاقة الخضراء (الشاشة الرئيسية)', 'Hero card color (home screen)')}</label>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <input type="color" id="AB_HERO" style={inp} value={validHex(B.hero) ? B.hero : (validHex(B.p) ? B.p : DEFC.p)} onChange={(e) => live({ ...B, hero: e.target.value })} />
+            <label style={{ fontSize: 11.5 }}><input type="checkbox" id="AB_HERO_AUTO" checked={!B.hero} onChange={(e) => live({ ...B, hero: e.target.checked ? '' : (validHex(B.p) ? B.p : DEFC.p) })} /> {T('تلقائي من اللون الأساسي', 'Auto from the primary')}</label>
+          </div></div>}
+        {app && <div id="AB_PV" data-keep-color="" style={{ width: 150, height: 92, borderRadius: 18, background: 'linear-gradient(135deg,' + (validHex(B.hero) ? B.hero : (validHex(B.p) ? B.p : DEFC.p)) + ',' + (validHex(B.a) ? B.a : pal.A) + ')', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px rgba(0,0,0,.18)' }}>
+          <span data-keep-color="" style={{ width: 54, height: 54, borderRadius: 27, background: validHex(B.a) ? B.a : pal.A, boxShadow: '0 0 0 6px rgba(255,255,255,.18)' }} /></div>}
         <div id="BR_PV"><div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
           <span data-keep-color="" style={{ ...swPv, background: pal.P }} /><span data-keep-color="" style={{ ...swPv, background: pal.A }} /><span data-keep-color="" style={{ ...swPv, background: pal.S, border: '1px solid ' + pal.bdL }} /><span data-keep-color="" style={{ ...swPv, background: pal.dBg }} /><span data-keep-color="" style={{ ...swPv, background: pal.dC2 }} /></div></div>
       </div>

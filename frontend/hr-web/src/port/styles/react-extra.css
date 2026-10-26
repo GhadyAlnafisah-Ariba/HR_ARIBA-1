@@ -115,3 +115,8 @@ html[data-ariba-theme] #a9Panel .a9-new{color:#d64545!important}
 html[data-ariba-theme] #a9Panel .a9-ic.template{color:#3b7ddd!important}html[data-ariba-theme] #a9Panel .a9-ic.request{color:#b9811a!important}html[data-ariba-theme] #a9Panel .a9-ic.ok{color:#1f9a4f!important}html[data-ariba-theme] #a9Panel .a9-ic.no{color:#d64545!important}
 html[data-ariba-theme] .a9-badge{color:#fff!important;background:#d64545!important}
 .a9-bell{overflow:visible}
+
+/* The account pill in the top bar (role, change password, sign out) sits on a light surface in day mode, but
+   `.topbar *{color:#fff!important}` turned its icons white on white. Green icons in day mode, cream in night mode. */
+html[data-ariba-theme="light"] .topbar .hr-pill .ib,html[data-ariba-theme="light"] .topbar .hr-pill .ib *{color:var(--ariba-green,#29B35E)!important}
+html[data-ariba-theme="dark"] .topbar .hr-pill .ib,html[data-ariba-theme="dark"] .topbar .hr-pill .ib *{color:#E4E4BC!important}

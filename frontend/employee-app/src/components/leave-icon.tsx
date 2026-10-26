@@ -11,10 +11,11 @@ const SRC = {
   annual: require("../../assets/leave-icons/annual.png"),
   marriage: require("../../assets/leave-icons/marriage.png"),
   permission: require("../../assets/leave-icons/permission.png"),
+  year_end: require("../../assets/leave-icons/year_end.png"),
 };
 const OF: Record<string, keyof typeof SRC> = {
   remote: "remote", maternity: "maternity", umrah: "umrah", hajj: "umrah", paternity: "paternity", unpaid: "unpaid",
-  emergency: "emergency", annual: "annual", marriage: "marriage", permission: "permission",
+  emergency: "emergency", annual: "annual", marriage: "marriage", permission: "permission", year_end: "year_end",
 };
 
 export const hasLeaveIcon = (type: string) => type in OF;

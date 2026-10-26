@@ -32,7 +32,7 @@ router = APIRouter()
 RUNTIME_KEYS = {"insurance": "insurance_rules", "carry": "leave_carry", "accrual": "leave_accrual_method",
                 "country": "country_system", "schedule": "attendance_schedule", "rights": "special_rights"}
 # Every key their pages read or write through ariba_hr_get_setting / ariba_hr_set_setting, with the module needed to change it.
-KV_KEYS = {"brand_colors": "settings", "company_logo": "settings", "company_names": "settings", "hr_signer": "settings",
+KV_KEYS = {"brand_colors": "settings", "app_brand": "settings", "company_logo": "settings", "company_names": "settings", "hr_signer": "settings",
            "insurance_rules": "settings", "leave_carry": "settings", "leave_accrual_method": "settings", "letterhead": "settings",
            "punch_watermark": "settings", "country_system": "settings", "attendance_schedule": "settings", "master_lists": "settings",
            "report_templates": "documents|forms", "salary_cert_seq": "documents|forms", "id_issue_place": "documents|forms",
@@ -62,6 +62,16 @@ def get_kv(key: str, actor: dict[str, Any] = Depends(current_actor), db: Session
     return {"key": key, "value": _app_setting(db, _kv_key(key))}
 
 
+def _keep_app_identity(db: Session, actor: dict[str, Any]) -> None:
+    """The employee app has its own identity (`app_brand`), apart from the website's colours (`brand_colors`). Until the first time
+    the website's colours are changed, the app has been following them; so before that change the app's current look is saved as its
+    own identity, and from then on nothing done to the website touches the app."""
+    if _app_setting(db, "app_brand") is None:
+        legacy = _app_setting(db, "brand_colors")
+        if isinstance(legacy, dict) and legacy:
+            pc.set_setting(db, "app_brand", {k: v for k, v in legacy.items() if k in ("p", "s", "a", "reset", "punch")} | {"updated": legacy.get("updated")}, actor.get("username"))
+
+
 @router.put("/settings/kv/{key}")
 def set_kv(key: str, body: dict[str, Any], request: Request, actor: dict[str, Any] = Depends(current_actor), db: Session = Depends(get_db)):
     """ariba_hr_set_setting: {value}; a null value removes the setting."""
@@ -69,6 +79,8 @@ def set_kv(key: str, body: dict[str, Any], request: Request, actor: dict[str, An
     value = body.get("value")
     if len(str(value)) > 3_000_000:
         raise ApiError(413, "TOO_LARGE", "القيمة كبيرة جداً")
+    if key == "brand_colors":
+        _keep_app_identity(db, actor)
     if value is None:
         db.execute(text("DELETE FROM public.ariba_app_settings WHERE key=:k"), {"k": key})
     else:
@@ -151,12 +163,16 @@ def default_passwords(actor: dict[str, Any] = Depends(current_actor), db: Sessio
 @router.get("/public/brand")
 def public_brand(db: Session = Depends(get_db)):
     """ariba_get_brand: colours, the punch logo and the company names — nothing private."""
-    b = _app_setting(db, "brand_colors") or {}
+    # the employee app's own identity; until it is first set (or the website's colours first changed) it still follows the old shared value
+    b = _app_setting(db, "app_brand")
+    if b is None:
+        b = _app_setting(db, "brand_colors") or {}
     names = _app_setting(db, "company_names") or {}
     logo = _app_setting(db, "company_logo") or {}
-    return {"brand": {k: b.get(k) for k in ("p", "s", "a", "reset", "updated", "punch") if k in b} if isinstance(b, dict) else {},
+    own = (b.get("logo") if isinstance(b, dict) else None) or None
+    return {"brand": {k: b.get(k) for k in ("p", "s", "a", "hero", "reset", "updated", "punch") if k in b} if isinstance(b, dict) else {},
             "names": {k: names.get(k) for k in ("coAr", "coEn") if isinstance(names, dict)},
-            "logo": (logo.get("data") if isinstance(logo, dict) else None) or None}
+            "logo": own or (logo.get("data") if isinstance(logo, dict) else None) or None, "appLogo": own}
 
 
 # ---------------------------------------------------------------- password recovery (their ariba-password-recovery function)

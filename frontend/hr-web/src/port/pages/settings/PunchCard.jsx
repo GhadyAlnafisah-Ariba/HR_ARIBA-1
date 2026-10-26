@@ -5,14 +5,14 @@ import { readImage, isSafeDataImg } from '../../lib/images.js';
 import { toast } from '../../components/Toast.jsx';
 import { Card, useSaveSetting } from './shared.jsx';
 import { setSetting } from '../../lib/api.js';
-import { brandValue } from '../../lib/brand.js';
+import { appBase } from '../../lib/brand.js';
 
 export default function PunchCard() {
-  const { settings } = useApp(); const save = useSaveSetting(); const ref = useRef(null);
+  const { settings, patchSettings } = useApp(); const save = useSaveSetting(); const ref = useRef(null);
   const [stat, setStat] = useState('');
   const d = settings.punch && isSafeDataImg(settings.punch.data) ? settings.punch.data : '';
-  // تطبيق الموظف بيقرأ الألوان من brand_colors — فنحط الشعار جواها كمان
-  const mirror = async (data) => { try { await setSetting('brand_colors', brandValue(settings.brand, data)); } catch { /* ignore */ } };
+  // تطبيق الموظف بيقرأ هويته من app_brand (منفصلة عن ألوان الموقع) — فنحط الشعار جواها كمان
+  const mirror = async (data) => { try { const v = { ...appBase(settings), punch: data, updated: Date.now() }; if (!data) delete v.punch; await setSetting('app_brand', v); patchSettings('appBrand', v); } catch { /* ignore */ } };
   const done = async (ok, msg) => { setStat(msg + ' — ' + (ok ? T('تم الحفظ ✓ وبيظهر في تطبيق الموظف خلال دقيقتين', 'Saved ✓ — shows in the employee app within two minutes') : T('لم يُحفظ على الخادم (سجّل دخول سحابي)', 'Not saved to the server (sign in to the cloud)'))); setTimeout(() => setStat(''), 7000); };
   const pick = async (e) => { const f = e.target.files[0]; if (!f) return; try { const data = await readImage(f, { maxW: 520, maxH: 520, maxLen: 380000 }); const ok = await save('punch', 'punch_watermark', { data, updated: Date.now(), name: f.name.slice(0, 80) }, T('اتغيّر الشعار', 'Logo updated')); if (ok) await mirror(data); done(ok, T('اتغيّر الشعار', 'Logo updated')); } catch { toast(T('تعذر قراءة الصورة', 'Could not read the image'), 'ter'); } if (ref.current) ref.current.value = ''; };
   const rm = async () => { const ok = await save('punch', 'punch_watermark', { data: '', updated: Date.now() }, T('تمت إزالة الشعار', 'Logo removed')); if (ok) await mirror(''); done(ok, T('تمت إزالة الشعار', 'Logo removed')); };

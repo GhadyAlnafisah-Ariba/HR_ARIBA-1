@@ -2,18 +2,21 @@
 // with Face ID / fingerprint (after it was enabled once), «نسيت كلمة المرور؟» (temporary password to the registered
 // e-mail, by username or iqama number) and «نسيان هذا الجهاز».
 import { useEffect, useRef, useState } from "react";
-import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Switch, TextInput, View } from "react-native";
+import { Image, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Switch, TextInput, View } from "react-native";
 import { Icon } from "@/components/icons";
 import { Btn, Sheet, T } from "@/components/ui";
 import { InstallHint } from "@/components/install-hint";
 import { api, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { biometricAvailable, biometricEnabled, forgetDevice, remember, remembered } from "@/lib/biometric";
-import { fonts, useTheme } from "@/theme";
+import { fonts, useAppBrand, useTheme } from "@/theme";
 import { shadow } from "@/lib/shadow";
+import { inputAlign, tr, useLang } from "@/i18n";
 
 export default function Login() {
   const t = useTheme();
+  const ab = useAppBrand();
+  const { lang, setLang } = useLang();
   const { signIn, signInBiometric } = useAuth();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -73,12 +76,16 @@ export default function Login() {
     setMsg({ t: "تم نسيان هذا الجهاز", good: true });
   }
 
-  const input = [styles.input, { borderColor: t.bd, backgroundColor: t.c2, color: t.tx, fontFamily: fonts.medium }];
+  const input = [styles.input, { textAlign: (lang === "en" ? "left" : "right") as "left" | "right", borderColor: t.bd, backgroundColor: t.c2, color: t.tx, fontFamily: fonts.medium }];
   return (
     <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1, backgroundColor: t.bg, justifyContent: "center", alignItems: "center", padding: 20 }}>
+      <Pressable accessibilityRole="button" accessibilityLabel="Language" onPress={() => { setLang(lang === "en" ? "ar" : "en"); }}
+        style={{ position: "absolute", top: 18, left: 18, paddingVertical: 8, paddingHorizontal: 14, borderRadius: 999, backgroundColor: t.c, borderWidth: 1, borderColor: t.bd }}>
+        <T size={13} weight={800} color={t.bl}>{lang === "en" ? "العربية" : "English"}</T>
+      </Pressable>
       <View style={[styles.box, { backgroundColor: t.c }]}>
         <View style={{ alignItems: "center", marginBottom: 20 }}>
-          <T size={36} weight={900} color={t.bl} style={{ letterSpacing: 3, marginBottom: 4 }}>ARIBA</T>
+          {ab.logo ? <Image source={{ uri: ab.logo }} resizeMode="contain" style={{ width: 150, height: 64, alignSelf: "center", marginBottom: 4 }} /> : <T size={36} weight={900} color={t.bl} style={{ letterSpacing: 3, marginBottom: 4 }}>ARIBA</T>}
           <T size={13} color={t.mu}>تطبيق الموظف</T>
         </View>
         <T size={11} weight={600} color={t.mu} style={{ marginBottom: 4 }}>اسم المستخدم</T>
@@ -146,10 +153,10 @@ function ForgotSheet({ onClose }: { onClose: () => void }) {
       <View style={{ alignItems: "center" }}><Icon name="key" size={34} color="#014D3D" stroke={1.8} /></View>
       <T weight={800} size={16} center style={{ marginVertical: 8 }}>استرجاع بيانات الدخول</T>
       <T size={13} color="#555" style={{ marginBottom: 10 }}>
-        {mode === "user" ? "اكتب اسم المستخدم وهنبعتلك كلمة مرور مؤقتة على الإيميل المسجّل." : "اكتب رقم الإقامة / الهوية وهنبعتلك اسم المستخدم وكلمة مرور مؤقتة على الإيميل المسجّل."}
+        {mode === "user" ? "اكتب اسم المستخدم وسنرسل لك كلمة مرور مؤقتة على الإيميل المسجّل." : "اكتب رقم الإقامة / الهوية وسنرسل لك اسم المستخدم وكلمة مرور مؤقتة على الإيميل المسجّل."}
       </T>
-      <TextInput value={v} onChangeText={setV} autoCapitalize="none" keyboardType={mode === "iq" ? "number-pad" : "default"} placeholder={mode === "user" ? "اسم المستخدم" : "رقم الإقامة"}
-        style={{ borderWidth: 1, borderColor: "#ccc", borderRadius: 10, padding: 11, fontSize: 15, textAlign: "right", fontFamily: fonts.medium }} />
+      <TextInput value={v} onChangeText={setV} autoCapitalize="none" keyboardType={mode === "iq" ? "number-pad" : "default"} placeholder={tr(mode === "user" ? "اسم المستخدم" : "رقم الإقامة")}
+        style={{ borderWidth: 1, borderColor: "#ccc", borderRadius: 10, padding: 11, fontSize: 15, textAlign: inputAlign(), fontFamily: fonts.medium }} />
       <Pressable onPress={() => { setMode(mode === "user" ? "iq" : "user"); setMsg(null); }} style={{ marginVertical: 10 }}>
         <T size={12} color="#29B35E">{mode === "user" ? "نسيت اسم المستخدم؟ استخدم رقم الإقامة" : "استخدم اسم المستخدم"}</T>
       </Pressable>

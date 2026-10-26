@@ -5,12 +5,14 @@
 import { useEffect, useRef, useState } from "react";
 import { htmlToPdfBlob } from "@/lib/pdf";
 import { stripEmojiHtml } from "@/lib/clean";
+import { tr, useLang } from "@/i18n";
 import { deliverFile } from "@/lib/web-file";
 
 const SHEET = 794;
 
 export function HtmlView({ html: raw, fileName = "document" }: { html: string; fileName?: string }) {
   const html = stripEmojiHtml(raw);
+  useLang();
   const box = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: SHEET, h: 800 });
   const [busy, setBusy] = useState(false);
@@ -44,7 +46,7 @@ export function HtmlView({ html: raw, fileName = "document" }: { html: string; f
       />
       <button onClick={save} disabled={busy}
         style={{ position: "absolute", bottom: 18, left: 14, padding: "10px 16px", borderRadius: 14, border: 0, background: "#014D3D", color: "#fff", font: "700 14px sans-serif", boxShadow: "0 4px 14px rgba(0,0,0,.3)", opacity: busy ? 0.6 : 1 }}>
-        {busy ? "…جاري التجهيز" : "حفظ PDF"}
+        {busy ? tr("جاري التجهيز") + "…" : tr("حفظ PDF")}
       </button>
     </div>
   );

@@ -1,7 +1,8 @@
 // الرئيسية — legacy V118 home (js/core-ui/030 hero + tiles + quick actions) over 018.renderHome (بياناتي، آخر راتب معتمد)
 // and V122 «جهة العمل ومواقع العمل».
+import { dateLocale } from "@/i18n";
 import { memo, useEffect, useRef, useState } from "react";
-import { Animated, Pressable, StyleSheet, View } from "react-native";
+import { Animated, Image, Pressable, StyleSheet, View } from "react-native";
 import { router } from "expo-router";
 import Svg, { Circle, Defs, LinearGradient, Polygon, Rect, Stop } from "react-native-svg";
 import { Icon, type IconName } from "@/components/icons";
@@ -10,6 +11,7 @@ import { ForgotPunchSheet, LocationsCard, sar } from "@/components/shared";
 import { Card, Page, T } from "@/components/ui";
 import { RequestItem } from "@/components/request-item";
 import { AnnouncementsCard } from "@/components/announcements";
+import { LeaveIcon } from "@/components/leave-icon";
 import { useData } from "@/lib/data";
 import { useAuth } from "@/lib/auth";
 import { useTileWidth } from "@/lib/grid";
@@ -17,7 +19,7 @@ import { useLayout } from "@/lib/responsive";
 import { diagOff } from "@/lib/diag";
 import { distanceText } from "@/lib/geo";
 import { riyadhParts, todaySessions, usePunch, workedMinutes } from "@/lib/punch";
-import { useTheme } from "@/theme";
+import { useAppBrand, useTheme } from "@/theme";
 import { shadow } from "@/lib/shadow";
 
 function useNow() {
@@ -41,37 +43,71 @@ const DIAL = 176;
 const R = 80;
 
 // The one bright action of the screen: a lime key (sand once you are in, quiet once the day is done) in a ring that fills with the worked hours.
-function Dial({ state, progress, onPress, busy }: { state: "in" | "out" | "done"; progress: number; onPress: () => void; busy: boolean }) {
+function Dial({ state, progress, onPress, busy, watermark }: { state: "in" | "out" | "done"; progress: number; onPress: () => void; busy: boolean; watermark?: string }) {
   const pulse = useRef(new Animated.Value(0)).current;
+  const glow = useRef(new Animated.Value(0)).current;
+  const scan = useRef(new Animated.Value(0)).current;
+  // «سجّل حضورك»: a ring that pulses outward invites the first tap
   useEffect(() => {
-    if (state === "done" || busy) return;
+    if (state !== "in" || busy) return;
     const loop = Animated.loop(Animated.timing(pulse, { toValue: 1, duration: 2200, useNativeDriver: true }));
     loop.start();
     return () => loop.stop();
   }, [state, busy, pulse]);
+  // while the work day is open (from the check-in until the check-out) a soft glow breathes around the dial; it stops once checked out
+  useEffect(() => {
+    if (state !== "out") { glow.setValue(0); return; }
+    const loop = Animated.loop(Animated.sequence([
+      Animated.timing(glow, { toValue: 1, duration: 2600, useNativeDriver: true }),
+      Animated.timing(glow, { toValue: 0, duration: 2600, useNativeDriver: true }),
+    ]));
+    loop.start();
+    return () => loop.stop();
+  }, [state, glow]);
+  // while the punch is being verified (location, server) the fingerprint is scanned top to bottom
+  useEffect(() => {
+    if (!busy) { scan.setValue(0); return; }
+    const loop = Animated.loop(Animated.timing(scan, { toValue: 1, duration: 1100, useNativeDriver: true }));
+    loop.start();
+    return () => loop.stop();
+  }, [busy, scan]);
   const fill = { in: "#29B35E", out: "#E4E4BC", done: "rgba(255,255,255,.22)" }[state];
   const ink = state === "in" ? "#012A21" : state === "out" ? "#231F20" : "#E8F2ED";
   const label = { in: "سجّل حضورك", out: "سجّل انصرافك", done: "تم الانصراف" }[state];
-  const icon = { in: "fingerprint", out: "exit", done: "checkCircle" }[state] as IconName;
+  const icon = { in: "fingerprint", out: "fingerprint", done: "checkCircle" }[state] as IconName;
   const c = 2 * Math.PI * R;
   const inner = DIAL - 32;
   return (
     <View style={{ width: DIAL, height: DIAL, alignSelf: "center", marginTop: 12, marginBottom: 4, alignItems: "center", justifyContent: "center" }}>
+      {watermark ? <Image source={{ uri: watermark }} resizeMode="contain" style={{ pointerEvents: "none", position: "absolute", width: DIAL + 34, height: DIAL + 34, opacity: 0.16 }} /> : null}
+      {state === "out" ? (
+        <Animated.View style={{ pointerEvents: "none", position: "absolute", width: DIAL + 30, height: DIAL + 30, borderRadius: (DIAL + 30) / 2, backgroundColor: "rgba(41,179,94,.30)",
+          opacity: glow.interpolate({ inputRange: [0, 1], outputRange: [0.25, 0.75] }), transform: [{ scale: glow.interpolate({ inputRange: [0, 1], outputRange: [0.97, 1.05] }) }] }} />
+      ) : null}
       <Svg width={DIAL} height={DIAL} style={StyleSheet.absoluteFill}>
         <Circle cx={DIAL / 2} cy={DIAL / 2} r={R} stroke="rgba(255,255,255,.16)" strokeWidth={6} fill="none" />
         <Circle cx={DIAL / 2} cy={DIAL / 2} r={R} stroke="#29B35E" strokeWidth={6} fill="none" strokeLinecap="round"
           strokeDasharray={`${c * Math.min(1, progress)} ${c}`} transform={`rotate(-90 ${DIAL / 2} ${DIAL / 2})`} />
       </Svg>
-      {state !== "done" && !busy ? (
+      {state === "in" && !busy ? (
         <Animated.View style={{ pointerEvents: "none", position: "absolute", width: inner, height: inner, borderRadius: inner / 2, borderWidth: 2, borderColor: fill,
           opacity: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.6, 0] }), transform: [{ scale: pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.22] }) }] }} />
       ) : null}
       <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={onPress} disabled={busy || state === "done"}
         style={({ pressed }) => ({ width: inner, height: inner, borderRadius: inner / 2, backgroundColor: fill, alignItems: "center", justifyContent: "center",
           transform: [{ scale: pressed ? 0.95 : 1 }], opacity: busy ? 0.7 : 1, ...shadow("#000", 0.35, 14, 0, 12, 8) })}>
-        {busy ? <T size={15} weight={800} color={ink}>...</T> : (
+        {busy ? (
           <View style={{ alignItems: "center" }}>
-            <Icon name={icon} size={42} color={ink} stroke={1.9} />
+            <View style={{ width: 54, height: 54, alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+              <Icon name="fingerprint" size={52} color={ink} stroke={1.8} />
+              <Animated.View style={{ pointerEvents: "none", position: "absolute", left: 4, right: 4, height: 3, borderRadius: 2, backgroundColor: ink, opacity: 0.55,
+                transform: [{ translateY: scan.interpolate({ inputRange: [0, 1], outputRange: [-24, 24] }) }] }} />
+            </View>
+            <T size={14} weight={800} color={ink} style={{ marginTop: 4 }}>جارٍ التحقق…</T>
+          </View>
+        ) : (
+          <View style={{ alignItems: "center" }}>
+            <Icon name={icon} size={state === "done" ? 46 : 54} color={ink} stroke={1.8} />
             <T size={15} weight={800} color={ink} style={{ marginTop: 4 }}>{label}</T>
           </View>
         )}
@@ -92,17 +128,18 @@ function Chip({ text, tone, icon }: { text: string; tone?: "ok" | "bad"; icon: "
 }
 
 // Memoised: the card re-renders every second for the clock, and redrawing a gradient with ribbons that often made the page stutter on phones.
-const HeroArt = memo(function HeroArt({ w, h }: { w: number; h: number }) {
+const HeroArt = memo(function HeroArt({ w, h, c }: { w: number; h: number; c: { a: string; b: string; c: string; band1: string; band2: string } | null }) {
+  const k = c ?? { a: "#01392D", b: "#014D3D", c: "#0B6B4F", band1: "#29B35E", band2: "#E4E4BC" };   // null = the original colours
   return (
     <Svg style={[StyleSheet.absoluteFill, { pointerEvents: "none" }]} width={w} height={h} viewBox={`0 0 ${w} ${h}`}>
           <Defs>
             <LinearGradient id="heroBg" x1="0.2" y1="0" x2="0.8" y2="1">
-              <Stop offset="0" stopColor="#01392D" />
-              <Stop offset="0.55" stopColor="#014D3D" />
-              <Stop offset="1" stopColor="#0B6B4F" />
+              <Stop offset="0" stopColor={k.a} />
+              <Stop offset="0.55" stopColor={k.b} />
+              <Stop offset="1" stopColor={k.c} />
             </LinearGradient>
-            <LinearGradient id="band1" x1="0" y1="0" x2="1" y2="0"><Stop offset="0" stopColor="#29B35E" stopOpacity="0" /><Stop offset="1" stopColor="#29B35E" stopOpacity="0.4" /></LinearGradient>
-            <LinearGradient id="band2" x1="0" y1="0" x2="1" y2="0"><Stop offset="0" stopColor="#E4E4BC" stopOpacity="0" /><Stop offset="1" stopColor="#E4E4BC" stopOpacity="0.2" /></LinearGradient>
+            <LinearGradient id="band1" x1="0" y1="0" x2="1" y2="0"><Stop offset="0" stopColor={k.band1} stopOpacity="0" /><Stop offset="1" stopColor={k.band1} stopOpacity="0.4" /></LinearGradient>
+            <LinearGradient id="band2" x1="0" y1="0" x2="1" y2="0"><Stop offset="0" stopColor={k.band2} stopOpacity="0" /><Stop offset="1" stopColor={k.band2} stopOpacity="0.2" /></LinearGradient>
           </Defs>
           <Rect x="0" y="0" width={w} height={h} fill="url(#heroBg)" />
           <Polygon points={`0,${h * 0.26} ${w},${h * 0.04} ${w},${h * 0.17} 0,${h * 0.39}`} fill="url(#band1)" />
@@ -113,6 +150,7 @@ const HeroArt = memo(function HeroArt({ w, h }: { w: number; h: number }) {
 
 function Hero({ onForgot }: { onForgot: () => void }) {
   const [box, setBox] = useState({ w: 0, h: 0 });
+  const ab = useAppBrand();
   const now = useNow();
   const { employee, att } = useData();
   const { loc, punch, busy } = usePunch();
@@ -124,7 +162,7 @@ function Hero({ onForgot }: { onForgot: () => void }) {
   const fg = "#fff";
   const h12 = r.h % 12 || 12;
   const pad = (n: number) => String(n).padStart(2, "0");
-  const date = now.toLocaleDateString("ar-SA-u-ca-gregory-nu-latn", { timeZone: "Asia/Riyadh", weekday: "long", year: "numeric", month: "long", day: "numeric" });
+  const date = now.toLocaleDateString(dateLocale(), { timeZone: "Asia/Riyadh", weekday: "long", year: "numeric", month: "long", day: "numeric" });
   const name = employee?.name_ar ?? "";
   const locChip = (() => {
     switch (loc.kind) {
@@ -141,7 +179,7 @@ function Hero({ onForgot }: { onForgot: () => void }) {
   return (
     <View style={styles.hero} onLayout={(e) => setBox({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}>
       {/* the artwork (gradient + slanted ribbons) is the only green: drawn at the card's measured size (not "100%") so it covers the whole card and all its text, however tall the content grows */}
-      {box.w > 0 ? <HeroArt w={box.w} h={box.h} /> : null}
+      {box.w > 0 ? <HeroArt w={box.w} h={box.h} c={ab.hero} /> : null}
       <View style={{ flexDirection: "row", alignItems: "center", gap: 11 }}>
         <View style={styles.avatar}>
           <T size={19} weight={800} color="#E4E4BC">{name.charAt(0)}</T>
@@ -157,7 +195,7 @@ function Hero({ onForgot }: { onForgot: () => void }) {
         <T size={14} weight={700} color={fg} style={{ opacity: 0.75 }}>{r.h < 12 ? "ص" : "م"}</T>
       </View>
       <T size={12.5} color={fg} center style={{ opacity: 0.78 }}>{date}</T>
-      <Dial state={state} progress={worked / shift} busy={busy} onPress={() => punch(state === "in" ? "in" : "out")} />
+      <Dial state={state} progress={worked / shift} busy={busy} watermark={ab.punch} onPress={() => punch(state === "in" ? "in" : "out")} />
       <View style={styles.chips}>
         <Chip icon="pin" text={locChip.text} tone={locChip.tone} />
         {open && att?.flexible_enabled && att.expected_checkout ? <Chip icon="flag" text={`الانصراف المتوقع ${att.expected_checkout}`} /> : null}
@@ -184,12 +222,13 @@ function Hero({ onForgot }: { onForgot: () => void }) {
   );
 }
 
-function Ledger({ items }: { items: [string, string][] }) {
+function Ledger({ items }: { items: [string, string, string][] }) {
   const t = useTheme();
   return (
     <View style={[styles.ledger, { backgroundColor: t.c }]}>
-      {items.map(([v, l], i) => (
+      {items.map(([v, l, ic], i) => (
         <View key={l} style={[styles.ledgerCell, i > 0 && { borderStartWidth: StyleSheet.hairlineWidth, borderStartColor: t.bd }]}>
+          <LeaveIcon type={ic} size={34} color={t.dark ? "#29B35E" : "#014D3D"} />
           <T size={26} weight={300} style={{ letterSpacing: -0.8 }}>{v}</T>
           <T size={12} color={t.mu} center>{l}</T>
         </View>
@@ -250,7 +289,7 @@ export default function Home() {
   return (
     <Page onRefresh={refresh}>
       <Hero onForgot={() => setForgot(true)} />
-      <Ledger items={[[fmt(leave?.current), "رصيد الإجازة (يوم)"], [fmt(leave?.year_end), "رصيد نهاية العام"], [att ? String(Math.max(0, att.remote_limit - att.remote_used)) : "—", "عن بعد المتبقي"]]} />
+      <Ledger items={[[fmt(leave?.current), "رصيد الإجازة (يوم)", "annual"], [fmt(leave?.year_end), "رصيد نهاية العام", "year_end"], [att ? String(Math.max(0, att.remote_limit - att.remote_used)) : "—", "عن بعد المتبقي", "remote"]]} />
 
       <AnnouncementsCard />
 

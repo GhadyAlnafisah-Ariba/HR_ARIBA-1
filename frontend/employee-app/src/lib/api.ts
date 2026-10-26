@@ -317,5 +317,5 @@ export const notifications = {
 
 export type Announcement = { id: string; kind: "announcement" | "greeting"; occasion: string | null; title: string; body: string; pinned: boolean; created_at: string };
 
-/** Running announcements (pinned, or the last 14 days) and greetings of the last 3 days for me (22/10 update). */
+/** Running announcements (pinned, or the last 14 days) and greetings of the last day for me (22/10 update; the greeting hides itself after 24 hours). */
 export const announcements = { mine: () => api<{ ok: boolean; items: Announcement[] }>("/me/announcements").then((r) => r.items) };

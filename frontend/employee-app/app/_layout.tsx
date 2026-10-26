@@ -9,8 +9,9 @@ import { DataProvider } from "@/lib/data";
 import { NotificationsProvider } from "@/lib/notifications";
 import { Loading, ToastProvider } from "@/components/ui";
 import { fonts, ThemeProvider, useTheme } from "@/theme";
+import { LangProvider } from "@/i18n";
 
-// Native builds force RTL through the expo-localization plugin. The web preview needs the document direction.
+// The layout direction follows the language (src/i18n): Arabic is right-to-left. Before the saved language is read the web page starts right-to-left.
 if (Platform.OS === "web" && typeof document !== "undefined") document.documentElement.dir = "rtl";
 
 function Gate() {
@@ -49,6 +50,7 @@ export default function RootLayout() {
   });
   if (!loaded) return null;
   return (
+    <LangProvider>
     <ThemeProvider>
       <AuthProvider>
         <NotificationsProvider>
@@ -60,5 +62,6 @@ export default function RootLayout() {
         </NotificationsProvider>
       </AuthProvider>
     </ThemeProvider>
+    </LangProvider>
   );
 }

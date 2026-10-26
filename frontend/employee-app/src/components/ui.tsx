@@ -8,6 +8,7 @@ import {
 import { brand, fonts, useTheme } from "@/theme";
 import { Icon, type IconName } from "./icons";
 import { tap } from "@/lib/haptics";
+import { inputAlign, tr, useLang } from "@/i18n";
 import { MAX_FONT_SCALE, useLayout } from "@/lib/responsive";
 import { Calendar, TimeGrid } from "./date-time";
 import { T } from "./text";
@@ -116,16 +117,18 @@ export function Label({ children }: { children: ReactNode }) {
 
 export function Input(props: TextInputProps & { label?: string }) {
   const t = useTheme();
-  const { label, style, ...rest } = props;
+  const { label, style, placeholder, ...rest } = props;
+  useLang();
   return (
     <View style={{ flex: 1 }}>
       {label ? <Label>{label}</Label> : null}
       <TextInput
         maxFontSizeMultiplier={MAX_FONT_SCALE}
         placeholderTextColor={t.dm}
+        placeholder={placeholder ? tr(placeholder) : placeholder}
         {...(props.multiline ? { returnKeyType: "done" as const, submitBehavior: "blurAndSubmit" as const } : null)}
         {...rest}
-        style={[styles.input, { borderColor: t.bd, backgroundColor: t.c2, color: t.tx, fontFamily: fonts.medium }, props.multiline && { minHeight: 64, textAlignVertical: "top" }, style]}
+        style={[styles.input, { textAlign: inputAlign(), borderColor: t.bd, backgroundColor: t.c2, color: t.tx, fontFamily: fonts.medium }, props.multiline && { minHeight: 64, textAlignVertical: "top" }, style]}
       />
     </View>
   );

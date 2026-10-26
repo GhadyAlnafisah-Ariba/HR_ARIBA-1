@@ -1,5 +1,6 @@
 // طلباتي — their Leaves.jsx «📋 طلباتي» and the delegation card. Sending a request is the «+» in the dock (components/composer.tsx),
 // which holds every type, rule and attachment that used to be the inline form here.
+import { dateLocale } from "@/i18n";
 import { Alert, View } from "react-native";
 import { Btn, Card, CardTitle, Empty, Page, T, useToast } from "@/components/ui";
 import { Icon } from "@/components/icons";
@@ -26,7 +27,7 @@ function dayLabel(k: string) {
   if (k === ymd(now)) return "اليوم";
   if (k === ymd(new Date(now.getTime() - DAY))) return "أمس";
   const [y, mo, d] = k.split("-").map(Number);
-  return new Date(y, mo - 1, d).toLocaleDateString("ar-SA-u-nu-latn-ca-gregory", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  return new Date(y, mo - 1, d).toLocaleDateString(dateLocale(), { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 }
 
 export default function Leaves() {

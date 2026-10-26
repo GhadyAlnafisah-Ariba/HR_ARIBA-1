@@ -11,6 +11,7 @@ import { Btn, Card, CardTitle, InfoBox, Page, PayRow, T, useToast } from "@/comp
 import { useData } from "@/lib/data";
 import { useAuth } from "@/lib/auth";
 import { useTheme, useThemeMode, type Choice } from "@/theme";
+import { useLang, type Lang } from "@/i18n";
 import { select } from "@/lib/haptics";
 import { docLabel } from "@/lib/labels";
 import { shadow } from "@/lib/shadow";
@@ -22,6 +23,7 @@ export default function Profile() {
   const [pw, setPw] = useState(false);
   const { signOut } = useAuth();
   const { choice, setChoice } = useThemeMode();
+  const { lang, setLang } = useLang();
   const { leave, requests } = useData();
   const [docs, setDocs] = useState<{ id: string; type: string; file_name: string }[]>([]);
   const [opening, setOpening] = useState("");
@@ -122,6 +124,17 @@ export default function Profile() {
           ))}
         </View>
         <T size={11.5} color={t.mu} style={{ marginTop: 6 }}>«تلقائي» يتبع إعداد جهازك.</T>
+      </Card>
+      <Card>
+        <CardTitle>اللغة</CardTitle>
+        <View style={{ flexDirection: "row", backgroundColor: t.c2, borderRadius: 14, padding: 4 }}>
+          {([["ar", "العربية"], ["en", "English"]] as [Lang, string][]).map(([k, l]) => (
+            <Pressable key={k} accessibilityRole="button" accessibilityState={{ selected: lang === k }} onPress={() => { select(); setLang(k).then((restart) => { if (restart) toast(k === "en" ? "Close and reopen the app to apply the layout" : "أغلق التطبيق وافتحه مجددًا لتطبيق الاتجاه", "info"); }); }}
+              style={{ flex: 1, minHeight: 44, alignItems: "center", justifyContent: "center", borderRadius: 11, backgroundColor: lang === k ? "#014D3D" : "transparent" }}>
+              <T size={13} weight={700} color={lang === k ? "#fff" : t.mu}>{l}</T>
+            </Pressable>
+          ))}
+        </View>
       </Card>
       <Card>
         <CardTitle icon="lock">الأمان</CardTitle>

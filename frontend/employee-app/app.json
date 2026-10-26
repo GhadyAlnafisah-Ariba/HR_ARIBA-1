@@ -38,7 +38,7 @@
       [
         "expo-localization",
         {
-          "forcesRTL": true
+          "forcesRTL": false
         }
       ],
       [
