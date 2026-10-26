@@ -10,6 +10,25 @@ import { RequestItem } from "@/components/request-item";
 import { useData } from "@/lib/data";
 import { useTheme } from "@/theme";
 
+const DAY = 86400000;
+const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+/** Requests grouped by the day they were sent, newest day first. */
+function byDay(list: MyRequest[]): [string, MyRequest[]][] {
+  const m = new Map<string, MyRequest[]>();
+  for (const r of [...list].sort((a, b) => b.created_at.localeCompare(a.created_at))) {
+    const k = ymd(new Date(r.created_at));
+    m.set(k, [...(m.get(k) ?? []), r]);
+  }
+  return [...m.entries()];
+}
+function dayLabel(k: string) {
+  const now = new Date();
+  if (k === ymd(now)) return "اليوم";
+  if (k === ymd(new Date(now.getTime() - DAY))) return "أمس";
+  const [y, mo, d] = k.split("-").map(Number);
+  return new Date(y, mo - 1, d).toLocaleDateString("ar-SA-u-nu-latn-ca-gregory", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+}
+
 export default function Leaves() {
   const t = useTheme();
   const toast = useToast();
@@ -34,7 +53,18 @@ export default function Leaves() {
         <CardTitle icon="clipboard">طلباتي</CardTitle>
         {pending ? <View style={{ marginBottom: 6 }}><T size={12} color={t.mu}>{`${pending} طلب بانتظار الاعتماد`}</T></View> : null}
         {!mine.length ? <Empty text="لا توجد طلبات" /> : null}
-        {mine.map((r) => <RequestItem key={r.id} r={r} onDelete={remove} />)}
+        {byDay(mine).map(([day, rows]) => (
+          <View key={day}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginTop: 14, marginBottom: 2 }}>
+              <View style={{ flex: 1, height: 1, backgroundColor: t.bd }} />
+              <View style={{ paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999, backgroundColor: t.bg, borderWidth: 1, borderColor: t.bd }}>
+                <T size={11.5} weight={800} color={t.mu}>{dayLabel(day)}</T>
+              </View>
+              <View style={{ flex: 1, height: 1, backgroundColor: t.bd }} />
+            </View>
+            {rows.map((r) => <RequestItem key={r.id} r={r} onDelete={remove} />)}
+          </View>
+        ))}
       </Card>
       <DelegationCard />
     </Page>

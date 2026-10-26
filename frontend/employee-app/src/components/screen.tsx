@@ -1,7 +1,7 @@
 // A full screen opened from a tab (their modals / overlays): back button, title, scrolling content.
 import type { ReactNode } from "react";
 import { Pressable, ScrollView, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useInsets } from "@/lib/insets";
 import { router } from "expo-router";
 import { Icon } from "./icons";
 import { T } from "./ui";
@@ -10,7 +10,7 @@ import { goBack } from "@/lib/nav";
 
 export function Screen({ title, children, scroll = true, scrollEnabled = true }: { title: string; children: ReactNode; scroll?: boolean; scrollEnabled?: boolean }) {
   const t = useTheme();
-  const insets = useSafeAreaInsets();
+  const insets = useInsets();
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingTop: insets.top + 12, paddingBottom: 8, paddingHorizontal: 18,

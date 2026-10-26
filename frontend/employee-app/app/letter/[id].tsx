@@ -1,7 +1,7 @@
 // عرض المستند — the HTML HR sent (legacy forms/020 «عرض المستند»). Approve / reject happen on the documents tab.
 import { useEffect, useState } from "react";
 import { Pressable, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useInsets } from "@/lib/insets";
 import { router, useLocalSearchParams } from "expo-router";
 import { HtmlView } from "@/components/html-view";
 import { Icon } from "@/components/icons";
@@ -12,7 +12,7 @@ import { goBack } from "@/lib/nav";
 
 export default function LetterScreen() {
   const t = useTheme();
-  const insets = useSafeAreaInsets();
+  const insets = useInsets();
   const { id, title } = useLocalSearchParams<{ id: string; title?: string }>();
   const [html, setHtml] = useState<string | null>(null);
 

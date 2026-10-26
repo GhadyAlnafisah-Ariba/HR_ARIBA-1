@@ -4,7 +4,7 @@
 // the forgot-punch modal, and shortcuts to overtime / document upload / profile edit / IBAN change.
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Animated, Easing, Keyboard, KeyboardAvoidingView, Modal, PanResponder, Platform, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useInsets } from "@/lib/insets";
 import { router } from "expo-router";
 import { ForgotPunchSheet, todayISO } from "@/components/shared";
 import { Btn, Input, PickerField, T, useToast } from "@/components/ui";
@@ -66,7 +66,7 @@ export function ComposerProvider({ children }: { children: ReactNode }) {
 function ComposerSheet({ visible, first, onClose, onForgot }: { visible: boolean; first: RequestType | null; onClose: () => void; onForgot: () => void }) {
   const t = useTheme();
   const toast = useToast();
-  const insets = useSafeAreaInsets();
+  const insets = useInsets();
   const { height } = useWindowDimensions();
   const { leave, refresh } = useData();
   const [step, setStep] = useState<0 | 1 | 2>(0);

@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 import { Alert, Animated, Easing, Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { getRefreshToken } from "@/lib/api";
 import { biometricAvailable, biometricEnabled, enableBiometric, remembered, setNudged, wasNudged } from "@/lib/biometric";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useInsets } from "@/lib/insets";
 import { router, Tabs } from "expo-router";
 import { Icon } from "@/components/icons";
-import { ComposerProvider, useComposer } from "@/components/composer";
+import { ComposerProvider } from "@/components/composer";
 import { T, useToast } from "@/components/ui";
 import { useAuth } from "@/lib/auth";
 import { useData } from "@/lib/data";
@@ -47,7 +47,7 @@ const FROM_MORE = ["attendance", "team", "goals", "overtime", "documents", "appr
 
 function Header({ title, route }: { title: string; route: string }) {
   const t = useTheme();
-  const insets = useSafeAreaInsets();
+  const insets = useInsets();
   const { refresh } = useData();
   const bell = useBell();
   const toast = useToast();
@@ -171,8 +171,7 @@ const DOCK: { name: string; label: string; icon: Parameters<typeof Icon>[0]["nam
 
 function BottomNav({ state }: BottomTabBarProps) {
   const t = useTheme();
-  const insets = useSafeAreaInsets();
-  const { open } = useComposer();
+  const insets = useInsets();
   const { width, gutter, dockMax } = useLayout();
   const dockW = Math.min(dockMax, width - gutter * 2); // tablets: a dock of phone width, centred
   const { approvals, letters } = useData();
@@ -195,22 +194,7 @@ function BottomNav({ state }: BottomTabBarProps) {
   return (
     <View style={[styles.bnav, { left: (width - dockW) / 2, right: (width - dockW) / 2, bottom: Math.max(14, insets.bottom), backgroundColor: t.dark ? "rgba(1,61,49,.94)" : "rgba(255,255,255,.94)", borderColor: t.bd }]}>
       {item(DOCK[0])}{item(DOCK[1])}
-      <View style={{ width: 78, alignItems: "center" }}>
-        <Pressable accessibilityRole="button" accessibilityLabel="طلب جديد" onPress={() => { tap(); open(); }}
-          style={({ pressed }) => [styles.plus, { transform: [{ skewX: "-10deg" }, { scale: pressed ? 0.93 : 1 }] }]}>
-          <View style={{ transform: [{ skewX: "10deg" }] }}><PlusMark /></View>
-        </Pressable>
-      </View>
       {item(DOCK[2])}{item(DOCK[3])}
-    </View>
-  );
-}
-
-function PlusMark() {
-  return (
-    <View style={{ width: 26, height: 26, alignItems: "center", justifyContent: "center" }}>
-      <View style={{ position: "absolute", width: 22, height: 3, borderRadius: 2, backgroundColor: "#012A21" }} />
-      <View style={{ position: "absolute", width: 3, height: 22, borderRadius: 2, backgroundColor: "#012A21" }} />
     </View>
   );
 }
@@ -256,7 +240,6 @@ const styles = StyleSheet.create({
     ...shadow("#014D3D", 0.22, 16, 0, 12, 10) },
   tab: { flex: 1, height: 68, alignItems: "center", justifyContent: "center", gap: 2 },
   tabLine: { position: "absolute", bottom: 6, width: 16, height: 3, borderRadius: 2 },
-  plus: { width: 62, height: 52, marginTop: -26, borderRadius: 18, backgroundColor: "#29B35E", alignItems: "center", justifyContent: "center", ...shadow("#29B35E", 0.55, 12, 0, 10, 8) },
   navBadge: { position: "absolute", top: 8, right: "22%", minWidth: 17, height: 17, borderRadius: 9, alignItems: "center", justifyContent: "center", paddingHorizontal: 4 },
   panel: { position: "absolute", left: 8, right: 8, maxHeight: "76%", borderWidth: 1, borderRadius: 18, overflow: "hidden",
     ...shadow("#000", 0.28, 25, 0, 18, 10) },
