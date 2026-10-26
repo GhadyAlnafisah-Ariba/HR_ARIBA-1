@@ -143,7 +143,7 @@ function ForgotSheet({ onClose }: { onClose: () => void }) {
   }
   return (
     <Sheet visible onClose={onClose}>
-      <T size={34} center>🔑</T>
+      <View style={{ alignItems: "center" }}><Icon name="key" size={34} color="#014D3D" stroke={1.8} /></View>
       <T weight={800} size={16} center style={{ marginVertical: 8 }}>استرجاع بيانات الدخول</T>
       <T size={13} color="#555" style={{ marginBottom: 10 }}>
         {mode === "user" ? "اكتب اسم المستخدم وهنبعتلك كلمة مرور مؤقتة على الإيميل المسجّل." : "اكتب رقم الإقامة / الهوية وهنبعتلك اسم المستخدم وكلمة مرور مؤقتة على الإيميل المسجّل."}

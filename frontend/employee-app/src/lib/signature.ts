@@ -56,7 +56,7 @@ export function injectSignature(html: string, role: "employee" | "manager", sig:
   return String(html).split("<!--ARIBA_EN-->").map((p) => {
     if (p.includes(slot)) {
       let n = 0;
-      return p.split(slot).join("\u0000").replace(/\u0000/g, () => (n++ === 0 ? imgTag(sig) + stamp : `<span data-sig-done="${role}">✓</span>`));
+      return p.split(slot).join("\u0000").replace(/\u0000/g, () => (n++ === 0 ? imgTag(sig) + stamp : `<span data-sig-done="${role}"></span>`));
     }
     const lbl = role === "manager" ? "اعتماد المدير المباشر / Direct manager approval" : "توقيع الموظف / Employee signature";
     const block = `<div style="margin:18px 12px 0;padding-top:8px;border-top:1px solid #999;font-size:12px"><b>${lbl}</b> ${name ? "— " + esc(name) : ""}<div style="margin-top:6px">${imgTag(sig)}${stamp}</div></div>`;

@@ -2,6 +2,7 @@
 import { Pressable, View } from "react-native";
 import { Badge, T } from "./ui";
 import { Icon } from "./icons";
+import { LeaveIcon, hasLeaveIcon } from "./leave-icon";
 import type { MyRequest, RequestType } from "@/lib/api";
 import { requestDetail, statusText } from "@/lib/labels";
 import { useTheme } from "@/theme";
@@ -24,7 +25,10 @@ export function RequestItem({ r, onDelete }: { r: MyRequest; onDelete?: (r: MyRe
   return (
     <View style={{ paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: t.bd }}>
       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-        <T size={12} weight={700}>{NAME[r.type] ?? r.type}</T>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flexShrink: 1 }}>
+          {hasLeaveIcon(r.type) ? <LeaveIcon type={r.type} size={30} color={t.dark ? "#29B35E" : "#014D3D"} /> : null}
+          <T size={12} weight={700}>{NAME[r.type] ?? r.type}</T>
+        </View>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
           <Badge text={st.text} tone={TONE[st.tone]} />
           {onDelete && r.status !== "approved" ? (

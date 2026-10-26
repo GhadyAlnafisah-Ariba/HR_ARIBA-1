@@ -29,7 +29,7 @@ export function DelegationCard() {
   const who = d.manager_name || "مديرك المباشر";
   return (
     <Card>
-      <CardTitle>🤝 تفويض المدير المباشر</CardTitle>
+      <CardTitle icon="users">تفويض المدير المباشر</CardTitle>
       <T size={11.5} color={t.mu} style={{ lineHeight: 20 }}>
         {`عند التفعيل يستطيع ${who} تقديم الإجازات وطلباتك نيابةً عنك. تصل الموارد البشرية معلومة أنه قُدِّم بالنيابة وتعتمد أو ترفض، ويصلك إشعار وإيميل.`}
       </T>

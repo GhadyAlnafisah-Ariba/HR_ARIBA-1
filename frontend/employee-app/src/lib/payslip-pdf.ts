@@ -1,6 +1,7 @@
 // The payslip as a PDF (their Pay.jsx slipDoc → «حفظ كـ PDF»): the same A4 page, printed to a file and shared.
 import { Platform } from "react-native";
 import { htmlToPdfBlob } from "./pdf";
+import { stripEmojiHtml } from "./clean";
 import { deliverFile } from "./web-file";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
@@ -38,6 +39,6 @@ export async function sharePayslip(raw: Payslip, me: Employee | null, company: {
     await deliverFile(new Uint8Array(await blob.arrayBuffer()), `payslip-${raw.year}-${String(raw.month).padStart(2, "0")}.pdf`, "application/pdf");
     return;
   }
-  const { uri } = await Print.printToFileAsync({ html: slipDoc(raw, me, company) });
+  const { uri } = await Print.printToFileAsync({ html: stripEmojiHtml(slipDoc(raw, me, company)) });
   await Sharing.shareAsync(uri, { mimeType: "application/pdf", dialogTitle: "قسيمة الراتب", UTI: "com.adobe.pdf" });
 }

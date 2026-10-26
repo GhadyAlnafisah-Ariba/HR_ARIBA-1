@@ -82,7 +82,7 @@ export default function Team() {
 
       {P?.view_team_requests && reqs ? (
         <Card>
-          <CardTitle>📋 طلبات فريقي وحالتها</CardTitle>
+          <CardTitle icon="clipboard">طلبات فريقي وحالتها</CardTitle>
           {!reqs.length ? <Empty text="لا طلبات" /> : null}
           {reqs.slice(0, 40).map((r) => { const st = STATUS(r); return (
             <View key={r.id} style={{ paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: t.bd }}>
@@ -97,7 +97,7 @@ export default function Team() {
       ) : null}
 
       <Card>
-        <CardTitle>📅 المهام والاجتماعات / توفر الفريق</CardTitle>
+        <CardTitle icon="calendar">المهام والاجتماعات / توفر الفريق</CardTitle>
         <Btn title={`فتح${openTasks ? ` — ${openTasks} مهمة مفتوحة` : ""}`} onPress={() => router.push("/tasks")} style={{ marginTop: 0 }} />
       </Card>
     </Page>

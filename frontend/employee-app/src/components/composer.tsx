@@ -9,6 +9,7 @@ import { router } from "expo-router";
 import { ForgotPunchSheet, todayISO } from "@/components/shared";
 import { Btn, Input, PickerField, T, useToast } from "@/components/ui";
 import { Icon, type IconName } from "@/components/icons";
+import { LeaveIcon, hasLeaveIcon } from "@/components/leave-icon";
 import { HOURLY, TYPES } from "@/components/request-item";
 import { ApiError, requests, type RequestType } from "@/lib/api";
 import { pickFile, type Picked } from "@/lib/files";
@@ -187,7 +188,7 @@ function ComposerSheet({ visible, first, onClose, onForgot }: { visible: boolean
                     {g.items.map((k) => (
                       <Pressable key={k} onPress={() => pickType(k)} accessibilityRole="button" accessibilityLabel={nameOf(k)}
                         style={({ pressed }) => [styles.type, grid.tile ? { width: grid.tile } : null, { backgroundColor: t.c2, transform: [{ scale: pressed ? 0.96 : 1 }] }]}>
-                        <View style={[styles.typeIc, { backgroundColor: t.c }]}><Icon name={ICON[k] ?? "file"} size={20} color={t.dark ? "#29B35E" : "#014D3D"} /></View>
+                        <View style={[styles.typeIc, { backgroundColor: t.c }]}>{hasLeaveIcon(k) ? <LeaveIcon type={k} size={34} color={t.dark ? "#29B35E" : "#014D3D"} /> : <Icon name={ICON[k] ?? "file"} size={20} color={t.dark ? "#29B35E" : "#014D3D"} />}</View>
                         <T size={12} weight={700} center numberOfLines={2}>{nameOf(k)}</T>
                       </Pressable>
                     ))}
@@ -274,7 +275,7 @@ const styles = StyleSheet.create({
   progBar: { flex: 1, height: 4, borderRadius: 2 },
   types: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   type: { width: "31.6%", alignItems: "center", gap: 7, paddingVertical: 12, paddingHorizontal: 4, borderRadius: 18, minHeight: 88 },
-  typeIc: { width: 38, height: 38, borderRadius: 12, alignItems: "center", justifyContent: "center" },
+  typeIc: { width: 46, height: 46, borderRadius: 14, alignItems: "center", justifyContent: "center" },
   note: { padding: 10, borderRadius: 14, marginBottom: 12 },
   calc: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 11, paddingHorizontal: 14, borderRadius: 14, marginTop: 10 },
   okMark: { width: 84, height: 84, borderRadius: 26, backgroundColor: "#29B35E", alignItems: "center", justifyContent: "center", transform: [{ skewX: "-8deg" }] },

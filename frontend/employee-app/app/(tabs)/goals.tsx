@@ -20,7 +20,7 @@ export default function Goals() {
   return (
     <Page onRefresh={load}>
       <Card>
-        <CardTitle>🎯 مستهدفاتي</CardTitle>
+        <CardTitle icon="star">مستهدفاتي</CardTitle>
         {!d.targets.length ? <Empty text="لا توجد مستهدفات حالياً" /> : null}
         {Object.entries(groups).map(([k, list]) => {
           const [type, key] = k.split("|");
@@ -46,7 +46,7 @@ export default function Goals() {
         })}
       </Card>
       <Card>
-        <CardTitle>⭐ تقييماتي</CardTitle>
+        <CardTitle icon="checks">تقييماتي</CardTitle>
         {!d.evaluations.length ? <Empty text="لا توجد تقييمات معتمدة بعد" /> : null}
         {d.evaluations.map((e) => (
           <View key={e.id} style={{ paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: t.bd }}>

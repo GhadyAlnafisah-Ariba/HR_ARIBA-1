@@ -147,7 +147,7 @@ function ManagerSign({ owner, name, needSig }: { owner: string; name: string; ne
   }
   return (
     <Card>
-      <CardTitle>✍️ مستندات بانتظار توقيعي كمدير ({list.length})</CardTitle>
+      <CardTitle icon="file">مستندات بانتظار توقيعي كمدير ({list.length})</CardTitle>
       {list.map((x) => (
         <View key={x.request_id} style={{ backgroundColor: t.c2, borderWidth: 1, borderColor: t.bd, borderRadius: 12, padding: 12, marginBottom: 10 }}>
           <T weight={700}>{x.employee_name || x.employee_id}</T>

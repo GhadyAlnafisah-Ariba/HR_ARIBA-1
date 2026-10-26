@@ -1,5 +1,6 @@
 // Web (PWA): HTML → a real A4 PDF file inside the app, so the employee never leaves it (window.open sent the installed app to a
 // browser tab that could only be left by quitting the app). The libraries load only when a PDF is asked for.
+import { stripEmojiHtml } from "./clean";
 const A4_W = 794;   // A4 at 96 dpi, in CSS pixels
 
 export async function htmlToPdfBlob(html: string): Promise<Blob> {
@@ -10,7 +11,7 @@ export async function htmlToPdfBlob(html: string): Promise<Blob> {
   document.body.appendChild(frame);
   try {
     const doc = frame.contentDocument!;
-    doc.open(); doc.write(html); doc.close();
+    doc.open(); doc.write(stripEmojiHtml(html)); doc.close();
     doc.body.style.cssText += `;margin:0;padding:36px 40px;width:${A4_W}px;box-sizing:border-box;background:#fff`;
     await Promise.race([(doc as Document & { fonts?: { ready: Promise<unknown> } }).fonts?.ready ?? Promise.resolve(), new Promise((r) => setTimeout(r, 2000))]);
     await Promise.all(Array.from(doc.images).map((img) => (img.complete ? Promise.resolve() : new Promise((r) => { img.onload = img.onerror = () => r(null); }))));

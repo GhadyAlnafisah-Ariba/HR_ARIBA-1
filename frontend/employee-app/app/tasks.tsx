@@ -4,6 +4,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Pressable, View } from "react-native";
 import { Screen } from "@/components/screen";
+import { Icon } from "@/components/icons";
 import { Badge, Btn, Card, Empty, Input, Loading, PickerField, Sheet, T, useToast } from "@/components/ui";
 import { ApiError } from "@/lib/api";
 import { tasks, type Availability, type Task } from "@/lib/port";
@@ -109,7 +110,7 @@ export default function TasksScreen() {
             {rows.map(({ e, s }) => (
               <Pressable key={e.id} onPress={() => setSel({ ...sel, [e.id]: !sel[e.id] })}
                 style={{ flexDirection: "row", gap: 8, paddingVertical: 9, borderTopWidth: 1, borderTopColor: t.bd, backgroundColor: sel[e.id] ? "rgba(41,179,94,.08)" : "transparent" }}>
-                <T size={16}>{sel[e.id] ? "☑" : "☐"}</T>
+                <View style={{ width: 20, height: 20, borderRadius: 6, borderWidth: 1.6, borderColor: sel[e.id] ? "#29B35E" : t.mu, backgroundColor: sel[e.id] ? "#29B35E" : "transparent", alignItems: "center", justifyContent: "center" }}>{sel[e.id] ? <Icon name="check" size={13} color="#012A21" stroke={3} /> : null}</View>
                 <View style={{ flex: 1 }}>
                   <T weight={700}>{e.name}</T>
                   <T size={11.5} color={t.mu}>{[e.job, e.dept].filter(Boolean).join(" • ")}</T>

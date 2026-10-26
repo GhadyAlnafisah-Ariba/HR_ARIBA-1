@@ -206,7 +206,7 @@ function BioAsk() {
     (async () => {
       if (!(await remembered()) || !(await biometricAvailable()) || (await biometricEnabled()) || (await wasNudged())) return;
       await setNudged();
-      Alert.alert("🔐 تفعيل الدخول بالبصمة؟", "بدل كتابة كلمة المرور كل مرة، تدخل بالبصمة أو Face ID على هذا الجهاز.", [
+      Alert.alert("تفعيل الدخول بالبصمة؟", "بدل كتابة كلمة المرور كل مرة، تدخل بالبصمة أو Face ID على هذا الجهاز.", [
         { text: "مش دلوقتي", style: "cancel" },
         { text: "تفعيل", onPress: async () => { const rt = await getRefreshToken(); if (!rt) return; const r = await enableBiometric(rt); toast(r.msg, r.ok ? "ok" : "err"); } },
       ]);

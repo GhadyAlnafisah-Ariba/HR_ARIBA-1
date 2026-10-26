@@ -43,7 +43,7 @@ export default function Overtime() {
   return (
     <Page onRefresh={refresh}>
       <Card>
-        <CardTitle>⏱️ طلب عمل إضافي</CardTitle>
+        <CardTitle icon="stopwatch">طلب عمل إضافي</CardTitle>
         <View style={{ flexDirection: "row", gap: 8 }}>
           <PickerField label="التاريخ" value={date} onChange={setDate} mode="date" />
           <Input label="عدد الساعات" value={hours} onChangeText={setHours} keyboardType="decimal-pad" />

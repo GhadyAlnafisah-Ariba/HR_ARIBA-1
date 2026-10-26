@@ -2,6 +2,7 @@
 // never ran. This puts a real dialog in its place, keeping the same call shape (title, message, buttons[{text,style,onPress}]).
 // Plain DOM on purpose: it works above every screen and modal, in light and dark, right-to-left.
 import { Alert, type AlertButton, type AlertOptions } from "react-native";
+import { stripEmoji } from "./clean";
 
 const dark = () => typeof matchMedia === "function" && matchMedia("(prefers-color-scheme: dark)").matches;
 
@@ -19,12 +20,12 @@ function show(title: string, message?: string, buttons?: AlertButton[], options?
   const box = document.createElement("div");
   box.style.cssText = `width:100%;max-width:360px;background:${c.bg};color:${c.tx};border:1px solid ${c.bd};border-radius:18px;padding:20px 18px 14px;box-shadow:0 18px 50px rgba(0,0,0,.35)`;
   const h = document.createElement("div");
-  h.textContent = title;
+  h.textContent = stripEmoji(title);
   h.style.cssText = "font-size:17px;font-weight:800;line-height:1.5;margin-bottom:6px";
   box.appendChild(h);
   if (message) {
     const p = document.createElement("div");
-    p.textContent = message;
+    p.textContent = stripEmoji(message);
     p.style.cssText = `font-size:14px;line-height:1.7;color:${c.mu};white-space:pre-line;margin-bottom:14px`;
     box.appendChild(p);
   }
@@ -48,7 +49,7 @@ function show(title: string, message?: string, buttons?: AlertButton[], options?
   list.forEach((b) => {
     const el = document.createElement("button");
     el.type = "button";
-    el.textContent = b.text ?? "حسنًا";
+    el.textContent = stripEmoji(b.text ?? "") || "حسنًا";
     const primary = b.style !== "cancel";
     const bg = b.style === "destructive" ? c.red : primary ? c.green : "transparent";
     const fg = b.style === "destructive" ? "#FFFFFF" : primary ? c.ink : c.tx;

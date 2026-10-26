@@ -73,7 +73,7 @@ export default function Profile() {
       </Card>
       {leave ? (
         <Card>
-          <CardTitle>🏖 أرصدة الإجازات</CardTitle>
+          <CardTitle icon="calendar">أرصدة الإجازات</CardTitle>
           <PayRow label="الرصيد حتى اليوم" value={`${leave.current.toFixed(2)} يوم`} />
           <PayRow label="رصيد نهاية العام" value={`${leave.year_end.toFixed(2)} يوم`} />
           <PayRow label="المرحل" value={`${leave.carry.toFixed(2)} يوم`} />
@@ -95,7 +95,7 @@ export default function Profile() {
         <Btn kind="ghost" title={ibanPending ? "⏳ طلب تغيير الآيبان قيد المراجعة" : "✏️ طلب تغيير الآيبان"} onPress={() => router.push("/iban-change")} style={{ marginTop: 8 }} />
       </Card>
       <Card>
-        <CardTitle>📎 وثائقي</CardTitle>
+        <CardTitle icon="file">وثائقي</CardTitle>
         <Btn kind="ghost" title="📤 رفع مستند للمراجعة" onPress={() => router.push("/upload-document")} style={{ marginTop: 0, marginBottom: 8 }} />
         {!docs.length ? <T size={11} color={t.mu} center>لا توجد وثائق مرفوعة</T> : null}
         {docs.map((d) => (
