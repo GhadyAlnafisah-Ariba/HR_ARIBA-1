@@ -170,7 +170,7 @@ def public_brand(db: Session = Depends(get_db)):
     names = _app_setting(db, "company_names") or {}
     logo = _app_setting(db, "company_logo") or {}
     own = (b.get("logo") if isinstance(b, dict) else None) or None
-    return {"brand": {k: b.get(k) for k in ("p", "s", "a", "hero", "reset", "updated", "punch") if k in b} if isinstance(b, dict) else {},
+    return {"brand": {k: b.get(k) for k in ("p", "s", "a", "hero", "heroImage", "reset", "updated", "punch") if k in b} if isinstance(b, dict) else {},
             "names": {k: names.get(k) for k in ("coAr", "coEn") if isinstance(names, dict)},
             "logo": own or (logo.get("data") if isinstance(logo, dict) else None) or None, "appLogo": own}
 

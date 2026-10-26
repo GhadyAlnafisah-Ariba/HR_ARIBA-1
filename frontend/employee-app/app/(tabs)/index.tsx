@@ -179,7 +179,12 @@ function Hero({ onForgot }: { onForgot: () => void }) {
   return (
     <View style={styles.hero} onLayout={(e) => setBox({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}>
       {/* the artwork (gradient + slanted ribbons) is the only green: drawn at the card's measured size (not "100%") so it covers the whole card and all its text, however tall the content grows */}
-      {box.w > 0 ? <HeroArt w={box.w} h={box.h} c={ab.hero} /> : null}
+      {ab.heroBg ? (
+        <>
+          <Image source={{ uri: ab.heroBg }} resizeMode="cover" style={[StyleSheet.absoluteFill, { pointerEvents: "none" }]} />
+          <View style={[StyleSheet.absoluteFill, { pointerEvents: "none", backgroundColor: "rgba(0,0,0,.32)" }]} />
+        </>
+      ) : box.w > 0 ? <HeroArt w={box.w} h={box.h} c={ab.hero} /> : null}
       <View style={{ flexDirection: "row", alignItems: "center", gap: 11 }}>
         <View style={styles.avatar}>
           <T size={19} weight={800} color="#E4E4BC">{name.charAt(0)}</T>

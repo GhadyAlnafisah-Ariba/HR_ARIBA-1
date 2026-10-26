@@ -59,5 +59,5 @@ export function appBrandValue(brand, prev) {
   const old = prev && typeof prev === 'object' ? prev : {};
   const on = brand && brand.p && !brand.reset;
   return { ...(on ? { p: brand.p, s: brand.s, a: brand.a || '' } : { reset: true }), ...(on && validHex(brand.hero) ? { hero: brand.hero } : {}),
-    ...(old.logo ? { logo: old.logo } : {}), ...(old.punch ? { punch: old.punch } : {}), updated: Date.now() };
+    ...(old.logo ? { logo: old.logo } : {}), ...(old.heroImage ? { heroImage: old.heroImage } : {}), ...(old.punch ? { punch: old.punch } : {}), updated: Date.now() };
 }

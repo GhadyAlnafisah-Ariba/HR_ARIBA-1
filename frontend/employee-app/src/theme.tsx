@@ -28,9 +28,9 @@ const BRAND_KEY = "ariba_employee_brand";
 type Mode = "light" | "dark";
 type Brand = { p: string; a?: string; s?: string; hero?: string } | null;
 /** What HR sets for the app apart from the colours: the picture behind the punch button and the app's own logo (kept in memory only; the keychain holds 2 KB). */
-export type AppAssets = { punch: string; logo: string };
+export type AppAssets = { punch: string; logo: string; heroBg: string };
 export type Choice = "auto" | "light" | "dark";
-const Ctx = createContext<{ mode: Mode; toggle: () => void; brand: Brand; assets: AppAssets; choice: Choice; setChoice: (c: Choice) => void }>({ mode: "light", toggle: () => {}, brand: null, assets: { punch: "", logo: "" }, choice: "auto", setChoice: () => {} });
+const Ctx = createContext<{ mode: Mode; toggle: () => void; brand: Brand; assets: AppAssets; choice: Choice; setChoice: (c: Choice) => void }>({ mode: "light", toggle: () => {}, brand: null, assets: { punch: "", logo: "", heroBg: "" }, choice: "auto", setChoice: () => {} });
 
 // The company colours HR sets (their employee brand.js): the ARIBA colours of the palette are swapped for the
 // company's primary (P, with shades), accent (A) and light background (S).
@@ -50,7 +50,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [mode, setMode] = useState<Mode>(() => (Appearance.getColorScheme() === "dark" ? "dark" : "light")); // follows the device until the user picks one
   const [explicit, setExplicit] = useState(false);
   const [brand, setBrand] = useState<Brand>(null);
-  const [assets, setAssets] = useState<AppAssets>({ punch: "", logo: "" });
+  const [assets, setAssets] = useState<AppAssets>({ punch: "", logo: "", heroBg: "" });
   useEffect(() => {
     store.get(KEY).then((v) => { if (v === "dark" || v === "light") { setMode(v); setExplicit(true); } }).catch(() => {});
     store.get(BRAND_KEY).then((v) => { try { const b = v ? JSON.parse(v) : null; if (b && h2r(b.p)) setBrand(b); } catch { /* ignore */ } }).catch(() => {});
@@ -58,8 +58,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       const v = r.brand;
       const nb: Brand = !v || v.reset || !v.p || !h2r(v.p) ? null : { p: v.p, a: v.a || "", s: v.s || "", ...(v.hero && h2r(v.hero) ? { hero: v.hero } : {}) };
       setBrand((o) => (JSON.stringify(o) === JSON.stringify(nb) ? o : nb));
-      const na = { punch: v?.punch && /^data:image\//.test(v.punch) ? v.punch : "", logo: r.appLogo && /^data:image\//.test(r.appLogo) ? r.appLogo : "" };
-      setAssets((o) => (o.punch === na.punch && o.logo === na.logo ? o : na));
+      const na = { punch: v?.punch && /^data:image\//.test(v.punch) ? v.punch : "", logo: r.appLogo && /^data:image\//.test(r.appLogo) ? r.appLogo : "", heroBg: v?.heroImage && /^data:image\//.test(v.heroImage) ? v.heroImage : "" };
+      setAssets((o) => (o.punch === na.punch && o.logo === na.logo && o.heroBg === na.heroBg ? o : na));
       (nb ? store.set(BRAND_KEY, JSON.stringify(nb)) : store.del(BRAND_KEY)).catch(() => {});
     }).catch(() => {});
     pull();
@@ -105,8 +105,8 @@ export function useTheme(): Palette {
 export function useAppBrand() {
   const { brand, assets } = useContext(Ctx);
   return useMemo(() => {
-    if (!brand) return { hero: null as null | { a: string; b: string; c: string; band1: string; band2: string }, punch: assets.punch, logo: assets.logo };
+    if (!brand) return { hero: null as null | { a: string; b: string; c: string; band1: string; band2: string }, punch: assets.punch, logo: assets.logo, heroBg: assets.heroBg };
     const P = h2r(brand.hero || brand.p)!, A = (brand.a && h2r(brand.a)) || lift(h2r(brand.p)!, 0.35), S = (brand.s && h2r(brand.s)) || [228, 228, 188];
-    return { hero: { a: r2h(shade(P, 0.25)), b: r2h(P), c: r2h(lift(P, 0.12)), band1: r2h(A), band2: r2h(S) }, punch: assets.punch, logo: assets.logo };
+    return { hero: { a: r2h(shade(P, 0.25)), b: r2h(P), c: r2h(lift(P, 0.12)), band1: r2h(A), band2: r2h(S) }, punch: assets.punch, logo: assets.logo, heroBg: assets.heroBg };
   }, [brand, assets]);
 }
