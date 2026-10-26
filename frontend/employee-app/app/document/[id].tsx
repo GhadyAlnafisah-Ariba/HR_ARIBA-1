@@ -22,7 +22,7 @@ export default function DocumentScreen() {
   }, [id]);
   return (
     <Screen title={title ?? "المستند"} scroll={false}>
-      {html === null ? <Loading /> : <HtmlView html={html} />}
+      {html === null ? <Loading /> : <HtmlView html={html} fileName={title ?? "document"} />}
     </Screen>
   );
 }

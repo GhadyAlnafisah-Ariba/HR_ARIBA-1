@@ -2,6 +2,6 @@
 // The web build uses html-view.web.tsx (an iframe), because react-native-webview has no web implementation.
 import { WebView } from "react-native-webview";
 
-export function HtmlView({ html }: { html: string }) {
+export function HtmlView({ html }: { html: string; fileName?: string }) {
   return <WebView originWhitelist={["*"]} source={{ html }} style={{ flex: 1 }} />;
 }

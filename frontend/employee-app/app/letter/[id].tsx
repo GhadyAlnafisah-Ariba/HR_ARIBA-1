@@ -28,7 +28,7 @@ export default function LetterScreen() {
         </Pressable>
         <T size={16} weight={800} style={{ flex: 1 }} numberOfLines={1}>{title ?? "المستند"}</T>
       </View>
-      {html === null ? <Loading /> : <HtmlView html={html} />}
+      {html === null ? <Loading /> : <HtmlView html={html} fileName={title ?? "document"} />}
     </View>
   );
 }

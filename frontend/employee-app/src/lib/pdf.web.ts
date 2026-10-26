@@ -14,7 +14,8 @@ export async function htmlToPdfBlob(html: string): Promise<Blob> {
     doc.body.style.cssText += `;margin:0;padding:36px 40px;width:${A4_W}px;box-sizing:border-box;background:#fff`;
     await Promise.race([(doc as Document & { fonts?: { ready: Promise<unknown> } }).fonts?.ready ?? Promise.resolve(), new Promise((r) => setTimeout(r, 2000))]);
     await Promise.all(Array.from(doc.images).map((img) => (img.complete ? Promise.resolve() : new Promise((r) => { img.onload = img.onerror = () => r(null); }))));
-    const canvas = await html2canvas(doc.body, { scale: 2, backgroundColor: "#ffffff", width: A4_W, windowWidth: A4_W, useCORS: true });
+    const w = Math.max(A4_W, doc.documentElement.scrollWidth, doc.body.scrollWidth);   // wide content is scaled to the page, never cut
+    const canvas = await html2canvas(doc.body, { scale: 2, backgroundColor: "#ffffff", width: w, windowWidth: w, useCORS: true });
     const pdf = new jsPDF({ unit: "pt", format: "a4", compress: true });
     const pw = pdf.internal.pageSize.getWidth(), ph = pdf.internal.pageSize.getHeight();
     const imgH = (canvas.height * pw) / canvas.width, data = canvas.toDataURL("image/jpeg", 0.92);
