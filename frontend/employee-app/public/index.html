@@ -33,6 +33,13 @@
         -webkit-tap-highlight-color: transparent;
         overscroll-behavior: none;
       }
+      /* A phone app has no visible scrollbars; browsers on a computer would draw one on the screen edge. */
+      * {
+        scrollbar-width: none;
+      }
+      *::-webkit-scrollbar {
+        display: none;
+      }
       /* These styles make the root element full-height */
       #root {
         display: flex;
