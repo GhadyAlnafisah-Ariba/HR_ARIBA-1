@@ -8,6 +8,7 @@ import { useData } from "@/lib/data";
 import { pickFile, type Picked } from "@/lib/files";
 import { submitRequest } from "@/lib/port";
 import { useTheme } from "@/theme";
+import { goBack } from "@/lib/nav";
 
 const FIELDS: [string, string, "phone-pad" | "email-address" | "default"][] = [
   ["mobile", "الجوال", "phone-pad"], ["email", "البريد الإلكتروني", "email-address"], ["address", "العنوان", "default"], ["city", "المدينة", "default"],
@@ -32,7 +33,7 @@ export default function ProfileEdit() {
       await submitRequest("profile_edit", { changes }, file);
       toast("✅ أُرسل طلب التعديل للموارد البشرية", "ok");
       await refresh();
-      router.back();
+      goBack();
     } catch (er) {
       toast(er instanceof ApiError ? er.message : "تعذر الإرسال", "err");
     } finally {

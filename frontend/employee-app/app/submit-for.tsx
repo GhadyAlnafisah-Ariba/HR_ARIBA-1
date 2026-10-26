@@ -8,6 +8,7 @@ import { Btn, Card, Input, Label, PickerField, T, useToast } from "@/components/
 import { ApiError } from "@/lib/api";
 import { calendarDays, manager } from "@/lib/port";
 import { useTheme } from "@/theme";
+import { goBack } from "@/lib/nav";
 
 const TYPES: [string, string][] = [["annual", "سنوية"], ["sick", "مرضية"], ["emergency", "اضطرارية"], ["unpaid", "إجازة بدون راتب"], ["salary_advance", "طلب راتب مقدم"]];
 
@@ -30,7 +31,7 @@ export default function SubmitFor() {
     try {
       await manager.submitFor(id, type, p);
       toast("✅ قُدّم الطلب نيابةً عن الموظف — أُبلغت الموارد البشرية والموظف", "ok");
-      router.back();
+      goBack();
     } catch (e) {
       toast(e instanceof ApiError ? e.message : "تعذر الإرسال", "err");
     } finally {

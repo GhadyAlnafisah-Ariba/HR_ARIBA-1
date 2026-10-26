@@ -5,6 +5,7 @@ import { File, Paths } from "expo-file-system";
 import * as Sharing from "expo-sharing";
 import { router } from "expo-router";
 import { docs } from "./port";
+import { deliverFile } from "./web-file";
 
 export async function openDocument(id: string, title?: string) {
   const d = await docs.content(id);
@@ -14,13 +15,7 @@ export async function openDocument(id: string, title?: string) {
     return;
   }
   if (Platform.OS === "web") {
-    // PWA: no share sheet and no file system — open the file in the browser (PDF / images) or let it download.
-    const bytes = Uint8Array.from(atob(d.base64), (c) => c.charCodeAt(0));
-    const url = URL.createObjectURL(new Blob([bytes], { type: d.mime_type || "application/octet-stream" }));
-    const a = document.createElement("a");
-    a.href = url; a.download = d.file_name; a.target = "_blank"; a.rel = "noopener";
-    document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    await deliverFile(Uint8Array.from(atob(d.base64), (c) => c.charCodeAt(0)), d.file_name, d.mime_type);
     return;
   }
   const f = new File(Paths.cache, `${id}-${d.file_name.replace(/[^\w.\-]+/g, "_")}`);

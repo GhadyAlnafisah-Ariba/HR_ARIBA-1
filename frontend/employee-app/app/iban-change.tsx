@@ -12,6 +12,7 @@ import { useData } from "@/lib/data";
 import { pickFile, type Picked } from "@/lib/files";
 import { brandInfo, submitRequest } from "@/lib/port";
 import { useTheme } from "@/theme";
+import { goBack } from "@/lib/nav";
 
 const esc = (s: unknown) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
 
@@ -65,7 +66,7 @@ export default function IbanChange() {
       await submitRequest("iban_change", { iban: ib, bank: bank.trim(), account_no: account.trim(), letter_html: letterHtml(e, company, bank.trim(), account.trim(), ib, sig) }, cert);
       toast("✅ أُرسل الطلب للمدير المباشر والموارد البشرية", "ok");
       await refresh();
-      router.back();
+      goBack();
     } catch (x) {
       toast(x instanceof ApiError ? x.message : "تعذر الإرسال", "err");
     } finally {

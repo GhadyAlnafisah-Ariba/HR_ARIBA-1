@@ -1,7 +1,9 @@
+import { useEffect } from "react";
 import { useFonts } from "expo-font";
 import { Redirect, Stack, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { Platform } from "react-native";
+import "@/lib/web-alert";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { DataProvider } from "@/lib/data";
 import { NotificationsProvider } from "@/lib/notifications";
@@ -15,6 +17,14 @@ function Gate() {
   const { user, ready } = useAuth();
   const t = useTheme();
   const segments = useSegments();
+  // Web (installed PWA): the strip behind the clock / status bar and the browser's theme colour follow the app's own theme
+  // (light, dark or the employee's own choice), so the app looks like one screen from edge to edge.
+  useEffect(() => {
+    if (Platform.OS !== "web" || typeof document === "undefined") return;
+    document.documentElement.style.backgroundColor = t.bg;
+    document.body.style.backgroundColor = t.bg;
+    document.querySelectorAll('meta[name="theme-color"]').forEach((m) => m.setAttribute("content", t.bg));
+  }, [t.bg]);
   if (!ready) return <Loading />;
 
   const screen = segments[0];

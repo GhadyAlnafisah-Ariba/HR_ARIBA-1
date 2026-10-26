@@ -4,12 +4,13 @@
     <meta charset="utf-8" />
     <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
     <!-- viewport-fit=cover lets the app use the full screen on a notched iPhone once installed -->
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
     <title>أريبا — الموظف</title>
 
     <!-- PWA: installable on iPhone (Safari › Share › Add to Home Screen) and Android (Chrome › Install app) -->
     <link rel="manifest" href="/manifest.webmanifest" />
-    <meta name="theme-color" content="#014D3D" />
+    <meta name="theme-color" content="#E9EFEA" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#011A15" media="(prefers-color-scheme: dark)" />
     <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -29,7 +30,7 @@
       body {
         overflow: hidden;
         margin: 0;
-        background: #014d3d; /* the brand green behind the status bar until the app paints */
+        background: #011a15; /* until the app paints (then the app sets its own colour, see app/_layout.tsx) */
         -webkit-tap-highlight-color: transparent;
         overscroll-behavior: none;
       }
@@ -39,6 +40,18 @@
       }
       *::-webkit-scrollbar {
         display: none;
+      }
+      /* Follow the real visible height (address bar, keyboard, installed window) instead of the first measured one */
+      @supports (height: 100dvh) {
+        html,
+        body,
+        #root {
+          height: 100dvh;
+        }
+      }
+      html {
+        touch-action: manipulation; /* no double-tap zoom or tap delay: it should feel like an app */
+        -webkit-text-size-adjust: 100%;
       }
       /* These styles make the root element full-height */
       #root {

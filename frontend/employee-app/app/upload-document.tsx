@@ -9,6 +9,7 @@ import { useData } from "@/lib/data";
 import { pickFile, type Picked } from "@/lib/files";
 import { submitRequest } from "@/lib/port";
 import { useTheme } from "@/theme";
+import { goBack } from "@/lib/nav";
 
 export const DOC_TYPES: [string, string][] = [["id", "الهوية / الإقامة"], ["passport", "جواز السفر"], ["experience", "شهادة خبرة"], ["cv", "السيرة الذاتية"],
   ["national_address", "العنوان الوطني"], ["contract", "العقد"], ["graduation", "شهادة التخرج"], ["social_insurance", "شهادة التأمينات الاجتماعية"], ["other", "أخرى"]];
@@ -29,7 +30,7 @@ export default function UploadDocument() {
       await submitRequest("document", { doc_type: type, doc_label: label, notes: other }, file);
       toast("✅ أُرسل المستند للموارد البشرية للمراجعة", "ok");
       await refresh();
-      router.back();
+      goBack();
     } catch (e) {
       toast(e instanceof ApiError ? e.message : "تعذر الإرسال", "err");
     } finally {
