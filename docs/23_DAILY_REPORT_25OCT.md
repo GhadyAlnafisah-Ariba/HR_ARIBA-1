@@ -40,8 +40,8 @@ Their files were copied verbatim wherever ours were verbatim, and their diff was
 - `services/mailer.py` now sends through the **Gmail API over HTTPS (443)** when `GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET`, `GMAIL_REFRESH_TOKEN` are set and the mailbox is Gmail; otherwise SMTP, then Resend, as before.
 - Microsoft 365 (Graph) failures now explain themselves (consent, mailbox, token) and fall back to Resend when it is configured.
 - Helper `backend/tools/gmail_oauth_token.py` (scope `gmail.send` only) obtains the refresh token once, on the owner's machine.
-- Google Cloud (account `ifx71fr@gmail.com`): project «ARIBA HR Mail», Gmail API enabled, OAuth consent screen (External, Testing), Desktop client, test users added.
-- Railway variables set on demo and production; the site's «send test message» delivered a real e-mail from `ifx71fr@gmail.com`.
+- Google Cloud (the sender mailbox account): project «ARIBA HR Mail», Gmail API enabled, OAuth consent screen (External, Testing), Desktop client, test users added.
+- Railway variables set on demo and production; the site's «send test message» delivered a real e-mail from the sender mailbox.
 
 ### 5. How it was checked (logic, not only looks)
 | Check | Result |
@@ -117,8 +117,8 @@ Impact on existing numbers (production-shaped local copy, 107 employees): two ac
 - `services/mailer.py` يرسل الآن عبر **Gmail API على HTTPS (443)** عند ضبط `GMAIL_CLIENT_ID` و`GMAIL_CLIENT_SECRET` و`GMAIL_REFRESH_TOKEN` وكون صندوق البريد Gmail؛ وإلا SMTP ثم Resend كما كان.
 - أخطاء Microsoft 365 (Graph) صارت تشرح نفسها (الموافقة والصندوق والتوكن)، وتنتقل إلى Resend إن كان مضبوطًا.
 - سكربت `backend/tools/gmail_oauth_token.py` (صلاحية `gmail.send` فقط) يستخرج التوكن مرة واحدة على جهاز المالك.
-- Google Cloud (حساب `ifx71fr@gmail.com`): مشروع «ARIBA HR Mail»، وتفعيل Gmail API، وشاشة موافقة OAuth (External، وضع Testing)، وبيانات Desktop، وإضافة المستخدمين التجريبيين.
-- المتغيرات مضبوطة على demo وproduction، وزر «إرسال رسالة تجربة» في الموقع أوصل إيميلًا حقيقيًا من `ifx71fr@gmail.com`.
+- Google Cloud (حساب صندوق الإرسال): مشروع «ARIBA HR Mail»، وتفعيل Gmail API، وشاشة موافقة OAuth (External، وضع Testing)، وبيانات Desktop، وإضافة المستخدمين التجريبيين.
+- المتغيرات مضبوطة على demo وproduction، وزر «إرسال رسالة تجربة» في الموقع أوصل إيميلًا حقيقيًا من صندوق الإرسال.
 
 ### 5. كيف تم التحقق (من المنطق وليس الشكل فقط)
 | الفحص | النتيجة |
